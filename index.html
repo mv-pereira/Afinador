@@ -305,6 +305,7 @@
   box-shadow:
     0 14px 36px rgba(0,0,0,0.10),
     inset 0 0 0 1px #dfe6ee;
+  overflow: hidden;
 }
 
 .anel-externo,
@@ -1840,9 +1841,10 @@ function renderizarCirculoDOM() {
     ".nota-item, .segmento-quinta, .rotulo-ajuste"
   ).forEach(n => n.remove());
 
-  const tamanho = Math.min(el.clientWidth, el.clientHeight);
-  const cx = el.clientWidth / 2;
-  const cy = el.clientHeight / 2;
+  const rect = el.getBoundingClientRect();
+  const tamanho = Math.min(rect.width, rect.height);
+  const cx = tamanho / 2;
+  const cy = tamanho / 2;
   const raioNotas = tamanho * 0.42;
   const ordemPcs = estadoTemperamento.quintas.map(q => q.pcDe);
   const anguloInicial = -Math.PI / 2;
@@ -2192,6 +2194,13 @@ function renderizarCirculoDOM() {
     // INIT
     // =========================================================
     aplicarPreset("pythagorean");
+
+window.addEventListener("resize", () => {
+  setTimeout(() => {
+    renderizarCirculoDOM();
+  }, 50);
+});
+
   </script>
 </body>
 </html>
