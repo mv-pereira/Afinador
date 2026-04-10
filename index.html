@@ -389,7 +389,7 @@
   color: #334155;
   text-align: center;
   white-space: nowrap;
-  z-index: 5;
+  z-index: 3;
   backdrop-filter: blur(2px);
 }
 
@@ -1883,8 +1883,8 @@ function renderizarCirculoDOM() {
     const vy = my - cy;
     const n = Math.hypot(vx, vy) || 1;
 
-    const rx = mx + (vx / n) * 32;
-    const ry = my + (vy / n) * 32;
+    const rx = mx + (vx / n) * 18;
+    const ry = my + (vy / n) * 18;
 
     const linhas = obterLinhasComa(estadoTemperamento.quintas[i], i);
     const indiceResidual = obterIndiceQuintaResidual();
