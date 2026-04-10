@@ -375,23 +375,14 @@
   margin-top: 6px;
 }
 
-.segmento-quinta {
-  position: absolute;
-  height: 6px;
-  transform-origin: 0 50%;
-  border-radius: 999px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
-  z-index: 1;
-}
-
 .rotulo-ajuste {
   position: absolute;
   transform: translate(-50%, -50%);
   min-width: 78px;
   padding: 7px 10px;
   border-radius: 12px;
-  background: rgba(255,255,255,0.96);
-  border: 1px solid #dbe3ec;
+  background: rgba(255,255,255,0.82);
+  border: 1px solid rgba(219, 227, 236, 0.9);
   box-shadow: 0 5px 14px rgba(0,0,0,0.08);
   font-size: 12px;
   font-weight: 600;
@@ -399,6 +390,26 @@
   text-align: center;
   white-space: nowrap;
   z-index: 3;
+  backdrop-filter: blur(2px);
+}
+
+.rotulo-ajuste.neutra {
+  background: rgba(102, 187, 106, 0.3);
+  border-color: rgba(27, 94, 32, 0.28);
+}
+
+.rotulo-ajuste.larga {
+  background: rgba(66, 165, 245, 0.3);
+  border-color: rgba(13, 71, 161, 0.28);
+}
+
+.rotulo-ajuste.estreita {
+  background: rgba(239, 83, 80, 0.3);
+  border-color: rgba(183, 28, 28, 0.28);
+}
+
+.rotulo-ajuste.residual {
+  color: #8d6e00;
 }
 
 .nota-item {
@@ -445,19 +456,6 @@
   padding: 18px;
   z-index: 5;
 }
-
-.segmento-quinta.neutra {
-  background: linear-gradient(90deg, #66bb6a, #1b5e20);
-}
-
-.segmento-quinta.larga {
-  background: linear-gradient(90deg, #42a5f5, #0d47a1);
-}
-
-.segmento-quinta.estreita {
-  background: linear-gradient(90deg, #ef5350, #b71c1c);
-}
-
 
 
   </style>
@@ -601,7 +599,6 @@
     <thead>
       <tr>
         <th>Quinta Justa<br><small>3:2</small></th>
-        <th>Quarta Justa<br><small>4:3</small></th>
         <th>Terça Maior<br><small>5:4</small></th>
         <th>Terça Menor<br><small>6:5</small></th>
         <th>Sexta Maior<br><small>5:3</small></th>
@@ -701,7 +698,6 @@ function gerarIntervalos(semitons, referencia, corMax) {
 
 const INTERVALOS_COLUNAS = {
   "Quinta Justa": gerarIntervalos(7, QUINTA_JUSTA_CENTS, COMA_PITAGORICO),
-  "Quarta Justa": gerarIntervalos(5, QUARTA_JUSTA_CENTS, COMA_PITAGORICO),
   "Terça Maior": gerarIntervalos(4, TERCA_MAIOR_PURA_CENTS, COMA_SINTONICO),
   "Terça Menor": gerarIntervalos(3, TERCA_MENOR_PURA_CENTS, COMA_SINTONICO),
   "Sexta Maior": gerarIntervalos(9, SEXTA_MAIOR_PURA_CENTS, COMA_SINTONICO),
@@ -1838,7 +1834,7 @@ function renderizarCirculoDOM() {
   if (!el) return;
 
   el.querySelectorAll(
-    ".nota-item, .segmento-quinta, .rotulo-ajuste"
+    ".nota-item, .rotulo-ajuste"
   ).forEach(n => n.remove());
 
   const rect = el.getBoundingClientRect();
@@ -1874,24 +1870,11 @@ function renderizarCirculoDOM() {
     const p1 = posicoes[i];
     const p2 = posicoes[(i + 1) % 12];
 
-    const dx = p2.x - p1.x;
-    const dy = p2.y - p1.y;
-    const comprimento = Math.hypot(dx, dy);
-    const anguloGraus = Math.atan2(dy, dx) * 180 / Math.PI;
-
     const ajuste = estadoTemperamento.quintas[i].ajusteCents;
 
     let classe = "neutra";
     if (ajuste > 0.001) classe = "larga";
     if (ajuste < -0.001) classe = "estreita";
-
-    const segmento = document.createElement("div");
-    segmento.className = `segmento-quinta ${classe}`;
-    segmento.style.left = `${p1.x}px`;
-    segmento.style.top = `${p1.y}px`;
-    segmento.style.width = `${comprimento}px`;
-    segmento.style.transform = `translateY(-50%) rotate(${anguloGraus}deg)`;
-    el.appendChild(segmento);
 
     const mx = (p1.x + p2.x) / 2;
     const my = (p1.y + p2.y) / 2;
@@ -1908,7 +1891,7 @@ function renderizarCirculoDOM() {
     const ehResidual = i === indiceResidual;
 
     const rotulo = document.createElement("div");
-    rotulo.className = `rotulo-ajuste${ehResidual ? " residual" : ""}`;
+    rotulo.className = `rotulo-ajuste ${classe}${ehResidual ? " residual" : ""}`;
     rotulo.style.left = `${rx}px`;
     rotulo.style.top = `${ry}px`;
     rotulo.innerHTML = linhas.map(l => `<div>${l}</div>`).join("");
