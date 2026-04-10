@@ -291,6 +291,175 @@
 #rotuloDireita  { left: 100%; transform: translateX(-100%); }
 
 
+.circulo-quintas-dom {
+  position: relative;
+  width: 760px;
+  height: 760px;
+  margin: 18px auto 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at center,
+      #ffffff 0 28%,
+      #f7f9fc 28% 48%,
+      #eef3f8 48% 50%,
+      #ffffff 50% 100%);
+  box-shadow:
+    0 14px 36px rgba(0,0,0,0.10),
+    inset 0 0 0 1px #dfe6ee;
+}
+
+.anel-externo,
+.anel-interno {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.anel-externo {
+  inset: 42px;
+  border: 2px solid #d8e0ea;
+}
+
+.anel-interno {
+  inset: 142px;
+  border: 1px solid #e3e8ef;
+}
+
+.miolo-circulo {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 220px;
+  height: 220px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: linear-gradient(180deg, #ffffff 0%, #f7f9fc 100%);
+  box-shadow:
+    0 8px 24px rgba(0,0,0,0.10),
+    inset 0 0 0 1px #dce4ec;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 20px;
+}
+
+.miolo-titulo {
+  font-size: 22px;
+  font-weight: 700;
+  color: #111;
+}
+
+.miolo-nome {
+  margin-top: 10px;
+  font-size: clamp(20px, 2.5vw, 30px);
+  font-weight: 700;
+  color: #1565c0;
+  line-height: 1.2;
+  max-width: 90%;
+}
+
+
+.nota-item .nome {
+  font-size: 22px;
+  font-weight: 700;
+  color: #111;
+  line-height: 1;
+}
+
+.nota-item .valor {
+  font-size: 12px;
+  color: #5b6470;
+  margin-top: 6px;
+}
+
+.segmento-quinta {
+  position: absolute;
+  height: 6px;
+  transform-origin: 0 50%;
+  border-radius: 999px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+  z-index: 1;
+}
+
+.rotulo-ajuste {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  min-width: 78px;
+  padding: 7px 10px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.96);
+  border: 1px solid #dbe3ec;
+  box-shadow: 0 5px 14px rgba(0,0,0,0.08);
+  font-size: 12px;
+  font-weight: 600;
+  color: #334155;
+  text-align: center;
+  white-space: nowrap;
+  z-index: 3;
+}
+
+.nota-item {
+  position: absolute;
+  width: 11%;
+  height: 11%;
+  min-width: 68px;
+  min-height: 68px;
+  max-width: 82px;
+  max-height: 82px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: linear-gradient(180deg, #ffffff 0%, #edf3f9 100%);
+  box-shadow:
+    0 6px 18px rgba(0,0,0,0.10),
+    inset 0 0 0 1px #d9e2ec;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  user-select: none;
+  z-index: 4;
+}
+
+.miolo-circulo {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 29%;
+  height: 29%;
+  min-width: 170px;
+  min-height: 170px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: linear-gradient(180deg, #ffffff 0%, #f7f9fc 100%);
+  box-shadow:
+    0 8px 24px rgba(0,0,0,0.10),
+    inset 0 0 0 1px #dce4ec;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 18px;
+  z-index: 5;
+}
+
+.segmento-quinta.neutra {
+  background: linear-gradient(90deg, #66bb6a, #1b5e20);
+}
+
+.segmento-quinta.larga {
+  background: linear-gradient(90deg, #42a5f5, #0d47a1);
+}
+
+.segmento-quinta.estreita {
+  background: linear-gradient(90deg, #ef5350, #b71c1c);
+}
+
+
+
   </style>
 </head>
 <body>
@@ -374,6 +543,11 @@
               <option value="werckmeister2">Werckmeister II</option>
               <option value="vallotti">Vallotti</option>
               <option value="young2">Young II</option>
+              <option value="sixth-comma-meantone">Mesotônico 1/6 coma sintônico</option>
+              <option value="bach-barnes">Bach / Barnes 1979</option>
+              <option value="bach-lehman">Bach / Lehman 1979</option>
+              <option value="neidhardt-kleine-stadt">Neidhardt – Kleine Stadt (1732)</option>
+              <option value="neidhardt-grosse-stadt">Neidhardt – Große Stadt (1724)</option>
             </select>
           </div>
         </div>
@@ -389,7 +563,15 @@
 
       <div class="subpainel">
         <h2>Círculo de quintas editável</h2>
-        <canvas id="circuloQuintas" width="760" height="760"></canvas>
+        <div id="circuloQuintas" class="circulo-quintas-dom">
+  <div class="anel-externo"></div>
+  <div class="anel-interno"></div>
+
+<div class="miolo-circulo">
+  <div class="miolo-titulo">Temperamento</div>
+  <div class="miolo-nome" id="nomeTemperamentoCentro">Pitagórico</div>
+</div>
+</div>
 
         <div class="bloco-info" id="resumoTemperamento"></div>
 
@@ -545,6 +727,11 @@ const estadoTemperamento = {
   loboCents: QUINTA_JUSTA_CENTS
 };
 
+let nomeTemperamentoAtual = "Pitagórico";
+let presetFoiModificado = false;
+let usarResidualAutomatica = true;
+let nomeTemperamentoBase = "Pitagórico";
+
     // =========================================================
     // UI TEMPERAMENTO
     // =========================================================
@@ -553,11 +740,6 @@ const estadoTemperamento = {
     const resumoTemperamentoEl = document.getElementById("resumoTemperamento");
     const tbodyQuintas = document.getElementById("tbodyQuintas");
     const tbodyIntervalosMatriz = document.getElementById("tbodyIntervalosMatriz");
-
-    const canvasCirculo = document.getElementById("circuloQuintas");
-    const ctxCirculo = canvasCirculo.getContext("2d");
-
-    const segmentosHit = [];
 
     // =========================================================
     // UTIL
@@ -833,8 +1015,10 @@ function recalcularResidualFracionaria() {
 
 
 function recalcularTemperamento() {
-  recalcularQuintaResidual();
-  recalcularResidualFracionaria();
+  if (usarResidualAutomatica) {
+    recalcularQuintaResidual();
+    recalcularResidualFracionaria();
+  }
 
   estadoTemperamento.mapaCentsPorPc = construirMapaCentsPorPc();
   recalcularFechamento();
@@ -842,7 +1026,7 @@ function recalcularTemperamento() {
     construirTabelaFrequenciasMidi(parseFloat(a4RefInput.value) || 440);
 
   renderTabelaQuintas();
-  desenharCirculoQuintas();
+  renderizarCirculoDOM();
   renderResumoTemperamento();
   renderTabelaIntervalosMatriz();
 }
@@ -909,10 +1093,19 @@ function zerarAjustes() {
 }
 
 function aplicarPreset(nome) {
+  nomeTemperamentoAtual = obterNomePresetBonito(nome);
+  nomeTemperamentoBase = nomeTemperamentoAtual;
+  presetFoiModificado = false;
+  usarResidualAutomatica = true;
+
   zerarAcumuladoresFracionarios();
 
   estadoTemperamento.quintas.forEach(q => {
     q.ajusteCents = 0;
+    q.acumCpNum = 0;
+    q.acumCpDen = 1;
+    q.acumCsNum = 0;
+    q.acumCsDen = 1;
   });
 
 
@@ -1036,6 +1229,134 @@ if (nome === "young2") {
   return;
 }
 
+if (nome === "sixth-comma-meantone") {
+    // cada quinta editável recebe -1/6 c.s.
+    estadoTemperamento.quintas.forEach((q, i) => {
+      if (i === obterIndiceQuintaResidual()) return;
+      q.acumCsNum = -1;
+      q.acumCsDen = 6;
+      q.ajusteCents = -(COMA_SINTONICO / 6);
+    });
+
+    recalcularTemperamento();
+    return;
+}
+
+
+if (nome === "bach-barnes") {
+
+  zerarAcumuladoresFracionarios();
+
+  const indicesCs = [0, 1, 2, 3, 5,11]; // quintas com -1/6 c.s.
+
+  indicesCs.forEach(i => {
+    if (i === obterIndiceQuintaResidual()) return;
+
+    estadoTemperamento.quintas[i].acumCsNum = -1;
+    estadoTemperamento.quintas[i].acumCsDen = 6;
+    estadoTemperamento.quintas[i].ajusteCents = -(COMA_SINTONICO / 6);
+  });
+
+  recalcularTemperamento();
+  return;
+}
+
+if (nome === "neidhardt-kleine-stadt") {
+ usarResidualAutomatica = false;
+  zerarAcumuladoresFracionarios();
+
+  const cs = [0, 1, 2, 3]; // -1/6 c.s.
+  const cp = [4, 5, 8, 9];    // -1/12 c.p.
+
+  cs.forEach(i => {
+    if (i === obterIndiceQuintaResidual()) return;
+
+    estadoTemperamento.quintas[i].acumCsNum = -1;
+    estadoTemperamento.quintas[i].acumCsDen = 6;
+    estadoTemperamento.quintas[i].ajusteCents = -(COMA_SINTONICO / 6);
+  });
+
+  cp.forEach(i => {
+    if (i === obterIndiceQuintaResidual()) return;
+
+    estadoTemperamento.quintas[i].acumCpNum = -1;
+    estadoTemperamento.quintas[i].acumCpDen = 12;
+    estadoTemperamento.quintas[i].ajusteCents = -(COMA_PITAGORICO / 12);
+  });
+
+  recalcularTemperamento();
+  return;
+}
+
+if (nome === "neidhardt-grosse-stadt") {
+
+  zerarAcumuladoresFracionarios();
+
+  const cs = [0, 1, 2]; // -1/6 c.s.
+  const cp = [3, 5, 6, 7,9,10]; // -1/12 c.p.
+
+  cs.forEach(i => {
+    if (i === obterIndiceQuintaResidual()) return;
+
+    estadoTemperamento.quintas[i].acumCsNum = -1;
+    estadoTemperamento.quintas[i].acumCsDen = 6;
+    estadoTemperamento.quintas[i].ajusteCents = -(COMA_SINTONICO / 6);
+  });
+
+  cp.forEach(i => {
+    if (i === obterIndiceQuintaResidual()) return;
+
+    estadoTemperamento.quintas[i].acumCpNum = -1;
+    estadoTemperamento.quintas[i].acumCpDen = 12;
+    estadoTemperamento.quintas[i].ajusteCents = -(COMA_PITAGORICO / 12);
+  });
+
+  recalcularTemperamento();
+  return;
+}
+
+
+if (nome === "bach-lehman") {
+ usarResidualAutomatica = false;
+  zerarAcumuladoresFracionarios();
+
+  const csNeg = [0, 1, 2, 3, 11]; // -1/6 c.s.
+  const cpNeg = [7, 8, 9];        // -1/12 c.p.
+  const cpPos = [10];             // +1/12 c.p.
+
+  csNeg.forEach(i => {
+    if (i === obterIndiceQuintaResidual()) return;
+
+    estadoTemperamento.quintas[i].acumCsNum = -1;
+    estadoTemperamento.quintas[i].acumCsDen = 6;
+    estadoTemperamento.quintas[i].ajusteCents = -(COMA_SINTONICO / 6);
+  });
+
+  cpNeg.forEach(i => {
+    if (i === obterIndiceQuintaResidual()) return;
+
+    estadoTemperamento.quintas[i].acumCpNum = -1;
+    estadoTemperamento.quintas[i].acumCpDen = 12;
+    estadoTemperamento.quintas[i].ajusteCents = -(COMA_PITAGORICO / 12);
+  });
+
+  cpPos.forEach(i => {
+    if (i === obterIndiceQuintaResidual()) return;
+
+    estadoTemperamento.quintas[i].acumCpNum = +1;
+    estadoTemperamento.quintas[i].acumCpDen = 12;
+    estadoTemperamento.quintas[i].ajusteCents = +(COMA_PITAGORICO / 12);
+  });
+
+  recalcularTemperamento();
+  return;
+}
+
+
+
+
+
+
 
 }
 
@@ -1105,8 +1426,15 @@ function construirTabelaFrequenciasMidi(a4 = 440) {
 
     function ajustarQuinta(index, deltaCents) {
       estadoTemperamento.quintas[index].ajusteCents += deltaCents;
-      recalcularTemperamento();
-    }
+
+      // virou custom
+      if (!presetFoiModificado) {
+           presetFoiModificado = true;
+           usarResidualAutomatica = true;
+        }
+
+        recalcularTemperamento();
+            }
 
 function obterLinhasComa(q, i) {
   const linhas = [];
@@ -1202,6 +1530,25 @@ function renderTabelaIntervalosMatriz() {
   }
 }
 
+function atualizarNomeTemperamentoCentro() {
+  const el = document.getElementById("nomeTemperamentoCentro");
+  if (!el) return;
+
+  if (presetFoiModificado) {
+    el.textContent = `Custom (base: ${nomeTemperamentoBase})`;
+  } else {
+    el.textContent = nomeTemperamentoAtual;
+  }
+}
+
+function obterNomePresetBonito(valor) {
+  const select = document.getElementById("presetTemperamento");
+  if (!select) return "Custom";
+
+  const option = select.querySelector(`option[value="${valor}"]`);
+  return option ? option.textContent : "Custom";
+}
+
 
     // =========================================================
     // TABELA
@@ -1212,7 +1559,7 @@ function renderTabelaQuintas() {
 
   estadoTemperamento.quintas.forEach((q, i) => {
     const indiceResidual = obterIndiceQuintaResidual();
-    const ehResidual = i === indiceResidual;
+    const ehResidual = usarResidualAutomatica&& i === indiceResidual;
 
     const tr = document.createElement("tr");
 
@@ -1378,6 +1725,8 @@ function renderTabelaQuintas() {
       estadoTemperamento.quintas[i].acumCpDen = 1;
       estadoTemperamento.quintas[i].acumCsNum = 0;
       estadoTemperamento.quintas[i].acumCsDen = 1;
+      presetFoiModificado = true;
+              usarResidualAutomatica = true;
       recalcularTemperamento();
     });
 
@@ -1481,159 +1830,91 @@ function renderResumoTemperamento() {
 }
 
     // =========================================================
-    // CANVAS DO CÍRCULO
+    // DESENHO DO CÍRCULO
     // =========================================================
 
-function desenharCirculoQuintas() {
-  const w = canvasCirculo.width;
-  const h = canvasCirculo.height;
-  const cx = w / 2;
-  const cy = h / 2;
-  const r = 250;
-  const startAngle = -Math.PI / 2;
+function renderizarCirculoDOM() {
+  const el = document.getElementById("circuloQuintas");
+  if (!el) return;
 
-  ctxCirculo.clearRect(0, 0, w, h);
-  ctxCirculo.fillStyle = "#fff";
-  ctxCirculo.fillRect(0, 0, w, h);
+  el.querySelectorAll(
+    ".nota-item, .segmento-quinta, .rotulo-ajuste"
+  ).forEach(n => n.remove());
 
-  ctxCirculo.fillStyle = "#111";
-  ctxCirculo.font = "24px Arial";
-  ctxCirculo.textAlign = "center";
-  ctxCirculo.textBaseline = "middle";
-  ctxCirculo.fillText("Temperamento vigente", cx, 36);
+  const tamanho = 760;
+  const cx = tamanho / 2;
+  const cy = tamanho / 2;
+  const raioNotas = 300;
+  const ordemPcs = estadoTemperamento.quintas.map(q => q.pcDe);
+  const anguloInicial = -Math.PI / 2;
 
-  const pos = [];
-  for (let i = 0; i < 12; i++) {
-    const a = startAngle + i * (Math.PI * 2 / 12);
-    pos.push({
-      a,
-      x: cx + r * Math.cos(a),
-      y: cy + r * Math.sin(a)
-    });
-  }
-
-  ctxCirculo.strokeStyle = "#d9d9d9";
-  ctxCirculo.lineWidth = 1.2;
-  ctxCirculo.beginPath();
-  ctxCirculo.arc(cx, cy, r, 0, Math.PI * 2);
-  ctxCirculo.stroke();
-
-  segmentosHit.length = 0;
+  const posicoes = [];
 
   for (let i = 0; i < 12; i++) {
-    const p1 = pos[i];
-    const p2 = pos[(i + 1) % 12];
-
-    const ajuste = estadoTemperamento.quintas[i].ajusteCents;
-    if (Math.abs(ajuste) < 0.01) {
-      ctxCirculo.strokeStyle = "#aaa";
-    } else if (ajuste > 0) {
-      ctxCirculo.strokeStyle = "#1b5e20";
-    } else {
-      ctxCirculo.strokeStyle = "#d32f2f";
-    }
-
-    ctxCirculo.lineWidth = 4;
-    ctxCirculo.beginPath();
-    ctxCirculo.moveTo(p1.x, p1.y);
-    ctxCirculo.lineTo(p2.x, p2.y);
-    ctxCirculo.stroke();
-
-    segmentosHit.push({
-      index: i,
-      x1: p1.x,
-      y1: p1.y,
-      x2: p2.x,
-      y2: p2.y
-    });
-  }
-
-  const ordemPcs = [0, 7, 2, 9, 4, 11, 6, 1, 8, 3, 10, 5];
-  for (let i = 0; i < 12; i++) {
-    const p = pos[i];
+    const ang = anguloInicial + i * (Math.PI * 2 / 12);
+    const x = cx + raioNotas * Math.cos(ang);
+    const y = cy + raioNotas * Math.sin(ang);
     const pc = ordemPcs[i];
 
-    const tx = cx + (r + 42) * Math.cos(p.a);
-    const ty = cy + (r + 42) * Math.sin(p.a);
+    posicoes.push({ x, y, ang, pc });
 
-    ctxCirculo.fillStyle = "#111";
-    ctxCirculo.font = "24px Arial";
-    ctxCirculo.textAlign = "center";
-    ctxCirculo.textBaseline = "middle";
-  ctxCirculo.fillText(obterNomeLatinoCirculo(pc), tx, ty);
-
-    const tx2 = cx + (r - 38) * Math.cos(p.a);
-    const ty2 = cy + (r - 38) * Math.sin(p.a);
-
-    ctxCirculo.fillStyle = "#1565c0";
-    ctxCirculo.font = "14px Arial";
-    ctxCirculo.fillText(estadoTemperamento.mapaCentsPorPc[pc].toFixed(1) + " c", tx2, ty2);
+    const nota = document.createElement("div");
+    nota.className = "nota-item";
+    nota.style.left = `${x}px`;
+    nota.style.top = `${y}px`;
+    nota.innerHTML = `
+      <div class="nome">${obterNomeLatinoCirculo(pc)}</div>
+      <div class="valor">${estadoTemperamento.mapaCentsPorPc[pc].toFixed(1)} c</div>
+    `;
+    el.appendChild(nota);
   }
 
   for (let i = 0; i < 12; i++) {
-    const p1 = pos[i];
-    const p2 = pos[(i + 1) % 12];
+    const p1 = posicoes[i];
+    const p2 = posicoes[(i + 1) % 12];
+
+    const dx = p2.x - p1.x;
+    const dy = p2.y - p1.y;
+    const comprimento = Math.hypot(dx, dy);
+    const anguloGraus = Math.atan2(dy, dx) * 180 / Math.PI;
+
+    const ajuste = estadoTemperamento.quintas[i].ajusteCents;
+
+    let classe = "neutra";
+    if (ajuste > 0.001) classe = "larga";
+    if (ajuste < -0.001) classe = "estreita";
+
+    const segmento = document.createElement("div");
+    segmento.className = `segmento-quinta ${classe}`;
+    segmento.style.left = `${p1.x}px`;
+    segmento.style.top = `${p1.y}px`;
+    segmento.style.width = `${comprimento}px`;
+    segmento.style.transform = `translateY(-50%) rotate(${anguloGraus}deg)`;
+    el.appendChild(segmento);
 
     const mx = (p1.x + p2.x) / 2;
     const my = (p1.y + p2.y) / 2;
 
     const vx = mx - cx;
     const vy = my - cy;
-    const norm = Math.hypot(vx, vy) || 1;
+    const n = Math.hypot(vx, vy) || 1;
 
-    const ox = (vx / norm) * 42;
-    const oy = (vy / norm) * 42;
+    const rx = mx + (vx / n) * 32;
+    const ry = my + (vy / n) * 32;
 
-    const tx = mx + ox;
-    const ty = my + oy;
+    const linhas = obterLinhasComa(estadoTemperamento.quintas[i], i);
+    const indiceResidual = obterIndiceQuintaResidual();
+    const ehResidual = i === indiceResidual;
 
-    const q = estadoTemperamento.quintas[i];
-    const linhas = obterLinhasComa(q,i);
-
-    ctxCirculo.fillStyle = "#333";
-    ctxCirculo.font = "14px Arial";
-    ctxCirculo.textAlign = "center";
-    ctxCirculo.textBaseline = "middle";
-
-    const espacamento = 16;
-    const alturaTotal = (linhas.length - 1) * espacamento;
-
-    for (let li = 0; li < linhas.length; li++) {
-      const yLinha = ty - alturaTotal / 2 + li * espacamento;
-      ctxCirculo.fillText(linhas[li], tx, yLinha);
-    }
-
-    ctxCirculo.fillStyle = "#666";
-    ctxCirculo.font = "18px Arial";
-    ctxCirculo.fillText("−", tx - 42, ty);
-    ctxCirculo.fillText("+", tx + 42, ty);
-
-    segmentosHit.push({
-      kind: "minus",
-      index: i,
-      x: tx - 42,
-      y: ty,
-      r: 16
-    });
-
-    segmentosHit.push({
-      kind: "plus",
-      index: i,
-      x: tx + 42,
-      y: ty,
-      r: 16
-    });
+    const rotulo = document.createElement("div");
+    rotulo.className = `rotulo-ajuste${ehResidual ? " residual" : ""}`;
+    rotulo.style.left = `${rx}px`;
+    rotulo.style.top = `${ry}px`;
+    rotulo.innerHTML = linhas.map(l => `<div>${l}</div>`).join("");
+    el.appendChild(rotulo);
   }
 
-  ctxCirculo.fillStyle = "#222";
-  ctxCirculo.font = "22px Arial";
-  ctxCirculo.textAlign = "center";
-  ctxCirculo.textBaseline = "middle";
-  ctxCirculo.fillText("Fechamento", cx, cy - 16);
-  ctxCirculo.fillText(formatSignedCents(estadoTemperamento.fechamentoCents, 3), cx, cy + 16);
-
-  ctxCirculo.font = "18px Arial";
-  ctxCirculo.fillText("Lobo: " + estadoTemperamento.loboCents.toFixed(3) + " c", cx, cy + 48);
+  atualizarNomeTemperamentoCentro();
 }
 
     // =========================================================
@@ -1900,7 +2181,11 @@ function desenharCirculoQuintas() {
     const enarmoniaCorte = document.getElementById("enarmoniaCorte");
 
     enarmoniaCorte.addEventListener("change", () => {
-      recalcularTemperamento();
+      if (presetFoiModificado) {
+        recalcularTemperamento();
+      } else {
+        aplicarPreset(presetTemperamento.value);
+      }
     });
 
 
