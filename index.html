@@ -293,8 +293,9 @@
 
 .circulo-quintas-dom {
   position: relative;
-  width: 760px;
-  height: 760px;
+  width: min(760px, 92vw);
+  aspect-ratio: 1 / 1;
+  height: auto;
   margin: 18px auto 0;
   border-radius: 50%;
   background:
@@ -1841,10 +1842,10 @@ function renderizarCirculoDOM() {
     ".nota-item, .segmento-quinta, .rotulo-ajuste"
   ).forEach(n => n.remove());
 
-  const tamanho = 760;
+  const tamanho = el.clientWidth;
   const cx = tamanho / 2;
   const cy = tamanho / 2;
-  const raioNotas = 300;
+  const raioNotas = tamanho * 0.395;
   const ordemPcs = estadoTemperamento.quintas.map(q => q.pcDe);
   const anguloInicial = -Math.PI / 2;
 
