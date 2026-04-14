@@ -1,5 +1,7 @@
 # Afinador FFT com Círculo de Quintas Editável
 
+[Acessar o afinador online](https://mv-pereira.github.io/Afinador/)
+
 Afinador de instrumentos baseado em **FFT (Fast Fourier Transform)** com suporte a **temperamentos históricos e customizados**, incluindo edição via **frações de comas pitagórico e sintônico**.
 
 ---
@@ -204,9 +206,3 @@ Coloração:
 ## Licença
 
 Este projeto está licenciado sob a Licença MIT — veja o arquivo [LICENSE](![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)) para detalhes.
-
----
-
-## 👤 Autor
-
-Projeto desenvolvido como ferramenta experimental de afinação e estudo de temperamentos musicais.
