@@ -1,1505 +1,1379 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Afinador editável via FFT</title>
-  <style>
-    :root {
-      --bg: #f4f4f4;
-      --panel: #ffffff;
-      --text: #222;
-      --muted: #666;
-      --line: #d8d8d8;
-      --blue: #1565c0;
-      --red: #d32f2f;
-      --green: #1b5e20;
-      --amber: #8d6e00;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: Arial, sans-serif;
-      margin: 24px;
-      background: var(--bg);
-      color: var(--text);
-      text-align: center;
-    }
-
-    .painel {
-      max-width: 1400px;
-      margin: 24px auto;
-      background: var(--panel);
-      border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-      padding: 24px;
-    }
-
-    h1 {
-      margin-top: 0;
-      font-size: 30px;
-    }
-
-    h2 {
-      margin-top: 0;
-      font-size: 22px;
-    }
-
-    p {
-      line-height: 1.5;
-    }
-
-    button, input, select {
-      padding: 10px 12px;
-      font-size: 16px;
-      box-sizing: border-box;
-    }
-
-    button {
-      cursor: pointer;
-    }
-
-    .linha-config {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      justify-content: center;
-      margin: 18px 0;
-    }
-
-    .campo {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      min-width: 180px;
-      text-align: left;
-    }
-
-    .campo small {
-      color: var(--muted);
-    }
-
-    #status {
-      min-height: 24px;
-      font-weight: bold;
-      margin-bottom: 10px;
-      color: var(--green);
-    }
-
-    #frequenciaDetectada,
-    #notaDetectada,
-    #desvioCents {
-      font-family: monospace;
-      font-size: 16px;
-      color: #444;
-      margin-top: 6px;
-    }
-
-    #notaDetectada {
-      font-size: 28px;
-      font-weight: bold;
-      color: #111;
-      margin-top: 14px;
-    }
-
-    .grade {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 24px;
-      align-items: start;
-      margin-top: 20px;
-    }
-
-    .subpainel {
-      border: 1px solid #e6e6e6;
-      border-radius: 10px;
-      padding: 18px;
-      background: #fff;
-    }
-
-    canvas {
-      width: 100%;
-      display: block;
-      margin: 12px auto 0;
-      background: #fff;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-    }
-
-    #grafico {
-      max-width: 700px;
-      height: 280px;
-    }
-
-    #circuloQuintas {
-      touch-action: manipulation;
-    }
-
-    .observacao {
-      font-size: 13px;
-      color: var(--muted);
-      margin-top: 18px;
-      line-height: 1.5;
-    }
-
-    .bloco-info {
-      text-align: left;
-      margin-top: 16px;
-      line-height: 1.6;
-      font-size: 15px;
-    }
-
-    .bloco-info strong {
-      color: #111;
-    }
-
-    .botoneria {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      justify-content: center;
-      margin-top: 12px;
-    }
-
-    .botoneria button {
-      min-width: 120px;
-    }
-
-    .tabela {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 18px;
-      font-size: 14px;
-      text-align: left;
-    }
-
-    .tabela th,
-    .tabela td {
-      border: 1px solid #ddd;
-      padding: 8px;
-    }
-
-    .tabela th {
-      background: #f7f7f7;
-    }
-
-    .tag {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 999px;
-      background: #f0f0f0;
-      font-size: 12px;
-      margin-left: 8px;
-      vertical-align: middle;
-    }
-
-    .warn {
-      color: var(--amber);
-      font-weight: bold;
-    }
-
-    .ok {
-      color: var(--green);
-      font-weight: bold;
-    }
-
-    .tabela th small {
-      display: block;
-      font-size: 12px;
-      font-weight: normal;
-      color: #666;
-      margin-top: 2px;
-    }
-
-#medidorCents {
-  max-width: 520px;
-  margin: 14px auto 0;
-}
-
-#escalaCents {
-  position: relative;
-  height: 24px;
-  border-radius: 999px;
-  border: 1px solid #bbb;
-  background: #eee;
-  overflow: hidden;
-}
-
-.marca-centro {
-  position: absolute;
-  left: 50%;
-  top: 0;
-  width: 2px;
-  height: 100%;
-  background: #222;
-  transform: translateX(-50%);
-  opacity: 0.85;
-}
-
-.marca-guia {
-  position: absolute;
-  top: 3px;
-  width: 1px;
-  height: 18px;
-  background: rgba(0,0,0,0.28);
-  transform: translateX(-50%);
-}
-
-/* posições para escala fixa de -40 a +40 */
-.guia-menos-20 { left: 25%; }
-.guia-menos-5  { left: 43.75%; }
-.guia-mais-5   { left: 56.25%; }
-.guia-mais-20  { left: 75%; }
-
-#ponteiroCents {
-  position: absolute;
-  top: -4px;
-  width: 3px;
-  height: 32px;
-  background: #111;
-  left: 50%;
-  transform: translateX(-50%);
-  border-radius: 2px;
-  box-shadow: 0 0 2px rgba(0,0,0,0.35);
-}
-
-#rotulosCents {
-  position: relative;
-  height: 18px;
-  margin-top: 4px;
-  font-size: 12px;
-  color: #555;
-}
-
-#rotulosCents span {
-  position: absolute;
-  transform: translateX(-50%);
-  white-space: nowrap;
-}
-
-#rotuloEsquerda { left: 0%; transform: translateX(0); }
-#rotuloMenos20  { left: 25%; }
-#rotuloMenos5   { left: 43.75%; }
-#rotuloZero     { left: 50%; }
-#rotuloMais5    { left: 56.25%; }
-#rotuloMais20   { left: 75%; }
-#rotuloDireita  { left: 100%; transform: translateX(-100%); }
-
-
-.circulo-quintas-dom {
-  position: relative;
-  width: min(760px, 92vw);
-  aspect-ratio: 1 / 1;
-  height: auto;
-  margin: 18px auto 0;
-  border-radius: 50%;
-  background:
-    radial-gradient(circle at center,
-      #ffffff 0 28%,
-      #f7f9fc 28% 48%,
-      #eef3f8 48% 50%,
-      #ffffff 50% 100%);
-  box-shadow:
-    0 14px 36px rgba(0,0,0,0.10),
-    inset 0 0 0 1px #dfe6ee;
-  overflow: hidden;
-}
-
-.anel-externo,
-.anel-interno {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  pointer-events: none;
-}
-
-.anel-externo {
-  inset: 6.5%;
-  border: 2px solid #d8e0ea;
-}
-
-.anel-interno {
-  inset: 15%;
-  border: 1px solid #e3e8ef;
-}
-
-.miolo-circulo {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 220px;
-  height: 220px;
-  transform: translate(-50%, -50%);
-  border-radius: 50%;
-  background: linear-gradient(180deg, #ffffff 0%, #f7f9fc 100%);
-  box-shadow:
-    0 8px 24px rgba(0,0,0,0.10),
-    inset 0 0 0 1px #dce4ec;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 20px;
-}
-
-.miolo-titulo {
-  font-size: 22px;
-  font-weight: 700;
-  color: #111;
-}
-
-.miolo-nome {
-  margin-top: 10px;
-  font-size: clamp(20px, 2.5vw, 30px);
-  font-weight: 700;
-  color: #1565c0;
-  line-height: 1.2;
-  max-width: 90%;
-}
-
-
-.nota-item .nome {
-  font-size: 22px;
-  font-weight: 700;
-  color: #111;
-  line-height: 1;
-}
-
-.nota-item .valor {
-  font-size: 12px;
-  color: #5b6470;
-  margin-top: 6px;
-}
-
-.rotulo-ajuste {
-  position: absolute;
-  transform: translate(-50%, -50%);
-  min-width: 78px;
-  padding: 7px 10px;
-  border-radius: 12px;
-  background: rgba(255,255,255,0.82);
-  border: 1px solid rgba(219, 227, 236, 0.9);
-  box-shadow: 0 5px 14px rgba(0,0,0,0.08);
-  font-size: 12px;
-  font-weight: 600;
-  color: #334155;
-  text-align: center;
-  white-space: nowrap;
-  z-index: 3;
-  backdrop-filter: blur(2px);
-}
-
-.rotulo-ajuste.neutra {
-  background: rgba(102, 187, 106, 0.3);
-  border-color: rgba(27, 94, 32, 0.28);
-}
-
-.rotulo-ajuste.larga {
-  background: rgba(66, 165, 245, 0.3);
-  border-color: rgba(13, 71, 161, 0.28);
-}
-
-.rotulo-ajuste.estreita {
-  background: rgba(239, 83, 80, 0.3);
-  border-color: rgba(183, 28, 28, 0.28);
-}
-
-.rotulo-ajuste.residual {
-  color: #8d6e00;
-}
-
-.nota-item {
-  position: absolute;
-  width: 11%;
-  height: 11%;
-  min-width: 68px;
-  min-height: 68px;
-  max-width: 82px;
-  max-height: 82px;
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  background: linear-gradient(180deg, #ffffff 0%, #edf3f9 100%);
-  box-shadow:
-    0 6px 18px rgba(0,0,0,0.10),
-    inset 0 0 0 1px #d9e2ec;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  user-select: none;
-  z-index: 4;
-}
-
-.miolo-circulo {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 29%;
-  height: 29%;
-  min-width: 170px;
-  min-height: 170px;
-  transform: translate(-50%, -50%);
-  border-radius: 50%;
-  background: linear-gradient(180deg, #ffffff 0%, #f7f9fc 100%);
-  box-shadow:
-    0 8px 24px rgba(0,0,0,0.10),
-    inset 0 0 0 1px #dce4ec;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 18px;
-  z-index: 5;
-}
-
-
-  </style>
-</head>
-<body>
-  <div class="painel">
-    <h1>Afinador FFT com círculo de quintas editável</h1>
-    <p>
-     Círculo de quintas editável por frações de coma sintônico ou pitagórico.
-    </p>
-
-<div class="bloco-info">
-  <strong>Instruções de uso:</strong><br><br>
-
-  • <strong>Ativar microfone:</strong> inicia a captação de áudio e exibe a frequência detectada, nota e desvio em cents.<br>
-
-  • <strong>Zerar ajustes:</strong> remove todas as alterações aplicadas às quintas, retornando ao estado base do preset selecionado.<br>
-
-  • <strong>Preset de temperamento:</strong> carrega distribuições históricas de quintas (pitagórico, igual, mesotônico, etc.).<br>
-
-  • <strong>Ajuste das quintas:</strong> cada intervalo pode ser alterado por frações de coma pitagórico (c.p.) ou sintônico (c.s.), acumuladas localmente. O fechamento do círculo gera um intervalo residual, localizado entre <strong>Mib–Sol#</strong> ou <strong>Lab–Do#</strong>, conforme a enarmonia selecionada.<br>
-
-• <strong>Estabilidade:</strong> controla a suavização da frequência detectada. Valores maiores tornam a leitura mais estável (menos variação), porém mais lenta para reagir; valores menores deixam a resposta mais rápida, porém mais sensível a flutuações.<br>
-
-</div>
-
-    <div class="linha-config">
-      <div class="campo">
-        <label for="a4Ref">Lá de referência (A4)</label>
-        <input type="number" id="a4Ref" value="440" step="0.1" min="300" max="500">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Afinador editável via FFT</title>
+    <style>
+      :root {
+        --bg: #f4f4f4;
+        --panel: #ffffff;
+        --text: #222;
+        --muted: #666;
+        --line: #d8d8d8;
+        --blue: #1565c0;
+        --red: #d32f2f;
+        --green: #1b5e20;
+        --amber: #8d6e00;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: Arial, sans-serif;
+        margin: 24px;
+        background: var(--bg);
+        color: var(--text);
+        text-align: center;
+      }
+
+      .painel {
+        max-width: 1400px;
+        margin: 24px auto;
+        background: var(--panel);
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        padding: 24px;
+      }
+
+      h1 {
+        margin-top: 0;
+        font-size: 30px;
+      }
+
+      h2 {
+        margin-top: 0;
+        font-size: 22px;
+      }
+
+      p {
+        line-height: 1.5;
+      }
+
+      button,
+      input,
+      select {
+        padding: 10px 12px;
+        font-size: 16px;
+        box-sizing: border-box;
+      }
+
+      button {
+        cursor: pointer;
+      }
+
+      .linha-config {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin: 18px 0;
+      }
+
+      .campo {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-width: 180px;
+        text-align: left;
+      }
+
+      .campo small {
+        color: var(--muted);
+      }
+
+      #status {
+        min-height: 24px;
+        font-weight: bold;
+        margin-bottom: 10px;
+        color: var(--green);
+      }
+
+      #frequenciaDetectada,
+      #notaDetectada,
+      #desvioCents {
+        font-family: monospace;
+        font-size: 16px;
+        color: #444;
+        margin-top: 6px;
+      }
+
+      #notaDetectada {
+        font-size: 28px;
+        font-weight: bold;
+        color: #111;
+        margin-top: 14px;
+      }
+
+      .grade {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 24px;
+        align-items: start;
+        margin-top: 20px;
+      }
+
+      .subpainel {
+        border: 1px solid #e6e6e6;
+        border-radius: 10px;
+        padding: 18px;
+        background: #fff;
+      }
+
+      canvas {
+        width: 100%;
+        display: block;
+        margin: 12px auto 0;
+        background: #fff;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+      }
+
+      #grafico {
+        max-width: 700px;
+        height: 280px;
+      }
+
+      #circuloQuintas {
+        touch-action: manipulation;
+      }
+
+      .observacao {
+        font-size: 13px;
+        color: var(--muted);
+        margin-top: 18px;
+        line-height: 1.5;
+      }
+
+      .bloco-info {
+        text-align: left;
+        margin-top: 16px;
+        line-height: 1.6;
+        font-size: 15px;
+      }
+
+      .bloco-info strong {
+        color: #111;
+      }
+
+      .botoneria {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-top: 12px;
+      }
+
+      .botoneria button {
+        min-width: 120px;
+      }
+
+      .tabela {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 18px;
+        font-size: 14px;
+        text-align: left;
+      }
+
+      .tabela th,
+      .tabela td {
+        border: 1px solid #ddd;
+        padding: 8px;
+      }
+
+      .tabela th {
+        background: #f7f7f7;
+      }
+
+      .tag {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 999px;
+        background: #f0f0f0;
+        font-size: 12px;
+        margin-left: 8px;
+        vertical-align: middle;
+      }
+
+      .warn {
+        color: var(--amber);
+        font-weight: bold;
+      }
+
+      .ok {
+        color: var(--green);
+        font-weight: bold;
+      }
+
+      .tabela th small {
+        display: block;
+        font-size: 12px;
+        font-weight: normal;
+        color: #666;
+        margin-top: 2px;
+      }
+
+      #medidorCents {
+        max-width: 520px;
+        margin: 14px auto 0;
+      }
+
+      #escalaCents {
+        position: relative;
+        height: 24px;
+        border-radius: 999px;
+        border: 1px solid #bbb;
+        background: #eee;
+        overflow: hidden;
+      }
+
+      .marca-centro {
+        position: absolute;
+        left: 50%;
+        top: 0;
+        width: 2px;
+        height: 100%;
+        background: #222;
+        transform: translateX(-50%);
+        opacity: 0.85;
+      }
+
+      .marca-guia {
+        position: absolute;
+        top: 3px;
+        width: 1px;
+        height: 18px;
+        background: rgba(0, 0, 0, 0.28);
+        transform: translateX(-50%);
+      }
+
+      /* posições para escala fixa de -40 a +40 */
+      .guia-menos-20 {
+        left: 25%;
+      }
+
+      .guia-menos-5 {
+        left: 43.75%;
+      }
+
+      .guia-mais-5 {
+        left: 56.25%;
+      }
+
+      .guia-mais-20 {
+        left: 75%;
+      }
+
+      #ponteiroCents {
+        position: absolute;
+        top: -4px;
+        width: 3px;
+        height: 32px;
+        background: #111;
+        left: 50%;
+        transform: translateX(-50%);
+        border-radius: 2px;
+        box-shadow: 0 0 2px rgba(0, 0, 0, 0.35);
+      }
+
+      #rotulosCents {
+        position: relative;
+        height: 18px;
+        margin-top: 4px;
+        font-size: 12px;
+        color: #555;
+      }
+
+      #rotulosCents span {
+        position: absolute;
+        transform: translateX(-50%);
+        white-space: nowrap;
+      }
+
+      #rotuloEsquerda {
+        left: 0%;
+        transform: translateX(0);
+      }
+
+      #rotuloMenos20 {
+        left: 25%;
+      }
+
+      #rotuloMenos5 {
+        left: 43.75%;
+      }
+
+      #rotuloZero {
+        left: 50%;
+      }
+
+      #rotuloMais5 {
+        left: 56.25%;
+      }
+
+      #rotuloMais20 {
+        left: 75%;
+      }
+
+      #rotuloDireita {
+        left: 100%;
+        transform: translateX(-100%);
+      }
+
+      .circulo-quintas-dom {
+        position: relative;
+        width: min(760px, 92vw);
+        aspect-ratio: 1 / 1;
+        height: auto;
+        margin: 18px auto 0;
+        border-radius: 50%;
+        background:
+          radial-gradient(circle at center,
+            #ffffff 0 28%,
+            #f7f9fc 28% 48%,
+            #eef3f8 48% 50%,
+            #ffffff 50% 100%);
+        box-shadow:
+          0 14px 36px rgba(0, 0, 0, 0.10),
+          inset 0 0 0 1px #dfe6ee;
+        overflow: hidden;
+      }
+
+      .anel-externo,
+      .anel-interno {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        pointer-events: none;
+      }
+
+      .anel-externo {
+        inset: 6.5%;
+        border: 2px solid #d8e0ea;
+      }
+
+      .anel-interno {
+        inset: 15%;
+        border: 1px solid #e3e8ef;
+      }
+
+      .miolo-circulo {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 220px;
+        height: 220px;
+        transform: translate(-50%, -50%);
+        border-radius: 50%;
+        background: linear-gradient(180deg, #ffffff 0%, #f7f9fc 100%);
+        box-shadow:
+          0 8px 24px rgba(0, 0, 0, 0.10),
+          inset 0 0 0 1px #dce4ec;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 20px;
+      }
+
+      .miolo-titulo {
+        font-size: 22px;
+        font-weight: 700;
+        color: #111;
+      }
+
+      .miolo-nome {
+        margin-top: 10px;
+        font-size: clamp(20px, 2.5vw, 30px);
+        font-weight: 700;
+        color: #1565c0;
+        line-height: 1.2;
+        max-width: 90%;
+      }
+
+      .nota-item .nome {
+        font-size: 22px;
+        font-weight: 700;
+        color: #111;
+        line-height: 1;
+      }
+
+      .nota-item .valor {
+        font-size: 12px;
+        color: #5b6470;
+        margin-top: 6px;
+      }
+
+      .rotulo-ajuste {
+        position: absolute;
+        transform: translate(-50%, -50%);
+        min-width: 78px;
+        padding: 7px 10px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.82);
+        border: 1px solid rgba(219, 227, 236, 0.9);
+        box-shadow: 0 5px 14px rgba(0, 0, 0, 0.08);
+        font-size: 12px;
+        font-weight: 600;
+        color: #334155;
+        text-align: center;
+        white-space: nowrap;
+        z-index: 3;
+        backdrop-filter: blur(2px);
+      }
+
+      .rotulo-ajuste.neutra {
+        background: rgba(102, 187, 106, 0.3);
+        border-color: rgba(27, 94, 32, 0.28);
+      }
+
+      .rotulo-ajuste.larga {
+        background: rgba(66, 165, 245, 0.3);
+        border-color: rgba(13, 71, 161, 0.28);
+      }
+
+      .rotulo-ajuste.estreita {
+        background: rgba(239, 83, 80, 0.3);
+        border-color: rgba(183, 28, 28, 0.28);
+      }
+
+      .rotulo-ajuste.residual {
+        color: #8d6e00;
+      }
+
+      .nota-item {
+        position: absolute;
+        width: 11%;
+        height: 11%;
+        min-width: 68px;
+        min-height: 68px;
+        max-width: 82px;
+        max-height: 82px;
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        background: linear-gradient(180deg, #ffffff 0%, #edf3f9 100%);
+        box-shadow:
+          0 6px 18px rgba(0, 0, 0, 0.10),
+          inset 0 0 0 1px #d9e2ec;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        user-select: none;
+        z-index: 4;
+      }
+
+      .miolo-circulo {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 29%;
+        height: 29%;
+        min-width: 170px;
+        min-height: 170px;
+        transform: translate(-50%, -50%);
+        border-radius: 50%;
+        background: linear-gradient(180deg, #ffffff 0%, #f7f9fc 100%);
+        box-shadow:
+          0 8px 24px rgba(0, 0, 0, 0.10),
+          inset 0 0 0 1px #dce4ec;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 18px;
+        z-index: 5;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="painel">
+      <h1>Afinador FFT com círculo de quintas editável</h1>
+      <p> Círculo de quintas editável por frações de coma sintônico ou pitagórico. </p>
+      <div class="bloco-info">
+        <strong>Instruções de uso:</strong>
+        <br>
+        <br> • <strong>Ativar microfone:</strong> inicia a captação de áudio e exibe a frequência detectada, nota e desvio em cents. <br> • <strong>Zerar ajustes:</strong> remove todas as alterações aplicadas às quintas, retornando ao estado base do preset selecionado. <br> • <strong>Preset de temperamento:</strong> carrega distribuições históricas de quintas (pitagórico, igual, mesotônico, etc.). <br> • <strong>Ajuste das quintas:</strong> cada intervalo pode ser alterado por frações de coma pitagórico (c.p.) ou sintônico (c.s.), acumuladas localmente. O fechamento do círculo gera um intervalo residual, localizado entre <strong>Mib–Sol#</strong> ou <strong>Lab–Do#</strong>, conforme a enarmonia selecionada. <br> • <strong>Estabilidade:</strong> controla a suavização da frequência detectada. Valores maiores tornam a leitura mais estável (menos variação), porém mais lenta para reagir; valores menores deixam a resposta mais rápida, porém mais sensível a flutuações. <br>
       </div>
-
-      <div class="campo">
-        <label for="freqMaxGrafico">Máx. gráfico (Hz)</label>
-        <input type="number" id="freqMaxGrafico" value="2000" step="50" min="200" max="10000">
-      </div>
-
-      <div class="campo">
-        <label for="suavizacao">Estabilidade</label>
-        <input type="range" id="suavizacao" min="0" max="100" value="70">
-        <div id="valorSuavizacao">70</div>
-      </div>
-
-    </div>
-
-    <div class="botoneria">
-      <button id="btnIniciar" type="button">Ativar microfone</button>
-      
-    </div>
-
-    <div id="status">Microfone desligado.</div>
-    <div id="frequenciaDetectada">Frequência dominante: -- Hz</div>
-    <div id="notaDetectada">--</div>
-    <div id="desvioCents">Desvio: -- cents</div>
-<div id="medidorCents">
-  <div id="escalaCents">
-    <div class="marca-guia guia-menos-20"></div>
-    <div class="marca-guia guia-menos-5"></div>
-    <div class="marca-centro"></div>
-    <div class="marca-guia guia-mais-5"></div>
-    <div class="marca-guia guia-mais-20"></div>
-    <div id="ponteiroCents"></div>
-  </div>
-  <div id="rotulosCents">
-    <span id="rotuloEsquerda">-40</span>
-    <span id="rotuloMenos20">-20</span>
-    <span id="rotuloMenos5">-5</span>
-    <span id="rotuloZero">0</span>
-    <span id="rotuloMais5">+5</span>
-    <span id="rotuloMais20">+20</span>
-    <span id="rotuloDireita">+40</span>
-  </div>
-</div>
-
-    <div class="grade">
-      <div class="subpainel">
-        <h2>Espectro FFT</h2>
-        <canvas id="grafico" width="700" height="280"></canvas>
-        <div class="observacao">
-          A frequência é estimada pelo pico dominante da FFT com suavização.
-          Em alguns casos o detector pode capturar um harmônico em vez da fundamental.
+      <div class="linha-config">
+        <div class="campo">
+          <label for="a4Ref">Lá de referência (A4)</label>
+          <input type="number" id="a4Ref" value="440" step="0.1" min="300" max="500">
+        </div>
+        <div class="campo">
+          <label for="freqMaxGrafico">Máx. gráfico (Hz)</label>
+          <input type="number" id="freqMaxGrafico" value="2000" step="50" min="200" max="10000">
+        </div>
+        <div class="campo">
+          <label for="suavizacao">Estabilidade</label>
+          <input type="range" id="suavizacao" min="0" max="100" value="70">
+          <div id="valorSuavizacao">70</div>
         </div>
       </div>
-
-      <div class="subpainel">
-        <h2>Preset de temperamento</h2>
-        <div class="linha-config">
-          <div class="campo">
-            <label for="presetTemperamento">Preset</label>
-            <select id="presetTemperamento">
-              <option value="pythagorean" selected>Sistema Pitagórico</option>
-              <option value="equal">Igual (-1/12 c.p.)</option>
-              <option value="quarter-comma-meantone">Mesotônico 1/4 c.s.</option>
-              <option value="sixth-comma-meantone">Mesotônico 1/6 c.s.</option>
-              <option value="kirnberger3">Kirnberger III (1779)</option>
-              <option value="werckmeister2">Werckmeister II</option>
-              <option value="werckmeister3">Werckmeister III (4× 1/4 c.s.) (1691)</option>
-              <option value="vallotti">Vallotti (1754)</option>
-              <option value="young2">Young II (1800)</option>
-              <option value="neidhardt-kleine-stadt">Neidhardt – Kleine Stadt (1732)</option>
-              <option value="neidhardt-grosse-stadt">Neidhardt – Große Stadt (1724)</option>
-              <option value="bach-barnes">Bach / Barnes (1979)</option>
-              <option value="bach-lehman">Bach / Lehman (2005)</option>
-            </select>
+      <div class="botoneria">
+        <button id="btnIniciar" type="button">Ativar microfone</button>
+      </div>
+      <div id="status">Microfone desligado.</div>
+      <div id="frequenciaDetectada">Frequência dominante: -- Hz</div>
+      <div id="notaDetectada">--</div>
+      <div id="desvioCents">Desvio: -- cents</div>
+      <div id="medidorCents">
+        <div id="escalaCents">
+          <div class="marca-guia guia-menos-20"></div>
+          <div class="marca-guia guia-menos-5"></div>
+          <div class="marca-centro"></div>
+          <div class="marca-guia guia-mais-5"></div>
+          <div class="marca-guia guia-mais-20"></div>
+          <div id="ponteiroCents"></div>
+        </div>
+        <div id="rotulosCents">
+          <span id="rotuloEsquerda">-40</span>
+          <span id="rotuloMenos20">-20</span>
+          <span id="rotuloMenos5">-5</span>
+          <span id="rotuloZero">0</span>
+          <span id="rotuloMais5">+5</span>
+          <span id="rotuloMais20">+20</span>
+          <span id="rotuloDireita">+40</span>
+        </div>
+      </div>
+      <div class="grade">
+        <div class="subpainel">
+          <h2>Espectro FFT</h2>
+          <canvas id="grafico" width="700" height="280"></canvas>
+          <div class="observacao"> A frequência é estimada pelo pico dominante da FFT com suavização. Em alguns casos o detector pode capturar um harmônico em vez da fundamental. </div>
+        </div>
+        <div class="subpainel">
+          <h2>Preset de temperamento</h2>
+          <div class="linha-config">
+            <div class="campo">
+              <label for="presetTemperamento">Preset</label>
+              <select id="presetTemperamento">
+                <option value="pythagorean" selected>Sistema Pitagórico</option>
+                <option value="equal">Igual (-1/12 c.p.)</option>
+                <option value="quarter-comma-meantone">Mesotônico 1/4 c.s.</option>
+                <option value="sixth-comma-meantone">Mesotônico 1/6 c.s.</option>
+                <option value="kirnberger3">Kirnberger III (1779)</option>
+                <option value="werckmeister2">Werckmeister II</option>
+                <option value="werckmeister3">Werckmeister III (4× 1/4 c.s.) (1691)</option>
+                <option value="vallotti">Vallotti (1754)</option>
+                <option value="young2">Young II (1800)</option>
+                <option value="neidhardt-kleine-stadt">Neidhardt – Kleine Stadt (1732)</option>
+                <option value="neidhardt-grosse-stadt">Neidhardt – Große Stadt (1724)</option>
+                <option value="bach-barnes">Bach / Barnes (1979)</option>
+                <option value="bach-lehman">Bach / Lehman (2005)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="campo">
+          <label for="enarmoniaCorte">Nome da enarmonia</label>
+          <select id="enarmoniaCorte">
+            <option value="solsustenido" selected>Sol#</option>
+            <option value="lab">Lab</option>
+          </select>
+        </div>
+        <div class="subpainel">
+          <h2>Círculo de quintas</h2>
+          <div id="circuloQuintas" class="circulo-quintas-dom">
+            <div class="anel-externo"></div>
+            <div class="anel-interno"></div>
+            <div class="miolo-circulo">
+              <div class="miolo-titulo">Temperamento</div>
+              <div class="miolo-nome" id="nomeTemperamentoCentro">Pitagórico</div>
+            </div>
+          </div>
+          <button id="btnZerarAjustes" type="button">Zerar ajustes</button>
+          <div class="subpainel">
+            <h2>Tabela de ajuste de comas</h2>
+            <div class="observacao"> A edição das quintas é feita pelos campos e botões da tabela abaixo. O valor exibido em cada quinta é o <strong>desvio em relação à quinta justa</strong>. </div>
+            <table class="tabela">
+              <thead>
+                <tr>
+                  <th>Quinta</th>
+                  <th>Ajuste</th>
+                  <th>Valor da quinta</th>
+                  <th>Comando</th>
+                </tr>
+              </thead>
+              <tbody id="tbodyQuintas"></tbody>
+            </table>
           </div>
         </div>
       </div>
-
-<div class="campo">
-  <label for="enarmoniaCorte">Nome da enarmonia</label>
-  <select id="enarmoniaCorte">
-    <option value="solsustenido" selected>Sol#</option>
-    <option value="lab">Lab</option>
-  </select>
-</div>
-
-      <div class="subpainel">
-        <h2>Círculo de quintas</h2>
-        <div id="circuloQuintas" class="circulo-quintas-dom">
-  <div class="anel-externo"></div>
-  <div class="anel-interno"></div>
-
-<div class="miolo-circulo">
-  <div class="miolo-titulo">Temperamento</div>
-  <div class="miolo-nome" id="nomeTemperamentoCentro">Pitagórico</div>
-</div>
-</div>
-
-        <button id="btnZerarAjustes" type="button">Zerar ajustes</button>
-
-
-      <div class="subpainel">
-        <h2>Tabela de ajuste de comas</h2>
-        <div class="observacao">
-          A edição das quintas é feita pelos campos e botões da tabela abaixo.
-          O valor exibido em cada quinta é o <strong>desvio em relação à quinta justa</strong>.
-        </div>
-        <table class="tabela">
-          <thead>
-            <tr>
-              <th>Quinta</th>
-              <th>Ajuste</th>
-              <th>Valor da quinta</th>
-              <th>Comando</th>
-            </tr>
-          </thead>
-          <tbody id="tbodyQuintas"></tbody>
-        </table>
-
-
-      </div>
     </div>
-  </div>
-</div>
+    <div class="subpainel">
+      <h2>Tabela de intervalos - Desvios</h2>
+      <table class="tabela">
+        <thead>
+          <tr>
+            <th>Quinta Justa <br>
+              <small>3:2</small>
+            </th>
+            <th>Terça Maior <br>
+              <small>5:4</small>
+            </th>
+            <th>Terça Menor <br>
+              <small>6:5</small>
+            </th>
+            <th>Sexta Maior <br>
+              <small>5:3</small>
+            </th>
+            <th>Sexta Menor <br>
+              <small>8:5</small>
+            </th>
+          </tr>
+        </thead>
+        <tbody id="tbodyIntervalosMatriz"></tbody>
+      </table>
+    </div>
+    <script>
+      // =========================================================
+      // ÁUDIO / FFT
+      // =========================================================
+      let audioContext = null;
+      let analyser = null;
+      let timeDataArray = null;
+      let freqDataArray = null;
+      let source = null;
+      let stream = null;
+      let animationId = null;
+      let freqSuavizada = null;
+      let suavizado = null;
+      const LIMIAR = 0.003;
+      const btnIniciar = document.getElementById("btnIniciar");
+      const statusEl = document.getElementById("status");
+      const frequenciaEl = document.getElementById("frequenciaDetectada");
+      const notaEl = document.getElementById("notaDetectada");
+      const centsEl = document.getElementById("desvioCents");
+      const a4RefInput = document.getElementById("a4Ref");
+      const freqMaxGraficoInput = document.getElementById("freqMaxGrafico");
+      const suavizacaoInput = document.getElementById("suavizacao");
+      const valorSuavizacaoEl = document.getElementById("valorSuavizacao");
+      const escalaCentsEl = document.getElementById("escalaCents");
+      const ponteiroCentsEl = document.getElementById("ponteiroCents");
+      const rotuloEsquerdaEl = document.getElementById("rotuloEsquerda");
+      const rotuloMenos20El = document.getElementById("rotuloMenos20");
+      const rotuloMenos5El = document.getElementById("rotuloMenos5");
+      const rotuloZeroEl = document.getElementById("rotuloZero");
+      const rotuloMais5El = document.getElementById("rotuloMais5");
+      const rotuloMais20El = document.getElementById("rotuloMais20");
+      const rotuloDireitaEl = document.getElementById("rotuloDireita");
+      const canvasGrafico = document.getElementById("grafico");
+      const ctxGrafico = canvasGrafico.getContext("2d");
+      // =========================================================
+      // TEMPERAMENTO
+      // =========================================================
+      const QUINTA_JUSTA_CENTS = 1200 * Math.log2(3 / 2);
+      const COMA_PITAGORICO = 23.460010384649014;
+      const COMA_SINTONICO = 21.50628959671478;
+      const NOMES_NOTAS = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+      const NOMES_LATINOS = ["Do", "Do#", "Re", "Re#", "Mi", "Fa", "Fa#", "Sol", "Sol#", "La", "La#", "Si"];
+      const ORDEM_QUINTAS = [{
+        de: "Do",
+        para: "Sol",
+        pcDe: 0,
+        pcPara: 7
+      }, {
+        de: "Sol",
+        para: "Re",
+        pcDe: 7,
+        pcPara: 2
+      }, {
+        de: "Re",
+        para: "La",
+        pcDe: 2,
+        pcPara: 9
+      }, {
+        de: "La",
+        para: "Mi",
+        pcDe: 9,
+        pcPara: 4
+      }, {
+        de: "Mi",
+        para: "Si",
+        pcDe: 4,
+        pcPara: 11
+      }, {
+        de: "Si",
+        para: "Fa#",
+        pcDe: 11,
+        pcPara: 6
+      }, {
+        de: "Fa#",
+        para: "Do#",
+        pcDe: 6,
+        pcPara: 1
+      }, {
+        de: "Do#",
+        para: "Sol#",
+        pcDe: 1,
+        pcPara: 8
+      }, {
+        de: "Sol#",
+        para: "Re#",
+        pcDe: 8,
+        pcPara: 3
+      }, {
+        de: "Re#",
+        para: "La#",
+        pcDe: 3,
+        pcPara: 10
+      }, {
+        de: "La#",
+        para: "Fa",
+        pcDe: 10,
+        pcPara: 5
+      }, {
+        de: "Fa",
+        para: "Do",
+        pcDe: 5,
+        pcPara: 0
+      }];
+      const TERCA_MAIOR_PURA_CENTS = 1200 * Math.log2(5 / 4);
+      const QUARTA_JUSTA_CENTS = 1200 * Math.log2(4 / 3);
+      const TERCA_MENOR_PURA_CENTS = 1200 * Math.log2(6 / 5);
+      const SEXTA_MAIOR_PURA_CENTS = 1200 * Math.log2(5 / 3);
+      const SEXTA_MENOR_PURA_CENTS = 1200 * Math.log2(8 / 5);
 
-<div class="subpainel">
-  <h2>Tabela de intervalos - Desvios</h2>
-  <table class="tabela">
-    <thead>
-      <tr>
-        <th>Quinta Justa<br><small>3:2</small></th>
-        <th>Terça Maior<br><small>5:4</small></th>
-        <th>Terça Menor<br><small>6:5</small></th>
-        <th>Sexta Maior<br><small>5:3</small></th>
-        <th>Sexta Menor<br><small>8:5</small></th>
-      </tr>
-    </thead>
-    <tbody id="tbodyIntervalosMatriz"></tbody>
-  </table>
-</div>
-
-  <script>
-    // =========================================================
-    // ÁUDIO / FFT
-    // =========================================================
-    let audioContext = null;
-    let analyser = null;
-    let timeDataArray = null;
-    let freqDataArray = null;
-    let source = null;
-    let stream = null;
-    let animationId = null;
-    let freqSuavizada = null;
-    let suavizado = null;
-
-    const LIMIAR = 0.003;
-
-    const btnIniciar = document.getElementById("btnIniciar");
-    const statusEl = document.getElementById("status");
-    const frequenciaEl = document.getElementById("frequenciaDetectada");
-    const notaEl = document.getElementById("notaDetectada");
-    const centsEl = document.getElementById("desvioCents");
-    const a4RefInput = document.getElementById("a4Ref");
-    const freqMaxGraficoInput = document.getElementById("freqMaxGrafico");
-    const suavizacaoInput = document.getElementById("suavizacao");
-    const valorSuavizacaoEl = document.getElementById("valorSuavizacao");
-const escalaCentsEl = document.getElementById("escalaCents");
-const ponteiroCentsEl = document.getElementById("ponteiroCents");
-
-const rotuloEsquerdaEl = document.getElementById("rotuloEsquerda");
-const rotuloMenos20El = document.getElementById("rotuloMenos20");
-const rotuloMenos5El = document.getElementById("rotuloMenos5");
-const rotuloZeroEl = document.getElementById("rotuloZero");
-const rotuloMais5El = document.getElementById("rotuloMais5");
-const rotuloMais20El = document.getElementById("rotuloMais20");
-const rotuloDireitaEl = document.getElementById("rotuloDireita");
-
-    const canvasGrafico = document.getElementById("grafico");
-    const ctxGrafico = canvasGrafico.getContext("2d");
-
-    // =========================================================
-    // TEMPERAMENTO
-    // =========================================================
-    const QUINTA_JUSTA_CENTS = 1200 * Math.log2(3 / 2);
-    const COMA_PITAGORICO = 23.460010384649014;
-    const COMA_SINTONICO = 21.50628959671478;
-
-    const NOMES_NOTAS = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-    const NOMES_LATINOS = ["Do", "Do#", "Re", "Re#", "Mi", "Fa", "Fa#", "Sol", "Sol#", "La", "La#", "Si"];
-
-    const ORDEM_QUINTAS = [
-      { de: "Do", para: "Sol", pcDe: 0, pcPara: 7 },
-      { de: "Sol", para: "Re", pcDe: 7, pcPara: 2 },
-      { de: "Re", para: "La", pcDe: 2, pcPara: 9 },
-      { de: "La", para: "Mi", pcDe: 9, pcPara: 4 },
-      { de: "Mi", para: "Si", pcDe: 4, pcPara: 11 },
-      { de: "Si", para: "Fa#", pcDe: 11, pcPara: 6 },
-      { de: "Fa#", para: "Do#", pcDe: 6, pcPara: 1 },
-      { de: "Do#", para: "Sol#", pcDe: 1, pcPara: 8 },
-      { de: "Sol#", para: "Re#", pcDe: 8, pcPara: 3 },
-      { de: "Re#", para: "La#", pcDe: 3, pcPara: 10 },
-      { de: "La#", para: "Fa", pcDe: 10, pcPara: 5 },
-      { de: "Fa", para: "Do", pcDe: 5, pcPara: 0 }
-    ];
-
-const TERCA_MAIOR_PURA_CENTS = 1200 * Math.log2(5 / 4);
-const QUARTA_JUSTA_CENTS = 1200 * Math.log2(4 / 3);
-const TERCA_MENOR_PURA_CENTS = 1200 * Math.log2(6 / 5);
-const SEXTA_MAIOR_PURA_CENTS = 1200 * Math.log2(5 / 3);
-const SEXTA_MENOR_PURA_CENTS = 1200 * Math.log2(8 / 5);
-
-function gerarIntervalos(semitons, referencia, corMax) {
-  const lista = [];
-
-  for (let pcBase = 0; pcBase < 12; pcBase++) {
-    const pcAlvo = (pcBase + semitons) % 12;
-
-    lista.push({
-      pcBase,
-      pcAlvo,
-      referencia,
-      corMax
-    });
-  }
-
-  return lista;
-}
-
-const INTERVALOS_COLUNAS = {
-  "Quinta Justa": gerarIntervalos(7, QUINTA_JUSTA_CENTS, COMA_PITAGORICO),
-  "Terça Maior": gerarIntervalos(4, TERCA_MAIOR_PURA_CENTS, COMA_SINTONICO),
-  "Terça Menor": gerarIntervalos(3, TERCA_MENOR_PURA_CENTS, COMA_SINTONICO),
-  "Sexta Maior": gerarIntervalos(9, SEXTA_MAIOR_PURA_CENTS, COMA_SINTONICO),
-  "Sexta Menor": gerarIntervalos(8, SEXTA_MENOR_PURA_CENTS, COMA_SINTONICO)
-};
-
-
-const estadoTemperamento = {
-  quintas: ORDEM_QUINTAS.map((q, i) => ({
-    ...q,
-    index: i,
-    ajusteCents: 0,
-    fracaoCp: "1/12",
-    fracaoCs: "1/4",
-    acumCpNum: 0,
-    acumCpDen: 1,
-    acumCsNum: 0,
-    acumCsDen: 1
-  })),
-  mapaCentsPorPc: new Array(12).fill(0),
-  tabelaFrequenciasMidi: [],
-  fechamentoCents: 0,
-  loboCents: QUINTA_JUSTA_CENTS
-};
-
-let nomeTemperamentoAtual = "Pitagórico";
-let presetFoiModificado = false;
-let usarResidualAutomatica = true;
-let nomeTemperamentoBase = "Pitagórico";
-
-    // =========================================================
-    // UI TEMPERAMENTO
-    // =========================================================
-    const presetTemperamento = document.getElementById("presetTemperamento");
-    const btnZerarAjustes = document.getElementById("btnZerarAjustes");
-    const resumoTemperamentoEl = document.getElementById("resumoTemperamento");
-    const tbodyQuintas = document.getElementById("tbodyQuintas");
-    const tbodyIntervalosMatriz = document.getElementById("tbodyIntervalosMatriz");
-
-    // =========================================================
-    // UTIL
-    // =========================================================
-    function mod(n, m) {
-      return ((n % m) + m) % m;
-    }
-
-    function centsToRatio(cents) {
-      return Math.pow(2, cents / 1200);
-    }
-
-    function ratioToCents(ratio) {
-      return 1200 * Math.log2(ratio);
-    }
-
-    function normalizarClasseCents(cents) {
-      let x = cents % 1200;
-      if (x < 0) x += 1200;
-      return x;
-    }
-
-    function formatSignedCents(v, casas = 3) {
-      const s = v >= 0 ? "+" : "";
-      return s + v.toFixed(casas) + " c";
-    }
-
-    function parseFracaoOuNumero(texto) {
-      const t = String(texto).trim().replace(",", ".");
-
-      if (!t) return NaN;
-
-      if (t.includes("/")) {
-        const [a, b] = t.split("/").map(v => parseFloat(v.trim()));
-        if (isFinite(a) && isFinite(b) && b !== 0) {
-          return a / b;
+      function gerarIntervalos(semitons, referencia, corMax) {
+        const lista = [];
+        for (let pcBase = 0; pcBase < 12; pcBase++) {
+          const pcAlvo = (pcBase + semitons) % 12;
+          lista.push({
+            pcBase,
+            pcAlvo,
+            referencia,
+            corMax
+          });
         }
+        return lista;
+      }
+      const INTERVALOS_COLUNAS = {
+        "Quinta Justa": gerarIntervalos(7, QUINTA_JUSTA_CENTS, COMA_PITAGORICO),
+        "Terça Maior": gerarIntervalos(4, TERCA_MAIOR_PURA_CENTS, COMA_SINTONICO),
+        "Terça Menor": gerarIntervalos(3, TERCA_MENOR_PURA_CENTS, COMA_SINTONICO),
+        "Sexta Maior": gerarIntervalos(9, SEXTA_MAIOR_PURA_CENTS, COMA_SINTONICO),
+        "Sexta Menor": gerarIntervalos(8, SEXTA_MENOR_PURA_CENTS, COMA_SINTONICO)
+      };
+      const estadoTemperamento = {
+        quintas: ORDEM_QUINTAS.map((q, i) => ({
+          ...q,
+          index: i,
+          ajusteCents: 0,
+          fracaoCp: "1/12",
+          fracaoCs: "1/4",
+          acumCpNum: 0,
+          acumCpDen: 1,
+          acumCsNum: 0,
+          acumCsDen: 1
+        })),
+        mapaCentsPorPc: new Array(12).fill(0),
+        tabelaFrequenciasMidi: [],
+        fechamentoCents: 0,
+        loboCents: QUINTA_JUSTA_CENTS
+      };
+      let nomeTemperamentoAtual = "Pitagórico";
+      let presetFoiModificado = false;
+      let usarResidualAutomatica = true;
+      let nomeTemperamentoBase = "Pitagórico";
+      // =========================================================
+      // UI TEMPERAMENTO
+      // =========================================================
+      const presetTemperamento = document.getElementById("presetTemperamento");
+      const btnZerarAjustes = document.getElementById("btnZerarAjustes");
+      const resumoTemperamentoEl = document.getElementById("resumoTemperamento");
+      const tbodyQuintas = document.getElementById("tbodyQuintas");
+      const tbodyIntervalosMatriz = document.getElementById("tbodyIntervalosMatriz");
+      // =========================================================
+      // UTIL
+      // =========================================================
+      function mod(n, m) {
+        return ((n % m) + m) % m;
+      }
+
+      function centsToRatio(cents) {
+        return Math.pow(2, cents / 1200);
+      }
+
+      function ratioToCents(ratio) {
+        return 1200 * Math.log2(ratio);
+      }
+
+      function normalizarClasseCents(cents) {
+        let x = cents % 1200;
+        if (x < 0) x += 1200;
+        return x;
+      }
+
+      function formatSignedCents(v, casas = 3) {
+        const s = v >= 0 ? "+" : "";
+        return s + v.toFixed(casas) + " c";
+      }
+
+      function parseFracaoOuNumero(texto) {
+        const t = String(texto).trim().replace(",", ".");
+        if (!t) return NaN;
+        if (t.includes("/")) {
+          const [a, b] = t.split("/").map(v => parseFloat(v.trim()));
+          if (isFinite(a) && isFinite(b) && b !== 0) {
+            return a / b;
+          }
+          return NaN;
+        }
+        const v = parseFloat(t);
+        return isFinite(v) ? v : NaN;
+      }
+
+      function obterDeltaPorComa(tipo, texto) {
+        const frac = parseFracaoOuNumero(texto);
+        if (!isFinite(frac)) return NaN;
+        if (tipo === "cp") return COMA_PITAGORICO * frac;
+        if (tipo === "cs") return COMA_SINTONICO * frac;
         return NaN;
       }
 
-      const v = parseFloat(t);
-      return isFinite(v) ? v : NaN;
-    }
-
-    function obterDeltaPorComa(tipo, texto) {
-      const frac = parseFracaoOuNumero(texto);
-      if (!isFinite(frac)) return NaN;
-
-      if (tipo === "cp") return COMA_PITAGORICO * frac;
-      if (tipo === "cs") return COMA_SINTONICO * frac;
-
-      return NaN;
-    }
-
-    function obterCoeficienteSuavizacao() {
-      const valor = parseFloat(suavizacaoInput.value) || 50;
-      return valor / 100;
-    }
-
-    function calcularRMS(buffer) {
-      let somaQuadrados = 0;
-      for (let i = 0; i < buffer.length; i++) {
-        somaQuadrados += buffer[i] * buffer[i];
+      function obterCoeficienteSuavizacao() {
+        const valor = parseFloat(suavizacaoInput.value) || 50;
+        return valor / 100;
       }
-      return Math.sqrt(somaQuadrados / buffer.length);
-    }
 
-function limparNota() {
-  frequenciaEl.textContent = "Frequência dominante: -- Hz";
-  notaEl.textContent = "--";
-  centsEl.textContent = "Desvio: -- cents";
-
-  ponteiroCentsEl.style.left = "50%";
-  escalaCentsEl.style.background = "#eee";
-
-  rotuloEsquerdaEl.textContent = "-40";
-  rotuloMenos20El.textContent = "-20";
-  rotuloMenos5El.textContent = "-5";
-  rotuloZeroEl.textContent = "0";
-  rotuloMais5El.textContent = "+5";
-  rotuloMais20El.textContent = "+20";
-  rotuloDireitaEl.textContent = "+40";
-}
-
-
-function calcularIntervaloEntrePc(pcBase, pcAlvo) {
-  const centsBase = estadoTemperamento.mapaCentsPorPc[pcBase];
-  const centsAlvo = estadoTemperamento.mapaCentsPorPc[pcAlvo];
-  return normalizarClasseCents(centsAlvo - centsBase);
-}
-
-function clamp(v, min, max) {
-  return Math.max(min, Math.min(max, v));
-}
-
-
-function mdc(a, b) {
-  a = Math.abs(a);
-  b = Math.abs(b);
-  while (b !== 0) {
-    const t = b;
-    b = a % b;
-    a = t;
-  }
-  return a || 1;
-}
-
-function parseFracaoTexto(texto) {
-  const t = String(texto).trim().replace(",", ".");
-
-  if (!t) return null;
-
-  if (t.includes("/")) {
-    const [aTxt, bTxt] = t.split("/");
-    const a = parseInt(aTxt.trim(), 10);
-    const b = parseInt(bTxt.trim(), 10);
-
-    if (Number.isInteger(a) && Number.isInteger(b) && b !== 0) {
-      return { num: a, den: b };
-    }
-    return null;
-  }
-
-  const v = Number(t);
-  if (!isFinite(v)) return null;
-
-  return { num: v, den: 1 };
-}
-
-function somarFracao(acumNum, acumDen, deltaNum, deltaDen) {
-  const novoNum = acumNum * deltaDen + deltaNum * acumDen;
-  const novoDen = acumDen * deltaDen;
-
-  const divisor = mdc(novoNum, novoDen);
-
-  return {
-    num: novoNum / divisor,
-    den: novoDen / divisor
-  };
-}
-
-function formatarAcumFracao(num, den, sufixo) {
-  if (num === 0) return "0";
-
-  const sinal = num > 0 ? "+" : "-";
-  const absNum = Math.abs(num);
-
-  if (den === 1) {
-    return `${sinal} ${absNum} ${sufixo}`;
-  }
-
-  return `${sinal} ${absNum}/${den} ${sufixo}`;
-}
-
-
-function obterCorteEnarmonico() {
-  return document.getElementById("enarmoniaCorte")?.value || "solsustenido";
-}
-
-function obterIndiceQuintaResidual() {
-  const corte = obterCorteEnarmonico();
-
-  // Sol#  => residual entre Mib e Sol#  => índice 8
-  // Lab   => residual entre Lab e Do#   => índice 7
-  return corte === "lab" ? 7 : 8;
-}
-
-function obterNomeLatinoCirculo(pc) {
-  const corte = obterCorteEnarmonico();
-
-  const nomesBase = {
-    0: "Do",
-    1: "Do#",
-    2: "Re",
-    3: "Mib",
-    4: "Mi",
-    5: "Fa",
-    6: "Fa#",
-    7: "Sol",
-    8: corte === "lab" ? "Lab" : "Sol#",
-    9: "La",
-    10: "Sib",
-    11: "Si"
-  };
-
-  return nomesBase[pc];
-}
-
-function obterNomeIntervaloExibido(pcBase, pcAlvo) {
-  return `${obterNomeLatinoCirculo(pcBase)}–${obterNomeLatinoCirculo(pcAlvo)}`;
-}
-
-function obterNomeQuintaExibida(q, i) {
-  const indiceResidual = obterIndiceQuintaResidual();
-  const corte = obterCorteEnarmonico();
-
-  if (i === indiceResidual) {
-    return corte === "lab" ? "Lab ↔ Do#" : "Mib ↔ Sol#";
-  }
-
-  return `${obterNomeLatinoCirculo(q.pcDe)} → ${obterNomeLatinoCirculo(q.pcPara)}`;
-}
-
-
-function recalcularQuintaResidual() {
-  const novoIndice = obterIndiceQuintaResidual();
-
-  // encontrar a residual antiga
-  estadoTemperamento.quintas.forEach((q, i) => {
-    if (i !== novoIndice) {
-      // se era residual antes (não tem fração), zera
-      if (
-        q.acumCpNum === 0 &&
-        q.acumCsNum === 0 &&
-        Math.abs(q.ajusteCents) > 1e-9
-      ) {
-        q.ajusteCents = 0;
-      }
-    }
-  });
-
-  let somaSemResidual = 0;
-
-  estadoTemperamento.quintas.forEach((q, i) => {
-    if (i === novoIndice) return;
-    somaSemResidual += QUINTA_JUSTA_CENTS + q.ajusteCents;
-  });
-
-  const quintaResidualReal = 8400 - somaSemResidual;
-
-  estadoTemperamento.quintas[novoIndice].ajusteCents =
-    quintaResidualReal - QUINTA_JUSTA_CENTS;
-}
-
-
-function recalcularResidualFracionaria() {
-  const indiceResidual = obterIndiceQuintaResidual();
-
-  let somaCpNum = 0;
-  let somaCpDen = 1;
-
-  let somaCsNum = 0;
-  let somaCsDen = 1;
-
-  estadoTemperamento.quintas.forEach((q, i) => {
-    if (i === indiceResidual) return;
-
-    const somaCp = somarFracao(
-      somaCpNum,
-      somaCpDen,
-      q.acumCpNum,
-      q.acumCpDen
-    );
-    somaCpNum = somaCp.num;
-    somaCpDen = somaCp.den;
-
-    const somaCs = somarFracao(
-      somaCsNum,
-      somaCsDen,
-      q.acumCsNum,
-      q.acumCsDen
-    );
-    somaCsNum = somaCs.num;
-    somaCsDen = somaCs.den;
-  });
-
-  estadoTemperamento.quintas[indiceResidual].acumCpNum = -somaCpNum;
-  estadoTemperamento.quintas[indiceResidual].acumCpDen = somaCpDen;
-
-  estadoTemperamento.quintas[indiceResidual].acumCsNum = -somaCsNum;
-  estadoTemperamento.quintas[indiceResidual].acumCsDen = somaCsDen;
-}
-
-
-function recalcularTemperamento() {
-  if (usarResidualAutomatica) {
-    recalcularQuintaResidual();
-    recalcularResidualFracionaria();
-  }
-
-  estadoTemperamento.mapaCentsPorPc = construirMapaCentsPorPc();
-  recalcularFechamento();
-  estadoTemperamento.tabelaFrequenciasMidi =
-    construirTabelaFrequenciasMidi(parseFloat(a4RefInput.value) || 440);
-
-  renderTabelaQuintas();
-  renderizarCirculoDOM();
-  renderTabelaIntervalosMatriz();
-}
-
-
-function corDesvioIntervalo(erroAbs, erroMax) {
-  const t = clamp(erroAbs / erroMax, 0, 1);
-  const hue = 120 * (1 - t);
-  return `hsl(${hue}, 85%, 45%)`;
-}
-
-function corMedidorCents(cents) {
-  const limite = 40;
-  const erro = Math.abs(cents);
-
-  if (erro >= limite) {
-    return "rgb(211, 47, 47)";
-  }
-
-  if (erro <= 2) {
-    return "rgb(27, 94, 32)";
-  }
-
-  const t = (erro - 2) / (limite - 2);
-  const hue = 120 * (1 - t);
-  return `hsl(${hue}, 85%, 45%)`;
-}
-
-function atualizarMedidorCents(cents) {
-  const limite = 40;
-
-  const centsLimitado = Math.max(-limite, Math.min(limite, cents));
-  const percentual = ((centsLimitado + limite) / (2 * limite)) * 100;
-
-  ponteiroCentsEl.style.left = percentual + "%";
-  escalaCentsEl.style.background = corMedidorCents(cents);
-
-  rotuloEsquerdaEl.textContent = "-40";
-  rotuloMenos20El.textContent = "-20";
-  rotuloMenos5El.textContent = "-5";
-  rotuloZeroEl.textContent = "0";
-  rotuloMais5El.textContent = "+5";
-  rotuloMais20El.textContent = "+20";
-  rotuloDireitaEl.textContent = "+40";
-}
-
-
-
-
-
-
-    // =========================================================
-    // PRESETS
-    // =========================================================
-function zerarAjustes() {
-  estadoTemperamento.quintas.forEach(q => {
-    q.ajusteCents = 0;
-    q.acumCpNum = 0;
-    q.acumCpDen = 1;
-    q.acumCsNum = 0;
-    q.acumCsDen = 1;
-  });
-  recalcularTemperamento();
-}
-
-function aplicarPreset(nome) {
-  nomeTemperamentoAtual = obterNomePresetBonito(nome);
-  nomeTemperamentoBase = nomeTemperamentoAtual;
-  presetFoiModificado = false;
-  usarResidualAutomatica = true;
-
-  zerarAcumuladoresFracionarios();
-
-  estadoTemperamento.quintas.forEach(q => {
-    q.ajusteCents = 0;
-    q.acumCpNum = 0;
-    q.acumCpDen = 1;
-    q.acumCsNum = 0;
-    q.acumCsDen = 1;
-  });
-
-
-  if (nome === "equal") {
-    // cada quinta editável recebe -1/12 c.p.
-    estadoTemperamento.quintas.forEach((q, i) => {
-      if (i === obterIndiceQuintaResidual()) return;
-      q.acumCpNum = -1;
-      q.acumCpDen = 12;
-      q.ajusteCents = -(COMA_PITAGORICO / 12);
-    });
-
-    recalcularTemperamento();
-    return;
-  }
-
-  if (nome === "quarter-comma-meantone") {
-    // cada quinta editável recebe -1/4 c.s.
-    estadoTemperamento.quintas.forEach((q, i) => {
-      if (i === obterIndiceQuintaResidual()) return;
-      q.acumCsNum = -1;
-      q.acumCsDen = 4;
-      q.ajusteCents = -(COMA_SINTONICO / 4);
-    });
-
-    recalcularTemperamento();
-    return;
-  }
-
-  if (nome === "pythagorean") {
-    // 11 quintas justas; residual automática absorve o coma pitagórico
-    recalcularTemperamento();
-    return;
-  }
-
-if (nome === "kirnberger3") {
-  // C–G, G–D, D–A, A–E recebem -1/4 de coma sintônico
-  // as demais ficam puras; a residual automática fecha o ciclo
-
-  [0, 1, 2, 3].forEach(i => {
-    if (i === obterIndiceQuintaResidual()) return;
-
-    estadoTemperamento.quintas[i].acumCsNum = -1;
-    estadoTemperamento.quintas[i].acumCsDen = 4;
-    estadoTemperamento.quintas[i].ajusteCents = -(COMA_SINTONICO / 4);
-  });
-
-  recalcularTemperamento();
-  return;
-}
-
-if (nome === "werckmeister3") {
-  // C–G, G–D, D–A, B–F# recebem -1/4 de coma sintótico
-  // as demais ficam puras; a residual automática fecha o ciclo
-
-  [0, 1, 2, 5].forEach(i => {
-    if (i === obterIndiceQuintaResidual()) return;
-
-    estadoTemperamento.quintas[i].acumCsNum = -1;
-    estadoTemperamento.quintas[i].acumCsDen = 4;
-    estadoTemperamento.quintas[i].ajusteCents = -(COMA_SINTONICO / 4);
-  });
-
-  recalcularTemperamento();
-  return;
-}
-
-if (nome === "werckmeister2") {
-
-  // estreitas (−1/3 c.p.)
-  [0, 2, 4, 6, 10].forEach(i => {
-    if (i === obterIndiceQuintaResidual()) return;
-
-    estadoTemperamento.quintas[i].acumCpNum = -1;
-    estadoTemperamento.quintas[i].acumCpDen = 3;
-    estadoTemperamento.quintas[i].ajusteCents = -(COMA_PITAGORICO / 3);
-  });
-
-  // largas (+1/3 c.p.)
-  [8, 9].forEach(i => {
-    if (i === obterIndiceQuintaResidual()) return;
-
-    estadoTemperamento.quintas[i].acumCpNum = +1;
-    estadoTemperamento.quintas[i].acumCpDen = 3;
-    estadoTemperamento.quintas[i].ajusteCents = +(COMA_PITAGORICO / 3);
-  });
-
-  recalcularTemperamento();
-  return;
-}
-
-if (nome === "vallotti") {
-  // 6 quintas estreitas de -1/6 c.p.:
-  // F-C, C-G, G-D, D-A, A-E, E-B
-  [11, 0, 1, 2, 3, 4].forEach(i => {
-    if (i === obterIndiceQuintaResidual()) return;
-
-    estadoTemperamento.quintas[i].acumCpNum = -1;
-    estadoTemperamento.quintas[i].acumCpDen = 6;
-    estadoTemperamento.quintas[i].ajusteCents = -(COMA_PITAGORICO / 6);
-  });
-
-  // as outras 6 ficam puras
-  recalcularTemperamento();
-  return;
-}
-
-if (nome === "young2") {
-  // 6 quintas estreitas de -1/6 c.p.:
-  // C-G, G-D, D-A, A-E, E-B, B-F#
-  [0, 1, 2, 3, 4, 5].forEach(i => {
-    if (i === obterIndiceQuintaResidual()) return;
-
-    estadoTemperamento.quintas[i].acumCpNum = -1;
-    estadoTemperamento.quintas[i].acumCpDen = 6;
-    estadoTemperamento.quintas[i].ajusteCents = -(COMA_PITAGORICO / 6);
-  });
-
-  // as outras 6 ficam puras
-  recalcularTemperamento();
-  return;
-}
-
-if (nome === "sixth-comma-meantone") {
-    // cada quinta editável recebe -1/6 c.s.
-    estadoTemperamento.quintas.forEach((q, i) => {
-      if (i === obterIndiceQuintaResidual()) return;
-      q.acumCsNum = -1;
-      q.acumCsDen = 6;
-      q.ajusteCents = -(COMA_SINTONICO / 6);
-    });
-
-    recalcularTemperamento();
-    return;
-}
-
-
-if (nome === "bach-barnes") {
-
-  zerarAcumuladoresFracionarios();
-
-  const indicesCs = [0, 1, 2, 3, 5,11]; // quintas com -1/6 c.s.
-
-  indicesCs.forEach(i => {
-    if (i === obterIndiceQuintaResidual()) return;
-
-    estadoTemperamento.quintas[i].acumCsNum = -1;
-    estadoTemperamento.quintas[i].acumCsDen = 6;
-    estadoTemperamento.quintas[i].ajusteCents = -(COMA_SINTONICO / 6);
-  });
-
-  recalcularTemperamento();
-  return;
-}
-
-if (nome === "neidhardt-kleine-stadt") {
- usarResidualAutomatica = false;
-  zerarAcumuladoresFracionarios();
-
-  const cs = [0, 1, 2, 3]; // -1/6 c.s.
-  const cp = [4, 5, 8, 9];    // -1/12 c.p.
-
-  cs.forEach(i => {
-    if (i === obterIndiceQuintaResidual()) return;
-
-    estadoTemperamento.quintas[i].acumCsNum = -1;
-    estadoTemperamento.quintas[i].acumCsDen = 6;
-    estadoTemperamento.quintas[i].ajusteCents = -(COMA_SINTONICO / 6);
-  });
-
-  cp.forEach(i => {
-    if (i === obterIndiceQuintaResidual()) return;
-
-    estadoTemperamento.quintas[i].acumCpNum = -1;
-    estadoTemperamento.quintas[i].acumCpDen = 12;
-    estadoTemperamento.quintas[i].ajusteCents = -(COMA_PITAGORICO / 12);
-  });
-
-  recalcularTemperamento();
-  return;
-}
-
-if (nome === "neidhardt-grosse-stadt") {
-
-  zerarAcumuladoresFracionarios();
-
-  const cs = [0, 1, 2]; // -1/6 c.s.
-  const cp = [3, 5, 6, 7,9,10]; // -1/12 c.p.
-
-  cs.forEach(i => {
-    if (i === obterIndiceQuintaResidual()) return;
-
-    estadoTemperamento.quintas[i].acumCsNum = -1;
-    estadoTemperamento.quintas[i].acumCsDen = 6;
-    estadoTemperamento.quintas[i].ajusteCents = -(COMA_SINTONICO / 6);
-  });
-
-  cp.forEach(i => {
-    if (i === obterIndiceQuintaResidual()) return;
-
-    estadoTemperamento.quintas[i].acumCpNum = -1;
-    estadoTemperamento.quintas[i].acumCpDen = 12;
-    estadoTemperamento.quintas[i].ajusteCents = -(COMA_PITAGORICO / 12);
-  });
-
-  recalcularTemperamento();
-  return;
-}
-
-
-if (nome === "bach-lehman") {
- usarResidualAutomatica = false;
-  zerarAcumuladoresFracionarios();
-
-  const csNeg = [0, 1, 2, 3, 11]; // -1/6 c.s.
-  const cpNeg = [7, 8, 9];        // -1/12 c.p.
-  const cpPos = [10];             // +1/12 c.p.
-
-  csNeg.forEach(i => {
-    if (i === obterIndiceQuintaResidual()) return;
-
-    estadoTemperamento.quintas[i].acumCsNum = -1;
-    estadoTemperamento.quintas[i].acumCsDen = 6;
-    estadoTemperamento.quintas[i].ajusteCents = -(COMA_SINTONICO / 6);
-  });
-
-  cpNeg.forEach(i => {
-    if (i === obterIndiceQuintaResidual()) return;
-
-    estadoTemperamento.quintas[i].acumCpNum = -1;
-    estadoTemperamento.quintas[i].acumCpDen = 12;
-    estadoTemperamento.quintas[i].ajusteCents = -(COMA_PITAGORICO / 12);
-  });
-
-  cpPos.forEach(i => {
-    if (i === obterIndiceQuintaResidual()) return;
-
-    estadoTemperamento.quintas[i].acumCpNum = +1;
-    estadoTemperamento.quintas[i].acumCpDen = 12;
-    estadoTemperamento.quintas[i].ajusteCents = +(COMA_PITAGORICO / 12);
-  });
-
-  recalcularTemperamento();
-  return;
-}
-
-
-
-
-
-
-
-}
-
-
-    // =========================================================
-    // MOTOR DO TEMPERAMENTO
-    // =========================================================
-function construirMapaCentsPorPc() {
-  const mapa = new Array(12).fill(null);
-  mapa[0] = 0; // Do = 0
-
-  let acumulado = 0;
-
-  for (let i = 0; i < 11; i++) {
-    const q = estadoTemperamento.quintas[i];
-    const quintaAtual = QUINTA_JUSTA_CENTS + q.ajusteCents;
-    acumulado += quintaAtual;
-    mapa[q.pcPara] = normalizarClasseCents(acumulado);
-  }
-
-  return mapa.map(v => v === null ? 0 : v);
-}
-
-function construirTabelaFrequenciasMidi(a4 = 440) {
-  const tabela = [];
-
-  // mapa em relação a Do = 0
-  const centsA = estadoTemperamento.mapaCentsPorPc[9];
-
-  // A4 = C0 * 2^4 * razão_da_classe_A
-  const freqDo0 = a4 / (Math.pow(2, 4) * centsToRatio(centsA));
-
-  for (let midi = 0; midi <= 127; midi++) {
-    const pc = mod(midi, 12);
-    const oitavaRelativaAoC0 = Math.floor(midi / 12) - 1;
-
-    const freq =
-      freqDo0 *
-      Math.pow(2, oitavaRelativaAoC0) *
-      centsToRatio(estadoTemperamento.mapaCentsPorPc[pc]);
-
-    tabela[midi] = freq;
-  }
-
-  return tabela;
-}
-
-
-    function recalcularFechamento() {
-      const soma12 = estadoTemperamento.quintas.reduce((acc, q) => {
-        return acc + QUINTA_JUSTA_CENTS + q.ajusteCents;
-      }, 0);
-
-      estadoTemperamento.fechamentoCents = soma12 - 8400;
-      // lobo implícito se as 11 primeiras forem tomadas como caminho principal
-      const soma11 = estadoTemperamento.quintas.slice(0, 11).reduce((acc, q) => {
-        return acc + QUINTA_JUSTA_CENTS + q.ajusteCents;
-      }, 0);
-
-      estadoTemperamento.loboCents = 8400 - soma11;
-    }
-
-
-    function valorQuintaReal(index) {
-      return QUINTA_JUSTA_CENTS + estadoTemperamento.quintas[index].ajusteCents;
-    }
-
-    function ajustarQuinta(index, deltaCents) {
-      estadoTemperamento.quintas[index].ajusteCents += deltaCents;
-
-      // virou custom
-      if (!presetFoiModificado) {
-           presetFoiModificado = true;
-           usarResidualAutomatica = true;
+      function calcularRMS(buffer) {
+        let somaQuadrados = 0;
+        for (let i = 0; i < buffer.length; i++) {
+          somaQuadrados += buffer[i] * buffer[i];
         }
+        return Math.sqrt(somaQuadrados / buffer.length);
+      }
 
-        recalcularTemperamento();
+      function limparNota() {
+        frequenciaEl.textContent = "Frequência dominante: -- Hz";
+        notaEl.textContent = "--";
+        centsEl.textContent = "Desvio: -- cents";
+        ponteiroCentsEl.style.left = "50%";
+        escalaCentsEl.style.background = "#eee";
+        rotuloEsquerdaEl.textContent = "-40";
+        rotuloMenos20El.textContent = "-20";
+        rotuloMenos5El.textContent = "-5";
+        rotuloZeroEl.textContent = "0";
+        rotuloMais5El.textContent = "+5";
+        rotuloMais20El.textContent = "+20";
+        rotuloDireitaEl.textContent = "+40";
+      }
+
+      function calcularIntervaloEntrePc(pcBase, pcAlvo) {
+        const centsBase = estadoTemperamento.mapaCentsPorPc[pcBase];
+        const centsAlvo = estadoTemperamento.mapaCentsPorPc[pcAlvo];
+        return normalizarClasseCents(centsAlvo - centsBase);
+      }
+
+      function clamp(v, min, max) {
+        return Math.max(min, Math.min(max, v));
+      }
+
+      function mdc(a, b) {
+        a = Math.abs(a);
+        b = Math.abs(b);
+        while (b !== 0) {
+          const t = b;
+          b = a % b;
+          a = t;
+        }
+        return a || 1;
+      }
+
+      function parseFracaoTexto(texto) {
+        const t = String(texto).trim().replace(",", ".");
+        if (!t) return null;
+        if (t.includes("/")) {
+          const [aTxt, bTxt] = t.split("/");
+          const a = parseInt(aTxt.trim(), 10);
+          const b = parseInt(bTxt.trim(), 10);
+          if (Number.isInteger(a) && Number.isInteger(b) && b !== 0) {
+            return {
+              num: a,
+              den: b
+            };
+          }
+          return null;
+        }
+        const v = Number(t);
+        if (!isFinite(v)) return null;
+        return {
+          num: v,
+          den: 1
+        };
+      }
+
+      function somarFracao(acumNum, acumDen, deltaNum, deltaDen) {
+        const novoNum = acumNum * deltaDen + deltaNum * acumDen;
+        const novoDen = acumDen * deltaDen;
+        const divisor = mdc(novoNum, novoDen);
+        return {
+          num: novoNum / divisor,
+          den: novoDen / divisor
+        };
+      }
+
+      function formatarAcumFracao(num, den, sufixo) {
+        if (num === 0) return "0";
+        const sinal = num > 0 ? "+" : "-";
+        const absNum = Math.abs(num);
+        if (den === 1) {
+          return `${sinal} ${absNum} ${sufixo}`;
+        }
+        return `${sinal} ${absNum}/${den} ${sufixo}`;
+      }
+
+      function obterCorteEnarmonico() {
+        return document.getElementById("enarmoniaCorte")?.value || "solsustenido";
+      }
+
+      function obterIndiceQuintaResidual() {
+        const corte = obterCorteEnarmonico();
+        // Sol#  => residual entre Mib e Sol#  => índice 8
+        // Lab   => residual entre Lab e Do#   => índice 7
+        return corte === "lab" ? 7 : 8;
+      }
+
+      function obterNomeLatinoCirculo(pc) {
+        const corte = obterCorteEnarmonico();
+        const nomesBase = {
+          0: "Do",
+          1: "Do#",
+          2: "Re",
+          3: "Mib",
+          4: "Mi",
+          5: "Fa",
+          6: "Fa#",
+          7: "Sol",
+          8: corte === "lab" ? "Lab" : "Sol#",
+          9: "La",
+          10: "Sib",
+          11: "Si"
+        };
+        return nomesBase[pc];
+      }
+
+      function obterNomeIntervaloExibido(pcBase, pcAlvo) {
+        return `${obterNomeLatinoCirculo(pcBase)}–${obterNomeLatinoCirculo(pcAlvo)}`;
+      }
+
+      function obterNomeQuintaExibida(q, i) {
+        const indiceResidual = obterIndiceQuintaResidual();
+        const corte = obterCorteEnarmonico();
+        if (i === indiceResidual) {
+          return corte === "lab" ? "Lab ↔ Do#" : "Mib ↔ Sol#";
+        }
+        return `${obterNomeLatinoCirculo(q.pcDe)} → ${obterNomeLatinoCirculo(q.pcPara)}`;
+      }
+
+      function recalcularQuintaResidual() {
+        const novoIndice = obterIndiceQuintaResidual();
+        // encontrar a residual antiga
+        estadoTemperamento.quintas.forEach((q, i) => {
+          if (i !== novoIndice) {
+            // se era residual antes (não tem fração), zera
+            if (q.acumCpNum === 0 && q.acumCsNum === 0 && Math.abs(q.ajusteCents) > 1e-9) {
+              q.ajusteCents = 0;
             }
+          }
+        });
+        let somaSemResidual = 0;
+        estadoTemperamento.quintas.forEach((q, i) => {
+          if (i === novoIndice) return;
+          somaSemResidual += QUINTA_JUSTA_CENTS + q.ajusteCents;
+        });
+        const quintaResidualReal = 8400 - somaSemResidual;
+        estadoTemperamento.quintas[novoIndice].ajusteCents = quintaResidualReal - QUINTA_JUSTA_CENTS;
+      }
 
-function obterLinhasComa(q, i) {
-  const linhas = [];
-  const indiceResidual = obterIndiceQuintaResidual();
+      function recalcularResidualFracionaria() {
+        const indiceResidual = obterIndiceQuintaResidual();
+        let somaCpNum = 0;
+        let somaCpDen = 1;
+        let somaCsNum = 0;
+        let somaCsDen = 1;
+        estadoTemperamento.quintas.forEach((q, i) => {
+          if (i === indiceResidual) return;
+          const somaCp = somarFracao(somaCpNum, somaCpDen, q.acumCpNum, q.acumCpDen);
+          somaCpNum = somaCp.num;
+          somaCpDen = somaCp.den;
+          const somaCs = somarFracao(somaCsNum, somaCsDen, q.acumCsNum, q.acumCsDen);
+          somaCsNum = somaCs.num;
+          somaCsDen = somaCs.den;
+        });
+        estadoTemperamento.quintas[indiceResidual].acumCpNum = -somaCpNum;
+        estadoTemperamento.quintas[indiceResidual].acumCpDen = somaCpDen;
+        estadoTemperamento.quintas[indiceResidual].acumCsNum = -somaCsNum;
+        estadoTemperamento.quintas[indiceResidual].acumCsDen = somaCsDen;
+      }
 
-  if (q.acumCpNum !== 0) {
-    linhas.push(formatarAcumFracao(q.acumCpNum, q.acumCpDen, "c.p."));
-  }
+      function recalcularTemperamento() {
+        if (usarResidualAutomatica) {
+          recalcularQuintaResidual();
+          recalcularResidualFracionaria();
+        }
+        estadoTemperamento.mapaCentsPorPc = construirMapaCentsPorPc();
+        recalcularFechamento();
+        estadoTemperamento.tabelaFrequenciasMidi = construirTabelaFrequenciasMidi(parseFloat(a4RefInput.value) || 440);
+        renderTabelaQuintas();
+        renderizarCirculoDOM();
+        renderTabelaIntervalosMatriz();
+      }
 
-  if (q.acumCsNum !== 0) {
-    linhas.push(formatarAcumFracao(q.acumCsNum, q.acumCsDen, "c.s."));
-  }
+      function corDesvioIntervalo(erroAbs, erroMax) {
+        const t = clamp(erroAbs / erroMax, 0, 1);
+        const hue = 120 * (1 - t);
+        return `hsl(${hue}, 85%, 45%)`;
+      }
 
-  if (i === indiceResidual) {
-    if (linhas.length === 0) {
-      linhas.push("residual");
-    }
-    linhas.push(formatSignedCents(q.ajusteCents, 2));
-    return linhas;
-  }
+      function corMedidorCents(cents) {
+        const limite = 40;
+        const erro = Math.abs(cents);
+        if (erro >= limite) {
+          return "rgb(211, 47, 47)";
+        }
+        if (erro <= 2) {
+          return "rgb(27, 94, 32)";
+        }
+        const t = (erro - 2) / (limite - 2);
+        const hue = 120 * (1 - t);
+        return `hsl(${hue}, 85%, 45%)`;
+      }
 
-  if (linhas.length === 0) {
-    linhas.push("0");
-  }
+      function atualizarMedidorCents(cents) {
+        const limite = 40;
+        const centsLimitado = Math.max(-limite, Math.min(limite, cents));
+        const percentual = ((centsLimitado + limite) / (2 * limite)) * 100;
+        ponteiroCentsEl.style.left = percentual + "%";
+        escalaCentsEl.style.background = corMedidorCents(cents);
+        rotuloEsquerdaEl.textContent = "-40";
+        rotuloMenos20El.textContent = "-20";
+        rotuloMenos5El.textContent = "-5";
+        rotuloZeroEl.textContent = "0";
+        rotuloMais5El.textContent = "+5";
+        rotuloMais20El.textContent = "+20";
+        rotuloDireitaEl.textContent = "+40";
+      }
+      // =========================================================
+      // PRESETS
+      // =========================================================
+      function zerarAjustes() {
+        estadoTemperamento.quintas.forEach(q => {
+          q.ajusteCents = 0;
+          q.acumCpNum = 0;
+          q.acumCpDen = 1;
+          q.acumCsNum = 0;
+          q.acumCsDen = 1;
+        });
+        recalcularTemperamento();
+      }
 
-  return linhas;
-}
+      function aplicarPreset(nome) {
+        nomeTemperamentoAtual = obterNomePresetBonito(nome);
+        nomeTemperamentoBase = nomeTemperamentoAtual;
+        presetFoiModificado = false;
+        usarResidualAutomatica = true;
+        zerarAcumuladoresFracionarios();
+        estadoTemperamento.quintas.forEach(q => {
+          q.ajusteCents = 0;
+          q.acumCpNum = 0;
+          q.acumCpDen = 1;
+          q.acumCsNum = 0;
+          q.acumCsDen = 1;
+        });
+        if (nome === "equal") {
+          // cada quinta editável recebe -1/12 c.p.
+          estadoTemperamento.quintas.forEach((q, i) => {
+            if (i === obterIndiceQuintaResidual()) return;
+            q.acumCpNum = -1;
+            q.acumCpDen = 12;
+            q.ajusteCents = -(COMA_PITAGORICO / 12);
+          });
+          recalcularTemperamento();
+          return;
+        }
+        if (nome === "quarter-comma-meantone") {
+          // cada quinta editável recebe -1/4 c.s.
+          estadoTemperamento.quintas.forEach((q, i) => {
+            if (i === obterIndiceQuintaResidual()) return;
+            q.acumCsNum = -1;
+            q.acumCsDen = 4;
+            q.ajusteCents = -(COMA_SINTONICO / 4);
+          });
+          recalcularTemperamento();
+          return;
+        }
+        if (nome === "pythagorean") {
+          // 11 quintas justas; residual automática absorve o coma pitagórico
+          recalcularTemperamento();
+          return;
+        }
+        if (nome === "kirnberger3") {
+          // C–G, G–D, D–A, A–E recebem -1/4 de coma sintônico
+          // as demais ficam puras; a residual automática fecha o ciclo
+          [0, 1, 2, 3].forEach(i => {
+            if (i === obterIndiceQuintaResidual()) return;
+            estadoTemperamento.quintas[i].acumCsNum = -1;
+            estadoTemperamento.quintas[i].acumCsDen = 4;
+            estadoTemperamento.quintas[i].ajusteCents = -(COMA_SINTONICO / 4);
+          });
+          recalcularTemperamento();
+          return;
+        }
+        if (nome === "werckmeister3") {
+          // C–G, G–D, D–A, B–F# recebem -1/4 de coma sintótico
+          // as demais ficam puras; a residual automática fecha o ciclo
+          [0, 1, 2, 5].forEach(i => {
+            if (i === obterIndiceQuintaResidual()) return;
+            estadoTemperamento.quintas[i].acumCsNum = -1;
+            estadoTemperamento.quintas[i].acumCsDen = 4;
+            estadoTemperamento.quintas[i].ajusteCents = -(COMA_SINTONICO / 4);
+          });
+          recalcularTemperamento();
+          return;
+        }
+        if (nome === "werckmeister2") {
+          // estreitas (−1/3 c.p.)
+          [0, 2, 4, 6, 10].forEach(i => {
+            if (i === obterIndiceQuintaResidual()) return;
+            estadoTemperamento.quintas[i].acumCpNum = -1;
+            estadoTemperamento.quintas[i].acumCpDen = 3;
+            estadoTemperamento.quintas[i].ajusteCents = -(COMA_PITAGORICO / 3);
+          });
+          // largas (+1/3 c.p.)
+          [8, 9].forEach(i => {
+            if (i === obterIndiceQuintaResidual()) return;
+            estadoTemperamento.quintas[i].acumCpNum = +1;
+            estadoTemperamento.quintas[i].acumCpDen = 3;
+            estadoTemperamento.quintas[i].ajusteCents = +(COMA_PITAGORICO / 3);
+          });
+          recalcularTemperamento();
+          return;
+        }
+        if (nome === "vallotti") {
+          // 6 quintas estreitas de -1/6 c.p.:
+          // F-C, C-G, G-D, D-A, A-E, E-B
+          [11, 0, 1, 2, 3, 4].forEach(i => {
+            if (i === obterIndiceQuintaResidual()) return;
+            estadoTemperamento.quintas[i].acumCpNum = -1;
+            estadoTemperamento.quintas[i].acumCpDen = 6;
+            estadoTemperamento.quintas[i].ajusteCents = -(COMA_PITAGORICO / 6);
+          });
+          // as outras 6 ficam puras
+          recalcularTemperamento();
+          return;
+        }
+        if (nome === "young2") {
+          // 6 quintas estreitas de -1/6 c.p.:
+          // C-G, G-D, D-A, A-E, E-B, B-F#
+          [0, 1, 2, 3, 4, 5].forEach(i => {
+            if (i === obterIndiceQuintaResidual()) return;
+            estadoTemperamento.quintas[i].acumCpNum = -1;
+            estadoTemperamento.quintas[i].acumCpDen = 6;
+            estadoTemperamento.quintas[i].ajusteCents = -(COMA_PITAGORICO / 6);
+          });
+          // as outras 6 ficam puras
+          recalcularTemperamento();
+          return;
+        }
+        if (nome === "sixth-comma-meantone") {
+          // cada quinta editável recebe -1/6 c.s.
+          estadoTemperamento.quintas.forEach((q, i) => {
+            if (i === obterIndiceQuintaResidual()) return;
+            q.acumCsNum = -1;
+            q.acumCsDen = 6;
+            q.ajusteCents = -(COMA_SINTONICO / 6);
+          });
+          recalcularTemperamento();
+          return;
+        }
+        if (nome === "bach-barnes") {
+          zerarAcumuladoresFracionarios();
+          const indicesCs = [0, 1, 2, 3, 5, 11]; // quintas com -1/6 c.s.
+          indicesCs.forEach(i => {
+            if (i === obterIndiceQuintaResidual()) return;
+            estadoTemperamento.quintas[i].acumCsNum = -1;
+            estadoTemperamento.quintas[i].acumCsDen = 6;
+            estadoTemperamento.quintas[i].ajusteCents = -(COMA_SINTONICO / 6);
+          });
+          recalcularTemperamento();
+          return;
+        }
+        if (nome === "neidhardt-kleine-stadt") {
+          usarResidualAutomatica = false;
+          zerarAcumuladoresFracionarios();
+          const cs = [0, 1, 2, 3]; // -1/6 c.s.
+          const cp = [4, 5, 8, 9]; // -1/12 c.p.
+          cs.forEach(i => {
+            if (i === obterIndiceQuintaResidual()) return;
+            estadoTemperamento.quintas[i].acumCsNum = -1;
+            estadoTemperamento.quintas[i].acumCsDen = 6;
+            estadoTemperamento.quintas[i].ajusteCents = -(COMA_SINTONICO / 6);
+          });
+          cp.forEach(i => {
+            if (i === obterIndiceQuintaResidual()) return;
+            estadoTemperamento.quintas[i].acumCpNum = -1;
+            estadoTemperamento.quintas[i].acumCpDen = 12;
+            estadoTemperamento.quintas[i].ajusteCents = -(COMA_PITAGORICO / 12);
+          });
+          recalcularTemperamento();
+          return;
+        }
+        if (nome === "neidhardt-grosse-stadt") {
+          zerarAcumuladoresFracionarios();
+          const cs = [0, 1, 2]; // -1/6 c.s.
+          const cp = [3, 5, 6, 7, 9, 10]; // -1/12 c.p.
+          cs.forEach(i => {
+            if (i === obterIndiceQuintaResidual()) return;
+            estadoTemperamento.quintas[i].acumCsNum = -1;
+            estadoTemperamento.quintas[i].acumCsDen = 6;
+            estadoTemperamento.quintas[i].ajusteCents = -(COMA_SINTONICO / 6);
+          });
+          cp.forEach(i => {
+            if (i === obterIndiceQuintaResidual()) return;
+            estadoTemperamento.quintas[i].acumCpNum = -1;
+            estadoTemperamento.quintas[i].acumCpDen = 12;
+            estadoTemperamento.quintas[i].ajusteCents = -(COMA_PITAGORICO / 12);
+          });
+          recalcularTemperamento();
+          return;
+        }
+        if (nome === "bach-lehman") {
+          usarResidualAutomatica = false;
+          zerarAcumuladoresFracionarios();
+          const csNeg = [0, 1, 2, 3, 11]; // -1/6 c.s.
+          const cpNeg = [7, 8, 9]; // -1/12 c.p.
+          const cpPos = [10]; // +1/12 c.p.
+          csNeg.forEach(i => {
+            if (i === obterIndiceQuintaResidual()) return;
+            estadoTemperamento.quintas[i].acumCsNum = -1;
+            estadoTemperamento.quintas[i].acumCsDen = 6;
+            estadoTemperamento.quintas[i].ajusteCents = -(COMA_SINTONICO / 6);
+          });
+          cpNeg.forEach(i => {
+            if (i === obterIndiceQuintaResidual()) return;
+            estadoTemperamento.quintas[i].acumCpNum = -1;
+            estadoTemperamento.quintas[i].acumCpDen = 12;
+            estadoTemperamento.quintas[i].ajusteCents = -(COMA_PITAGORICO / 12);
+          });
+          cpPos.forEach(i => {
+            if (i === obterIndiceQuintaResidual()) return;
+            estadoTemperamento.quintas[i].acumCpNum = +1;
+            estadoTemperamento.quintas[i].acumCpDen = 12;
+            estadoTemperamento.quintas[i].ajusteCents = +(COMA_PITAGORICO / 12);
+          });
+          recalcularTemperamento();
+          return;
+        }
+      }
+      // =========================================================
+      // MOTOR DO TEMPERAMENTO
+      // =========================================================
+      function construirMapaCentsPorPc() {
+        const mapa = new Array(12).fill(null);
+        mapa[0] = 0; // Do = 0
+        let acumulado = 0;
+        for (let i = 0; i < 11; i++) {
+          const q = estadoTemperamento.quintas[i];
+          const quintaAtual = QUINTA_JUSTA_CENTS + q.ajusteCents;
+          acumulado += quintaAtual;
+          mapa[q.pcPara] = normalizarClasseCents(acumulado);
+        }
+        return mapa.map(v => v === null ? 0 : v);
+      }
 
+      function construirTabelaFrequenciasMidi(a4 = 440) {
+        const tabela = [];
+        // mapa em relação a Do = 0
+        const centsA = estadoTemperamento.mapaCentsPorPc[9];
+        // A4 = C0 * 2^4 * razão_da_classe_A
+        const freqDo0 = a4 / (Math.pow(2, 4) * centsToRatio(centsA));
+        for (let midi = 0; midi <= 127; midi++) {
+          const pc = mod(midi, 12);
+          const oitavaRelativaAoC0 = Math.floor(midi / 12) - 1;
+          const freq = freqDo0 * Math.pow(2, oitavaRelativaAoC0) * centsToRatio(estadoTemperamento.mapaCentsPorPc[pc]);
+          tabela[midi] = freq;
+        }
+        return tabela;
+      }
 
-function zerarAcumuladoresFracionarios() {
-  estadoTemperamento.quintas.forEach(q => {
-    q.acumCpNum = 0;
-    q.acumCpDen = 1;
-    q.acumCsNum = 0;
-    q.acumCsDen = 1;
-  });
-}
+      function recalcularFechamento() {
+        const soma12 = estadoTemperamento.quintas.reduce((acc, q) => {
+          return acc + QUINTA_JUSTA_CENTS + q.ajusteCents;
+        }, 0);
+        estadoTemperamento.fechamentoCents = soma12 - 8400;
+        // lobo implícito se as 11 primeiras forem tomadas como caminho principal
+        const soma11 = estadoTemperamento.quintas.slice(0, 11).reduce((acc, q) => {
+          return acc + QUINTA_JUSTA_CENTS + q.ajusteCents;
+        }, 0);
+        estadoTemperamento.loboCents = 8400 - soma11;
+      }
 
-function corDesvioIntervalo(erroAbs, erroMax) {
-  const t = clamp(erroAbs / erroMax, 0, 1);
-  const hue = 120 * (1 - t);
-  return `hsl(${hue}, 85%, 45%)`;
-}
+      function valorQuintaReal(index) {
+        return QUINTA_JUSTA_CENTS + estadoTemperamento.quintas[index].ajusteCents;
+      }
 
-function htmlCelulaIntervalo(item) {
-  const valor = calcularIntervaloEntrePc(item.pcBase, item.pcAlvo);
-  const erro = valor - item.referencia;
-  const erroAbs = Math.abs(erro);
-  const cor = corDesvioIntervalo(erroAbs, item.corMax);
+      function ajustarQuinta(index, deltaCents) {
+        estadoTemperamento.quintas[index].ajusteCents += deltaCents;
+        // virou custom
+        if (!presetFoiModificado) {
+          presetFoiModificado = true;
+          usarResidualAutomatica = true;
+        }
+        recalcularTemperamento();
+      }
 
-  return `
-    <div style="
+      function obterLinhasComa(q, i) {
+        const linhas = [];
+        const indiceResidual = obterIndiceQuintaResidual();
+        if (q.acumCpNum !== 0) {
+          linhas.push(formatarAcumFracao(q.acumCpNum, q.acumCpDen, "c.p."));
+        }
+        if (q.acumCsNum !== 0) {
+          linhas.push(formatarAcumFracao(q.acumCsNum, q.acumCsDen, "c.s."));
+        }
+        if (i === indiceResidual) {
+          if (linhas.length === 0) {
+            linhas.push("residual");
+          }
+          linhas.push(formatSignedCents(q.ajusteCents, 2));
+          return linhas;
+        }
+        if (linhas.length === 0) {
+          linhas.push("0");
+        }
+        return linhas;
+      }
+
+      function zerarAcumuladoresFracionarios() {
+        estadoTemperamento.quintas.forEach(q => {
+          q.acumCpNum = 0;
+          q.acumCpDen = 1;
+          q.acumCsNum = 0;
+          q.acumCsDen = 1;
+        });
+      }
+
+      function corDesvioIntervalo(erroAbs, erroMax) {
+        const t = clamp(erroAbs / erroMax, 0, 1);
+        const hue = 120 * (1 - t);
+        return `hsl(${hue}, 85%, 45%)`;
+      }
+
+      function htmlCelulaIntervalo(item) {
+        const valor = calcularIntervaloEntrePc(item.pcBase, item.pcAlvo);
+        const erro = valor - item.referencia;
+        const erroAbs = Math.abs(erro);
+        const cor = corDesvioIntervalo(erroAbs, item.corMax);
+        return `
+    
+																		<div style="
       background:${cor};
       color:#fff;
       border-radius:8px;
@@ -1509,679 +1383,511 @@ function htmlCelulaIntervalo(item) {
       flex-direction:column;
       justify-content:center;
     ">
-      <div style="font-weight:bold;">${obterNomeIntervaloExibido(item.pcBase, item.pcAlvo)}</div>
-      <div style="font-size:13px; margin-top:4px;">${formatSignedCents(erro, 3)}</div>
-    </div>
+																			<div style="font-weight:bold;">${obterNomeIntervaloExibido(item.pcBase, item.pcAlvo)}</div>
+																			<div style="font-size:13px; margin-top:4px;">${formatSignedCents(erro, 3)}</div>
+																		</div>
   `;
-}
-
-function renderTabelaIntervalosMatriz() {
-  if (!tbodyIntervalosMatriz) return;
-
-  tbodyIntervalosMatriz.innerHTML = "";
-
-  const nomesColunas = Object.keys(INTERVALOS_COLUNAS);
-  const maxLinhas = Math.max(...nomesColunas.map(nome => INTERVALOS_COLUNAS[nome].length));
-
-  for (let i = 0; i < maxLinhas; i++) {
-    const tr = document.createElement("tr");
-
-    nomesColunas.forEach(nomeColuna => {
-      const td = document.createElement("td");
-      const item = INTERVALOS_COLUNAS[nomeColuna][i];
-
-      if (item) {
-        td.innerHTML = htmlCelulaIntervalo(item);
-      } else {
-        td.innerHTML = "";
       }
 
-      tr.appendChild(td);
-    });
-
-    tbodyIntervalosMatriz.appendChild(tr);
-  }
-}
-
-function atualizarNomeTemperamentoCentro() {
-  const el = document.getElementById("nomeTemperamentoCentro");
-  if (!el) return;
-
-  if (presetFoiModificado) {
-    el.textContent = `Custom (base: ${nomeTemperamentoBase})`;
-  } else {
-    el.textContent = nomeTemperamentoAtual;
-  }
-}
-
-function obterNomePresetBonito(valor) {
-  const select = document.getElementById("presetTemperamento");
-  if (!select) return "Custom";
-
-  const option = select.querySelector(`option[value="${valor}"]`);
-  return option ? option.textContent : "Custom";
-}
-
-
-    // =========================================================
-    // TABELA
-    // =========================================================
-
-function renderTabelaQuintas() {
-  tbodyQuintas.innerHTML = "";
-
-  estadoTemperamento.quintas.forEach((q, i) => {
-    const indiceResidual = obterIndiceQuintaResidual();
-    const ehResidual = usarResidualAutomatica&& i === indiceResidual;
-
-    const tr = document.createElement("tr");
-
-    const tdNome = document.createElement("td");
-    tdNome.textContent = obterNomeQuintaExibida(q, i);
-
-    const tdAjuste = document.createElement("td");
-    tdAjuste.textContent = formatSignedCents(q.ajusteCents);
-
-    const tdValor = document.createElement("td");
-    tdValor.textContent = valorQuintaReal(i).toFixed(3) + " c";
-
-    const tdCmd = document.createElement("td");
-
-    const wrap = document.createElement("div");
-    wrap.style.display = "flex";
-    wrap.style.flexWrap = "wrap";
-    wrap.style.gap = "6px";
-    wrap.style.alignItems = "center";
-
-    const cpLabel = document.createElement("span");
-    cpLabel.textContent = "c.p.";
-
-    const cpInput = document.createElement("input");
-    cpInput.type = "text";
-    cpInput.value = q.fracaoCp;
-    cpInput.style.width = "80px";
-
-    cpInput.addEventListener("input", () => {
-      estadoTemperamento.quintas[i].fracaoCp = cpInput.value;
-    });
-
-    const cpMenos = document.createElement("button");
-    cpMenos.type = "button";
-    cpMenos.textContent = "−";
-    cpMenos.addEventListener("click", () => {
-      estadoTemperamento.quintas[i].fracaoCp = cpInput.value;
-
-      const fr = parseFracaoTexto(cpInput.value);
-      const delta = obterDeltaPorComa("cp", cpInput.value);
-
-      if (!fr || !isFinite(delta)) {
-        alert("Fração inválida em c.p.");
-        return;
+      function renderTabelaIntervalosMatriz() {
+        if (!tbodyIntervalosMatriz) return;
+        tbodyIntervalosMatriz.innerHTML = "";
+        const nomesColunas = Object.keys(INTERVALOS_COLUNAS);
+        const maxLinhas = Math.max(...nomesColunas.map(nome => INTERVALOS_COLUNAS[nome].length));
+        for (let i = 0; i < maxLinhas; i++) {
+          const tr = document.createElement("tr");
+          nomesColunas.forEach(nomeColuna => {
+            const td = document.createElement("td");
+            const item = INTERVALOS_COLUNAS[nomeColuna][i];
+            if (item) {
+              td.innerHTML = htmlCelulaIntervalo(item);
+            } else {
+              td.innerHTML = "";
+            }
+            tr.appendChild(td);
+          });
+          tbodyIntervalosMatriz.appendChild(tr);
+        }
       }
 
-      const soma = somarFracao(
-        estadoTemperamento.quintas[i].acumCpNum,
-        estadoTemperamento.quintas[i].acumCpDen,
-        -fr.num,
-        fr.den
-      );
-
-      estadoTemperamento.quintas[i].acumCpNum = soma.num;
-      estadoTemperamento.quintas[i].acumCpDen = soma.den;
-
-      ajustarQuinta(i, -delta);
-    });
-
-    const cpMais = document.createElement("button");
-    cpMais.type = "button";
-    cpMais.textContent = "+";
-    cpMais.addEventListener("click", () => {
-      estadoTemperamento.quintas[i].fracaoCp = cpInput.value;
-
-      const fr = parseFracaoTexto(cpInput.value);
-      const delta = obterDeltaPorComa("cp", cpInput.value);
-
-      if (!fr || !isFinite(delta)) {
-        alert("Fração inválida em c.p.");
-        return;
+      function atualizarNomeTemperamentoCentro() {
+        const el = document.getElementById("nomeTemperamentoCentro");
+        if (!el) return;
+        if (presetFoiModificado) {
+          el.textContent = `Custom (base: ${nomeTemperamentoBase})`;
+        } else {
+          el.textContent = nomeTemperamentoAtual;
+        }
       }
 
-      const soma = somarFracao(
-        estadoTemperamento.quintas[i].acumCpNum,
-        estadoTemperamento.quintas[i].acumCpDen,
-        fr.num,
-        fr.den
-      );
-
-      estadoTemperamento.quintas[i].acumCpNum = soma.num;
-      estadoTemperamento.quintas[i].acumCpDen = soma.den;
-
-      ajustarQuinta(i, delta);
-    });
-
-    const csLabel = document.createElement("span");
-    csLabel.textContent = "c.s.";
-    csLabel.style.marginLeft = "8px";
-
-    const csInput = document.createElement("input");
-    csInput.type = "text";
-    csInput.value = q.fracaoCs;
-    csInput.style.width = "80px";
-
-    csInput.addEventListener("input", () => {
-      estadoTemperamento.quintas[i].fracaoCs = csInput.value;
-    });
-
-    const csMenos = document.createElement("button");
-    csMenos.type = "button";
-    csMenos.textContent = "−";
-    csMenos.addEventListener("click", () => {
-      estadoTemperamento.quintas[i].fracaoCs = csInput.value;
-
-      const fr = parseFracaoTexto(csInput.value);
-      const delta = obterDeltaPorComa("cs", csInput.value);
-
-      if (!fr || !isFinite(delta)) {
-        alert("Fração inválida em c.s.");
-        return;
+      function obterNomePresetBonito(valor) {
+        const select = document.getElementById("presetTemperamento");
+        if (!select) return "Custom";
+        const option = select.querySelector(`option[value="${valor}"]`);
+        return option ? option.textContent : "Custom";
       }
-
-      const soma = somarFracao(
-        estadoTemperamento.quintas[i].acumCsNum,
-        estadoTemperamento.quintas[i].acumCsDen,
-        -fr.num,
-        fr.den
-      );
-
-      estadoTemperamento.quintas[i].acumCsNum = soma.num;
-      estadoTemperamento.quintas[i].acumCsDen = soma.den;
-
-      ajustarQuinta(i, -delta);
-    });
-
-    const csMais = document.createElement("button");
-    csMais.type = "button";
-    csMais.textContent = "+";
-    csMais.addEventListener("click", () => {
-      estadoTemperamento.quintas[i].fracaoCs = csInput.value;
-
-      const fr = parseFracaoTexto(csInput.value);
-      const delta = obterDeltaPorComa("cs", csInput.value);
-
-      if (!fr || !isFinite(delta)) {
-        alert("Fração inválida em c.s.");
-        return;
+      // =========================================================
+      // TABELA
+      // =========================================================
+      function renderTabelaQuintas() {
+        tbodyQuintas.innerHTML = "";
+        estadoTemperamento.quintas.forEach((q, i) => {
+          const indiceResidual = obterIndiceQuintaResidual();
+          const ehResidual = usarResidualAutomatica && i === indiceResidual;
+          const tr = document.createElement("tr");
+          const tdNome = document.createElement("td");
+          tdNome.textContent = obterNomeQuintaExibida(q, i);
+          const tdAjuste = document.createElement("td");
+          tdAjuste.textContent = formatSignedCents(q.ajusteCents);
+          const tdValor = document.createElement("td");
+          tdValor.textContent = valorQuintaReal(i).toFixed(3) + " c";
+          const tdCmd = document.createElement("td");
+          const wrap = document.createElement("div");
+          wrap.style.display = "flex";
+          wrap.style.flexWrap = "wrap";
+          wrap.style.gap = "6px";
+          wrap.style.alignItems = "center";
+          const cpLabel = document.createElement("span");
+          cpLabel.textContent = "c.p.";
+          const cpInput = document.createElement("input");
+          cpInput.type = "text";
+          cpInput.value = q.fracaoCp;
+          cpInput.style.width = "80px";
+          cpInput.addEventListener("input", () => {
+            estadoTemperamento.quintas[i].fracaoCp = cpInput.value;
+          });
+          const cpMenos = document.createElement("button");
+          cpMenos.type = "button";
+          cpMenos.textContent = "−";
+          cpMenos.addEventListener("click", () => {
+            estadoTemperamento.quintas[i].fracaoCp = cpInput.value;
+            const fr = parseFracaoTexto(cpInput.value);
+            const delta = obterDeltaPorComa("cp", cpInput.value);
+            if (!fr || !isFinite(delta)) {
+              alert("Fração inválida em c.p.");
+              return;
+            }
+            const soma = somarFracao(estadoTemperamento.quintas[i].acumCpNum, estadoTemperamento.quintas[i].acumCpDen, -fr.num, fr.den);
+            estadoTemperamento.quintas[i].acumCpNum = soma.num;
+            estadoTemperamento.quintas[i].acumCpDen = soma.den;
+            ajustarQuinta(i, -delta);
+          });
+          const cpMais = document.createElement("button");
+          cpMais.type = "button";
+          cpMais.textContent = "+";
+          cpMais.addEventListener("click", () => {
+            estadoTemperamento.quintas[i].fracaoCp = cpInput.value;
+            const fr = parseFracaoTexto(cpInput.value);
+            const delta = obterDeltaPorComa("cp", cpInput.value);
+            if (!fr || !isFinite(delta)) {
+              alert("Fração inválida em c.p.");
+              return;
+            }
+            const soma = somarFracao(estadoTemperamento.quintas[i].acumCpNum, estadoTemperamento.quintas[i].acumCpDen, fr.num, fr.den);
+            estadoTemperamento.quintas[i].acumCpNum = soma.num;
+            estadoTemperamento.quintas[i].acumCpDen = soma.den;
+            ajustarQuinta(i, delta);
+          });
+          const csLabel = document.createElement("span");
+          csLabel.textContent = "c.s.";
+          csLabel.style.marginLeft = "8px";
+          const csInput = document.createElement("input");
+          csInput.type = "text";
+          csInput.value = q.fracaoCs;
+          csInput.style.width = "80px";
+          csInput.addEventListener("input", () => {
+            estadoTemperamento.quintas[i].fracaoCs = csInput.value;
+          });
+          const csMenos = document.createElement("button");
+          csMenos.type = "button";
+          csMenos.textContent = "−";
+          csMenos.addEventListener("click", () => {
+            estadoTemperamento.quintas[i].fracaoCs = csInput.value;
+            const fr = parseFracaoTexto(csInput.value);
+            const delta = obterDeltaPorComa("cs", csInput.value);
+            if (!fr || !isFinite(delta)) {
+              alert("Fração inválida em c.s.");
+              return;
+            }
+            const soma = somarFracao(estadoTemperamento.quintas[i].acumCsNum, estadoTemperamento.quintas[i].acumCsDen, -fr.num, fr.den);
+            estadoTemperamento.quintas[i].acumCsNum = soma.num;
+            estadoTemperamento.quintas[i].acumCsDen = soma.den;
+            ajustarQuinta(i, -delta);
+          });
+          const csMais = document.createElement("button");
+          csMais.type = "button";
+          csMais.textContent = "+";
+          csMais.addEventListener("click", () => {
+            estadoTemperamento.quintas[i].fracaoCs = csInput.value;
+            const fr = parseFracaoTexto(csInput.value);
+            const delta = obterDeltaPorComa("cs", csInput.value);
+            if (!fr || !isFinite(delta)) {
+              alert("Fração inválida em c.s.");
+              return;
+            }
+            const soma = somarFracao(estadoTemperamento.quintas[i].acumCsNum, estadoTemperamento.quintas[i].acumCsDen, fr.num, fr.den);
+            estadoTemperamento.quintas[i].acumCsNum = soma.num;
+            estadoTemperamento.quintas[i].acumCsDen = soma.den;
+            ajustarQuinta(i, delta);
+          });
+          const btnZero = document.createElement("button");
+          btnZero.type = "button";
+          btnZero.textContent = "zerar";
+          btnZero.style.marginLeft = "8px";
+          btnZero.addEventListener("click", () => {
+            estadoTemperamento.quintas[i].fracaoCp = cpInput.value;
+            estadoTemperamento.quintas[i].fracaoCs = csInput.value;
+            estadoTemperamento.quintas[i].ajusteCents = 0;
+            estadoTemperamento.quintas[i].acumCpNum = 0;
+            estadoTemperamento.quintas[i].acumCpDen = 1;
+            estadoTemperamento.quintas[i].acumCsNum = 0;
+            estadoTemperamento.quintas[i].acumCsDen = 1;
+            presetFoiModificado = true;
+            usarResidualAutomatica = true;
+            recalcularTemperamento();
+          });
+          if (ehResidual) {
+            const tagResidual = document.createElement("span");
+            tagResidual.textContent = "residual automática";
+            tagResidual.style.fontWeight = "bold";
+            tagResidual.style.color = "#8d6e00";
+            tdCmd.appendChild(tagResidual);
+          } else {
+            wrap.append(cpLabel, cpInput, cpMenos, cpMais, csLabel, csInput, csMenos, csMais, btnZero);
+            tdCmd.appendChild(wrap);
+          }
+          tr.appendChild(tdNome);
+          tr.appendChild(tdAjuste);
+          tr.appendChild(tdValor);
+          tr.appendChild(tdCmd);
+          tbodyQuintas.appendChild(tr);
+        });
       }
+      const tbodyIntervalos = document.getElementById("tbodyIntervalos");
 
-      const soma = somarFracao(
-        estadoTemperamento.quintas[i].acumCsNum,
-        estadoTemperamento.quintas[i].acumCsDen,
-        fr.num,
-        fr.den
-      );
-
-      estadoTemperamento.quintas[i].acumCsNum = soma.num;
-      estadoTemperamento.quintas[i].acumCsDen = soma.den;
-
-      ajustarQuinta(i, delta);
-    });
-
-    const btnZero = document.createElement("button");
-    btnZero.type = "button";
-    btnZero.textContent = "zerar";
-    btnZero.style.marginLeft = "8px";
-    btnZero.addEventListener("click", () => {
-      estadoTemperamento.quintas[i].fracaoCp = cpInput.value;
-      estadoTemperamento.quintas[i].fracaoCs = csInput.value;
-      estadoTemperamento.quintas[i].ajusteCents = 0;
-      estadoTemperamento.quintas[i].acumCpNum = 0;
-      estadoTemperamento.quintas[i].acumCpDen = 1;
-      estadoTemperamento.quintas[i].acumCsNum = 0;
-      estadoTemperamento.quintas[i].acumCsDen = 1;
-      presetFoiModificado = true;
-              usarResidualAutomatica = true;
-      recalcularTemperamento();
-    });
-
-if (ehResidual) {
-  const tagResidual = document.createElement("span");
-  tagResidual.textContent = "residual automática";
-  tagResidual.style.fontWeight = "bold";
-  tagResidual.style.color = "#8d6e00";
-
-  tdCmd.appendChild(tagResidual);
-} else {
-  wrap.append(
-    cpLabel, cpInput, cpMenos, cpMais,
-    csLabel, csInput, csMenos, csMais,
-    btnZero
-  );
-
-  tdCmd.appendChild(wrap);
-}
-
-    tr.appendChild(tdNome);
-    tr.appendChild(tdAjuste);
-    tr.appendChild(tdValor);
-    tr.appendChild(tdCmd);
-
-    tbodyQuintas.appendChild(tr);
-  });
-}
-
-const tbodyIntervalos = document.getElementById("tbodyIntervalos");
-function renderTabelaIntervalos() {
-  if (!tbodyIntervalos) return;
-
-  tbodyIntervalos.innerHTML = "";
-
-  INTERVALOS_ANALISE.forEach(item => {
-    const valor = calcularIntervaloEntrePc(item.pcBase, item.pcAlvo);
-    const erro = valor - item.referencia;
-    const erroAbs = Math.abs(erro);
-    const cor = corDesvioIntervalo(erroAbs, item.corMax);
-
-    const tr = document.createElement("tr");
-
-    const tdNome = document.createElement("td");
-    tdNome.textContent = `${item.base}–${item.alvo}`;
-
-    const tdTipo = document.createElement("td");
-    tdTipo.textContent = item.tipo;
-
-    const tdValor = document.createElement("td");
-    tdValor.textContent = `${valor.toFixed(3)} c`;
-
-    const tdRef = document.createElement("td");
-    tdRef.textContent = `${item.referencia.toFixed(3)} c`;
-
-    const tdErro = document.createElement("td");
-    tdErro.textContent = formatSignedCents(erro, 3);
-    tdErro.style.color = cor;
-    tdErro.style.fontWeight = "bold";
-
-    const tdQualidade = document.createElement("td");
-    tdQualidade.innerHTML = `
-      <div style="
+      function renderTabelaIntervalos() {
+        if (!tbodyIntervalos) return;
+        tbodyIntervalos.innerHTML = "";
+        INTERVALOS_ANALISE.forEach(item => {
+          const valor = calcularIntervaloEntrePc(item.pcBase, item.pcAlvo);
+          const erro = valor - item.referencia;
+          const erroAbs = Math.abs(erro);
+          const cor = corDesvioIntervalo(erroAbs, item.corMax);
+          const tr = document.createElement("tr");
+          const tdNome = document.createElement("td");
+          tdNome.textContent = `${item.base}–${item.alvo}`;
+          const tdTipo = document.createElement("td");
+          tdTipo.textContent = item.tipo;
+          const tdValor = document.createElement("td");
+          tdValor.textContent = `${valor.toFixed(3)} c`;
+          const tdRef = document.createElement("td");
+          tdRef.textContent = `${item.referencia.toFixed(3)} c`;
+          const tdErro = document.createElement("td");
+          tdErro.textContent = formatSignedCents(erro, 3);
+          tdErro.style.color = cor;
+          tdErro.style.fontWeight = "bold";
+          const tdQualidade = document.createElement("td");
+          tdQualidade.innerHTML = `
+      
+																		<div style="
         width: 90px;
         height: 12px;
         border-radius: 999px;
         background: ${cor};
       "></div>
     `;
-
-    tr.appendChild(tdNome);
-    tr.appendChild(tdTipo);
-    tr.appendChild(tdValor);
-    tr.appendChild(tdRef);
-    tr.appendChild(tdErro);
-    tr.appendChild(tdQualidade);
-
-    tbodyIntervalos.appendChild(tr);
-  });
-}
-
-
-
-    // =========================================================
-    // DESENHO DO CÍRCULO
-    // =========================================================
-
-function renderizarCirculoDOM() {
-  const el = document.getElementById("circuloQuintas");
-  if (!el) return;
-
-  el.querySelectorAll(
-    ".nota-item, .rotulo-ajuste"
-  ).forEach(n => n.remove());
-
-  const rect = el.getBoundingClientRect();
-  const tamanho = Math.min(rect.width, rect.height);
-  const cx = tamanho / 2;
-  const cy = tamanho / 2;
-  const raioNotas = tamanho * 0.42;
-  const ordemPcs = estadoTemperamento.quintas.map(q => q.pcDe);
-  const anguloInicial = -Math.PI / 2;
-
-  const posicoes = [];
-
-  for (let i = 0; i < 12; i++) {
-    const ang = anguloInicial + i * (Math.PI * 2 / 12);
-    const x = cx + raioNotas * Math.cos(ang);
-    const y = cy + raioNotas * Math.sin(ang);
-    const pc = ordemPcs[i];
-
-    posicoes.push({ x, y, ang, pc });
-
-    const nota = document.createElement("div");
-    nota.className = "nota-item";
-    nota.style.left = `${x}px`;
-    nota.style.top = `${y}px`;
-    nota.innerHTML = `
-      <div class="nome">${obterNomeLatinoCirculo(pc)}</div>
-      <div class="valor">${estadoTemperamento.mapaCentsPorPc[pc].toFixed(1)} c</div>
+          tr.appendChild(tdNome);
+          tr.appendChild(tdTipo);
+          tr.appendChild(tdValor);
+          tr.appendChild(tdRef);
+          tr.appendChild(tdErro);
+          tr.appendChild(tdQualidade);
+          tbodyIntervalos.appendChild(tr);
+        });
+      }
+      // =========================================================
+      // DESENHO DO CÍRCULO
+      // =========================================================
+      function renderizarCirculoDOM() {
+        const el = document.getElementById("circuloQuintas");
+        if (!el) return;
+        el.querySelectorAll(".nota-item, .rotulo-ajuste").forEach(n => n.remove());
+        const rect = el.getBoundingClientRect();
+        const tamanho = Math.min(rect.width, rect.height);
+        const cx = tamanho / 2;
+        const cy = tamanho / 2;
+        const raioNotas = tamanho * 0.42;
+        const ordemPcs = estadoTemperamento.quintas.map(q => q.pcDe);
+        const anguloInicial = -Math.PI / 2;
+        const posicoes = [];
+        for (let i = 0; i < 12; i++) {
+          const ang = anguloInicial + i * (Math.PI * 2 / 12);
+          const x = cx + raioNotas * Math.cos(ang);
+          const y = cy + raioNotas * Math.sin(ang);
+          const pc = ordemPcs[i];
+          posicoes.push({
+            x,
+            y,
+            ang,
+            pc
+          });
+          const nota = document.createElement("div");
+          nota.className = "nota-item";
+          nota.style.left = `${x}px`;
+          nota.style.top = `${y}px`;
+          nota.innerHTML = `
+      
+																		<div class="nome">${obterNomeLatinoCirculo(pc)}</div>
+																		<div class="valor">${estadoTemperamento.mapaCentsPorPc[pc].toFixed(1)} c</div>
     `;
-    el.appendChild(nota);
-  }
-
-  for (let i = 0; i < 12; i++) {
-    const p1 = posicoes[i];
-    const p2 = posicoes[(i + 1) % 12];
-
-    const ajuste = estadoTemperamento.quintas[i].ajusteCents;
-
-    let classe = "neutra";
-    if (ajuste > 0.001) classe = "larga";
-    if (ajuste < -0.001) classe = "estreita";
-
-    const mx = (p1.x + p2.x) / 2;
-    const my = (p1.y + p2.y) / 2;
-
-    const vx = mx - cx;
-    const vy = my - cy;
-    const n = Math.hypot(vx, vy) || 1;
-
-    const rx = mx + (vx / n) * 18;
-    const ry = my + (vy / n) * 18;
-
-    const linhas = obterLinhasComa(estadoTemperamento.quintas[i], i);
-    const indiceResidual = obterIndiceQuintaResidual();
-    const ehResidual = i === indiceResidual;
-
-    const rotulo = document.createElement("div");
-    rotulo.className = `rotulo-ajuste ${classe}${ehResidual ? " residual" : ""}`;
-    rotulo.style.left = `${rx}px`;
-    rotulo.style.top = `${ry}px`;
-    rotulo.innerHTML = linhas.map(l => `<div>${l}</div>`).join("");
-    el.appendChild(rotulo);
-  }
-
-  atualizarNomeTemperamentoCentro();
-}
-
-    // =========================================================
-    // DETECTOR DE NOTA PELO TEMPERAMENTO CORRENTE
-    // =========================================================
-    function frequenciaParaNotaTemperada(freq) {
-      let melhorMidi = 69;
-      let melhorErroAbs = Infinity;
-      let melhorCents = 0;
-
-      for (let midi = 24; midi <= 108; midi++) {
-        const f = estadoTemperamento.tabelaFrequenciasMidi[midi];
-        if (!f || !isFinite(f) || f <= 0) continue;
-
-        const cents = 1200 * Math.log2(freq / f);
-        const erroAbs = Math.abs(cents);
-
-        if (erroAbs < melhorErroAbs) {
-          melhorErroAbs = erroAbs;
-          melhorMidi = midi;
-          melhorCents = cents;
+          el.appendChild(nota);
         }
-      }
-
-      const pc = mod(melhorMidi, 12);
-      const oitava = Math.floor(melhorMidi / 12) - 1;
-
-      return {
-        midi: melhorMidi,
-        nome: obterNomeLatinoCirculo(pc),
-        nomeLatino: obterNomeLatinoCirculo(pc),
-        oitava,
-        notaCompleta: NOMES_NOTAS[pc] + oitava,
-        notaCompletaLatina: obterNomeLatinoCirculo(pc) + oitava,
-        freqNota: estadoTemperamento.tabelaFrequenciasMidi[melhorMidi],
-        cents: melhorCents
-      };
-    }
-
-    // =========================================================
-    // FFT
-    // =========================================================
-    function encontrarPicoDominante(array, sampleRate, fftSize) {
-      const binWidth = sampleRate / fftSize;
-
-      const freqMin = 20;
-      const freqMax = Math.min(parseFloat(freqMaxGraficoInput.value) || 2000, sampleRate / 2);
-
-      const startIndex = Math.max(1, Math.floor(freqMin / binWidth));
-      const endIndex = Math.min(array.length - 1, Math.floor(freqMax / binWidth));
-
-      let maxValue = -1;
-      let maxIndex = -1;
-
-      for (let i = startIndex; i <= endIndex; i++) {
-        if (array[i] > maxValue) {
-          maxValue = array[i];
-          maxIndex = i;
+        for (let i = 0; i < 12; i++) {
+          const p1 = posicoes[i];
+          const p2 = posicoes[(i + 1) % 12];
+          const ajuste = estadoTemperamento.quintas[i].ajusteCents;
+          let classe = "neutra";
+          if (ajuste > 0.001) classe = "larga";
+          if (ajuste < -0.001) classe = "estreita";
+          const mx = (p1.x + p2.x) / 2;
+          const my = (p1.y + p2.y) / 2;
+          const vx = mx - cx;
+          const vy = my - cy;
+          const n = Math.hypot(vx, vy) || 1;
+          const rx = mx + (vx / n) * 18;
+          const ry = my + (vy / n) * 18;
+          const linhas = obterLinhasComa(estadoTemperamento.quintas[i], i);
+          const indiceResidual = obterIndiceQuintaResidual();
+          const ehResidual = i === indiceResidual;
+          const rotulo = document.createElement("div");
+          rotulo.className = `rotulo-ajuste ${classe}${ehResidual ? " residual" : ""}`;
+          rotulo.style.left = `${rx}px`;
+          rotulo.style.top = `${ry}px`;
+          rotulo.innerHTML = linhas.map(l => `
+																		<div>${l}</div>`).join("");
+          el.appendChild(rotulo);
         }
+        atualizarNomeTemperamentoCentro();
       }
-
-      if (maxIndex <= 0) return null;
-
-      let refinedIndex = maxIndex;
-
-      if (maxIndex > 0 && maxIndex < array.length - 1) {
-        const y1 = array[maxIndex - 1];
-        const y2 = array[maxIndex];
-        const y3 = array[maxIndex + 1];
-        const denominator = (y1 - 2 * y2 + y3);
-
-        if (Math.abs(denominator) > 1e-12) {
-          const delta = 0.5 * (y1 - y3) / denominator;
-          refinedIndex = maxIndex + Math.max(-0.5, Math.min(0.5, delta));
+      // =========================================================
+      // DETECTOR DE NOTA PELO TEMPERAMENTO CORRENTE
+      // =========================================================
+      function frequenciaParaNotaTemperada(freq) {
+        let melhorMidi = 69;
+        let melhorErroAbs = Infinity;
+        let melhorCents = 0;
+        for (let midi = 24; midi <= 108; midi++) {
+          const f = estadoTemperamento.tabelaFrequenciasMidi[midi];
+          if (!f || !isFinite(f) || f <= 0) continue;
+          const cents = 1200 * Math.log2(freq / f);
+          const erroAbs = Math.abs(cents);
+          if (erroAbs < melhorErroAbs) {
+            melhorErroAbs = erroAbs;
+            melhorMidi = midi;
+            melhorCents = cents;
+          }
         }
+        const pc = mod(melhorMidi, 12);
+        const oitava = Math.floor(melhorMidi / 12) - 1;
+        return {
+          midi: melhorMidi,
+          nome: obterNomeLatinoCirculo(pc),
+          nomeLatino: obterNomeLatinoCirculo(pc),
+          oitava,
+          notaCompleta: NOMES_NOTAS[pc] + oitava,
+          notaCompletaLatina: obterNomeLatinoCirculo(pc) + oitava,
+          freqNota: estadoTemperamento.tabelaFrequenciasMidi[melhorMidi],
+          cents: melhorCents
+        };
+      }
+      // =========================================================
+      // FFT
+      // =========================================================
+      function encontrarPicoDominante(array, sampleRate, fftSize) {
+        const binWidth = sampleRate / fftSize;
+        const freqMin = 20;
+        const freqMax = Math.min(parseFloat(freqMaxGraficoInput.value) || 2000, sampleRate / 2);
+        const startIndex = Math.max(1, Math.floor(freqMin / binWidth));
+        const endIndex = Math.min(array.length - 1, Math.floor(freqMax / binWidth));
+        let maxValue = -1;
+        let maxIndex = -1;
+        for (let i = startIndex; i <= endIndex; i++) {
+          if (array[i] > maxValue) {
+            maxValue = array[i];
+            maxIndex = i;
+          }
+        }
+        if (maxIndex <= 0) return null;
+        let refinedIndex = maxIndex;
+        if (maxIndex > 0 && maxIndex < array.length - 1) {
+          const y1 = array[maxIndex - 1];
+          const y2 = array[maxIndex];
+          const y3 = array[maxIndex + 1];
+          const denominator = (y1 - 2 * y2 + y3);
+          if (Math.abs(denominator) > 1e-12) {
+            const delta = 0.5 * (y1 - y3) / denominator;
+            refinedIndex = maxIndex + Math.max(-0.5, Math.min(0.5, delta));
+          }
+        }
+        return {
+          index: refinedIndex,
+          frequency: refinedIndex * binWidth,
+          magnitude: maxValue
+        };
       }
 
-      return {
-        index: refinedIndex,
-        frequency: refinedIndex * binWidth,
-        magnitude: maxValue
-      };
-    }
-
-    function desenharGrafico(array, sampleRate, fftSize, peakFrequency = null) {
-      const width = canvasGrafico.width;
-      const height = canvasGrafico.height;
-
-      ctxGrafico.clearRect(0, 0, width, height);
-      ctxGrafico.fillStyle = "#ffffff";
-      ctxGrafico.fillRect(0, 0, width, height);
-
-      ctxGrafico.strokeStyle = "#dddddd";
-      ctxGrafico.lineWidth = 1;
-
-      for (let i = 0; i <= 4; i++) {
-        const y = (height / 4) * i;
-        ctxGrafico.beginPath();
-        ctxGrafico.moveTo(0, y);
-        ctxGrafico.lineTo(width, y);
-        ctxGrafico.stroke();
-      }
-
-      const freqMax = Math.min(parseFloat(freqMaxGraficoInput.value) || 2000, sampleRate / 2);
-      const maxIndex = Math.min(array.length - 1, Math.floor((freqMax / sampleRate) * fftSize));
-
-      ctxGrafico.strokeStyle = "#1565c0";
-      ctxGrafico.lineWidth = 2;
-      ctxGrafico.beginPath();
-
-      for (let i = 0; i <= maxIndex; i++) {
-        const x = (i / maxIndex) * width;
-        const magnitude = array[i] / 255;
-        const y = height - magnitude * height;
-
-        if (i === 0) ctxGrafico.moveTo(x, y);
-        else ctxGrafico.lineTo(x, y);
-      }
-
-      ctxGrafico.stroke();
-
-      if (peakFrequency !== null && peakFrequency <= freqMax) {
-        const xPeak = (peakFrequency / freqMax) * width;
-        ctxGrafico.strokeStyle = "#d32f2f";
+      function desenharGrafico(array, sampleRate, fftSize, peakFrequency = null) {
+        const width = canvasGrafico.width;
+        const height = canvasGrafico.height;
+        ctxGrafico.clearRect(0, 0, width, height);
+        ctxGrafico.fillStyle = "#ffffff";
+        ctxGrafico.fillRect(0, 0, width, height);
+        ctxGrafico.strokeStyle = "#dddddd";
+        ctxGrafico.lineWidth = 1;
+        for (let i = 0; i <= 4; i++) {
+          const y = (height / 4) * i;
+          ctxGrafico.beginPath();
+          ctxGrafico.moveTo(0, y);
+          ctxGrafico.lineTo(width, y);
+          ctxGrafico.stroke();
+        }
+        const freqMax = Math.min(parseFloat(freqMaxGraficoInput.value) || 2000, sampleRate / 2);
+        const maxIndex = Math.min(array.length - 1, Math.floor((freqMax / sampleRate) * fftSize));
+        ctxGrafico.strokeStyle = "#1565c0";
         ctxGrafico.lineWidth = 2;
         ctxGrafico.beginPath();
-        ctxGrafico.moveTo(xPeak, 0);
-        ctxGrafico.lineTo(xPeak, height);
+        for (let i = 0; i <= maxIndex; i++) {
+          const x = (i / maxIndex) * width;
+          const magnitude = array[i] / 255;
+          const y = height - magnitude * height;
+          if (i === 0) ctxGrafico.moveTo(x, y);
+          else ctxGrafico.lineTo(x, y);
+        }
         ctxGrafico.stroke();
-
-        ctxGrafico.fillStyle = "#d32f2f";
-        ctxGrafico.font = "14px Arial";
-        ctxGrafico.fillText(peakFrequency.toFixed(1) + " Hz", Math.min(xPeak + 6, width - 90), 18);
+        if (peakFrequency !== null && peakFrequency <= freqMax) {
+          const xPeak = (peakFrequency / freqMax) * width;
+          ctxGrafico.strokeStyle = "#d32f2f";
+          ctxGrafico.lineWidth = 2;
+          ctxGrafico.beginPath();
+          ctxGrafico.moveTo(xPeak, 0);
+          ctxGrafico.lineTo(xPeak, height);
+          ctxGrafico.stroke();
+          ctxGrafico.fillStyle = "#d32f2f";
+          ctxGrafico.font = "14px Arial";
+          ctxGrafico.fillText(peakFrequency.toFixed(1) + " Hz", Math.min(xPeak + 6, width - 90), 18);
+        }
+        ctxGrafico.fillStyle = "#444";
+        ctxGrafico.font = "12px Arial";
+        ctxGrafico.fillText("0 Hz", 6, height - 6);
+        ctxGrafico.fillText(freqMax.toFixed(0) + " Hz", width - 58, height - 6);
       }
 
-      ctxGrafico.fillStyle = "#444";
-      ctxGrafico.font = "12px Arial";
-      ctxGrafico.fillText("0 Hz", 6, height - 6);
-      ctxGrafico.fillText(freqMax.toFixed(0) + " Hz", width - 58, height - 6);
-    }
-
-    function atualizarAnalise() {
-      if (!analyser || !timeDataArray || !freqDataArray || !audioContext) return;
-
-      analyser.getFloatTimeDomainData(timeDataArray);
-      analyser.getByteFrequencyData(freqDataArray);
-
-      if (!suavizado) {
-        suavizado = new Float32Array(freqDataArray.length);
-      }
-
-      const alpha = obterCoeficienteSuavizacao();
-      const beta = 1 - alpha;
-
-      for (let i = 0; i < freqDataArray.length; i++) {
-        suavizado[i] = alpha * suavizado[i] + beta * freqDataArray[i];
-      }
-
-      const rms = calcularRMS(timeDataArray);
-
-      if (rms <= LIMIAR) {
+      function atualizarAnalise() {
+        if (!analyser || !timeDataArray || !freqDataArray || !audioContext) return;
+        analyser.getFloatTimeDomainData(timeDataArray);
+        analyser.getByteFrequencyData(freqDataArray);
+        if (!suavizado) {
+          suavizado = new Float32Array(freqDataArray.length);
+        }
+        const alpha = obterCoeficienteSuavizacao();
+        const beta = 1 - alpha;
+        for (let i = 0; i < freqDataArray.length; i++) {
+          suavizado[i] = alpha * suavizado[i] + beta * freqDataArray[i];
+        }
+        const rms = calcularRMS(timeDataArray);
+        if (rms <= LIMIAR) {
+          statusEl.textContent = "";
+          limparNota();
+          desenharGrafico(suavizado, audioContext.sampleRate, analyser.fftSize, null);
+          animationId = requestAnimationFrame(atualizarAnalise);
+          return;
+        }
         statusEl.textContent = "";
-        limparNota();
-        desenharGrafico(suavizado, audioContext.sampleRate, analyser.fftSize, null);
-        animationId = requestAnimationFrame(atualizarAnalise);
-        return;
-      }
-
-      statusEl.textContent = "";
-
-      const pico = encontrarPicoDominante(
-        suavizado,
-        audioContext.sampleRate,
-        analyser.fftSize
-      );
-
-      if (pico && pico.frequency > 0) {
-        if (freqSuavizada === null) {
-          freqSuavizada = pico.frequency;
+        const pico = encontrarPicoDominante(suavizado, audioContext.sampleRate, analyser.fftSize);
+        if (pico && pico.frequency > 0) {
+          if (freqSuavizada === null) {
+            freqSuavizada = pico.frequency;
+          } else {
+            const alphaFreq = obterCoeficienteSuavizacao();
+            const betaFreq = 1 - alphaFreq;
+            freqSuavizada = alphaFreq * freqSuavizada + betaFreq * pico.frequency;
+          }
+        }
+        if (pico && pico.frequency > 0 && isFinite(pico.frequency) && freqSuavizada !== null) {
+          frequenciaEl.textContent = "Frequência dominante: " + freqSuavizada.toFixed(2) + " Hz";
+          const resultado = frequenciaParaNotaTemperada(freqSuavizada);
+          notaEl.textContent = resultado.notaCompletaLatina;
+          centsEl.textContent = "Desvio: " + Math.round(resultado.cents) + " c";
+          atualizarMedidorCents(resultado.cents);
+          desenharGrafico(suavizado, audioContext.sampleRate, analyser.fftSize, freqSuavizada);
         } else {
-          const alphaFreq = obterCoeficienteSuavizacao();
-          const betaFreq = 1 - alphaFreq;
-          freqSuavizada = alphaFreq * freqSuavizada + betaFreq * pico.frequency;
+          limparNota();
+          desenharGrafico(suavizado, audioContext.sampleRate, analyser.fftSize, null);
+        }
+        animationId = requestAnimationFrame(atualizarAnalise);
+      }
+      async function iniciarMicrofone() {
+        try {
+          statusEl.textContent = "Solicitando acesso ao microfone...";
+          stream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+              echoCancellation: false,
+              noiseSuppression: false,
+              autoGainControl: false
+            }
+          });
+          audioContext = new(window.AudioContext || window.webkitAudioContext)();
+          source = audioContext.createMediaStreamSource(stream);
+          analyser = audioContext.createAnalyser();
+          analyser.fftSize = 8192;
+          analyser.smoothingTimeConstant = 0;
+          timeDataArray = new Float32Array(analyser.fftSize);
+          freqDataArray = new Uint8Array(analyser.frequencyBinCount);
+          source.connect(analyser);
+          statusEl.textContent = "Microfone ativo.";
+          btnIniciar.disabled = true;
+          btnIniciar.textContent = "Microfone ativo";
+          atualizarAnalise();
+        } catch (erro) {
+          statusEl.textContent = "Não foi possível acessar o microfone.";
+          console.error(erro);
+          alert("Erro: " + erro.name + " | " + erro.message);
         }
       }
-
-      if (pico && pico.frequency > 0 && isFinite(pico.frequency) && freqSuavizada !== null) {
-        frequenciaEl.textContent = "Frequência dominante: " + freqSuavizada.toFixed(2) + " Hz";
-
-        const resultado = frequenciaParaNotaTemperada(freqSuavizada);
-
-        notaEl.textContent = resultado.notaCompletaLatina;
-        centsEl.textContent = "Desvio: " + Math.round(resultado.cents) + " c";
-        atualizarMedidorCents(resultado.cents);
-
-        desenharGrafico(suavizado, audioContext.sampleRate, analyser.fftSize, freqSuavizada);
-      } else {
-        limparNota();
-        desenharGrafico(suavizado, audioContext.sampleRate, analyser.fftSize, null);
-      }
-
-      animationId = requestAnimationFrame(atualizarAnalise);
-    }
-
-    async function iniciarMicrofone() {
-      try {
-        statusEl.textContent = "Solicitando acesso ao microfone...";
-
-        stream = await navigator.mediaDevices.getUserMedia({
-          audio: {
-            echoCancellation: false,
-            noiseSuppression: false,
-            autoGainControl: false
-          }
-        });
-
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        source = audioContext.createMediaStreamSource(stream);
-        analyser = audioContext.createAnalyser();
-
-        analyser.fftSize = 8192;
-        analyser.smoothingTimeConstant = 0;
-
-        timeDataArray = new Float32Array(analyser.fftSize);
-        freqDataArray = new Uint8Array(analyser.frequencyBinCount);
-
-        source.connect(analyser);
-
-        statusEl.textContent = "Microfone ativo.";
-        btnIniciar.disabled = true;
-        btnIniciar.textContent = "Microfone ativo";
-
-        atualizarAnalise();
-      } catch (erro) {
-        statusEl.textContent = "Não foi possível acessar o microfone.";
-        console.error(erro);
-        alert("Erro: " + erro.name + " | " + erro.message);
-      }
-    }
-
-    // =========================================================
-    // EVENTOS
-    // =========================================================
-    valorSuavizacaoEl.textContent = suavizacaoInput.value;
-
-    suavizacaoInput.addEventListener("input", () => {
+      // =========================================================
+      // EVENTOS
+      // =========================================================
       valorSuavizacaoEl.textContent = suavizacaoInput.value;
-    });
-
-    btnIniciar.addEventListener("click", iniciarMicrofone);
-
-    presetTemperamento.addEventListener("change", () => {
-      aplicarPreset(presetTemperamento.value);
-    });
-
-    btnZerarAjustes.addEventListener("click", () => {
-      zerarAjustes();
-    });
-
-    a4RefInput.addEventListener("input", () => {
-      recalcularTemperamento();
-    });
-
-    const enarmoniaCorte = document.getElementById("enarmoniaCorte");
-
-    enarmoniaCorte.addEventListener("change", () => {
-      if (presetFoiModificado) {
-        recalcularTemperamento();
-      } else {
+      suavizacaoInput.addEventListener("input", () => {
+        valorSuavizacaoEl.textContent = suavizacaoInput.value;
+      });
+      btnIniciar.addEventListener("click", iniciarMicrofone);
+      presetTemperamento.addEventListener("change", () => {
         aplicarPreset(presetTemperamento.value);
-      }
-    });
-
-
-    // =========================================================
-    // INIT
-    // =========================================================
-    aplicarPreset("pythagorean");
-
-window.addEventListener("resize", () => {
-  setTimeout(() => {
-    renderizarCirculoDOM();
-  }, 50);
-});
-
-  </script>
-</body>
+      });
+      btnZerarAjustes.addEventListener("click", () => {
+        zerarAjustes();
+      });
+      a4RefInput.addEventListener("input", () => {
+        recalcularTemperamento();
+      });
+      const enarmoniaCorte = document.getElementById("enarmoniaCorte");
+      enarmoniaCorte.addEventListener("change", () => {
+        if (presetFoiModificado) {
+          recalcularTemperamento();
+        } else {
+          aplicarPreset(presetTemperamento.value);
+        }
+      });
+      // =========================================================
+      // INIT
+      // =========================================================
+      aplicarPreset("pythagorean");
+      window.addEventListener("resize", () => {
+        setTimeout(() => {
+          renderizarCirculoDOM();
+        }, 50);
+      });
+    </script>
+  </body>
 </html>
