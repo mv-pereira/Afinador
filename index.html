@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Afinador FFT com Círculo de Quintas Editável</title>
+  <title>Afinador editável via FFT</title>
   <style>
     :root {
       --bg: #f4f4f4;
@@ -457,56 +457,6 @@
   z-index: 5;
 }
 
-@media (max-width: 700px) {
-  .nota-item {
-    width: 8.8%;
-    height: 8.8%;
-    min-width: 50px;
-    min-height: 50px;
-    max-width: 64px;
-    max-height: 64px;
-  }
-
-  .nota-item .nome {
-    font-size: 14px;
-  }
-
-  .nota-item .valor {
-    font-size: 8px;
-    margin-top: 2px;
-  }
-
-  .miolo-circulo {
-    width: 28%;
-    height: 28%;
-    min-width: 120px;
-    min-height: 120px;
-    padding: 10px;
-  }
-
-  .miolo-titulo {
-    font-size: 16px;
-  }
-
-  .miolo-nome {
-    font-size: clamp(14px, 3.8vw, 20px);
-    max-width: 92%;
-  }
-
-  .anel-externo {
-    inset: 5%;
-  }
-
-  .anel-interno {
-    inset: 18%;
-  }
-
-  .rotulo-ajuste {
-    min-width: 48px;
-    padding: 3px 5px;
-    font-size: 9px;
-  }
-}
 
   </style>
 </head>
@@ -514,10 +464,23 @@
   <div class="painel">
     <h1>Afinador FFT com círculo de quintas editável</h1>
     <p>
-      O círculo abaixo não é ilustrativo: ele é o <strong>temperamento vigente</strong>.
-      Cada quinta pode ser ajustada individualmente, e o afinador passa a usar
-      imediatamente o resultado dessas alterações.
+     Círculo de quintas editável por frações de coma sintônico ou pitagórico.
     </p>
+
+<div class="bloco-info">
+  <strong>Instruções de uso:</strong><br><br>
+
+  • <strong>Ativar microfone:</strong> inicia a captação de áudio e exibe a frequência detectada, nota e desvio em cents.<br>
+
+  • <strong>Zerar ajustes:</strong> remove todas as alterações aplicadas às quintas, retornando ao estado base do preset selecionado.<br>
+
+  • <strong>Preset de temperamento:</strong> carrega distribuições históricas de quintas (pitagórico, igual, mesotônico, etc.).<br>
+
+  • <strong>Ajuste das quintas:</strong> cada intervalo pode ser alterado por frações de coma pitagórico (c.p.) ou sintônico (c.s.), acumuladas localmente. O fechamento do círculo gera um intervalo residual, localizado entre <strong>Mib–Sol#</strong> ou <strong>Lab–Do#</strong>, conforme a enarmonia selecionada.<br>
+
+• <strong>Estabilidade:</strong> controla a suavização da frequência detectada. Valores maiores tornam a leitura mais estável (menos variação), porém mais lenta para reagir; valores menores deixam a resposta mais rápida, porém mais sensível a flutuações.<br>
+
+</div>
 
     <div class="linha-config">
       <div class="campo">
@@ -540,7 +503,7 @@
 
     <div class="botoneria">
       <button id="btnIniciar" type="button">Ativar microfone</button>
-      <button id="btnZerarAjustes" type="button">Zerar ajustes</button>
+      
     </div>
 
     <div id="status">Microfone desligado.</div>
@@ -610,7 +573,7 @@
 </div>
 
       <div class="subpainel">
-        <h2>Círculo de quintas editável</h2>
+        <h2>Círculo de quintas</h2>
         <div id="circuloQuintas" class="circulo-quintas-dom">
   <div class="anel-externo"></div>
   <div class="anel-interno"></div>
@@ -621,8 +584,15 @@
 </div>
 </div>
 
-        <div class="bloco-info" id="resumoTemperamento"></div>
+        <button id="btnZerarAjustes" type="button">Zerar ajustes</button>
 
+
+      <div class="subpainel">
+        <h2>Tabela de ajuste de comas</h2>
+        <div class="observacao">
+          A edição das quintas é feita pelos campos e botões da tabela abaixo.
+          O valor exibido em cada quinta é o <strong>desvio em relação à quinta justa</strong>.
+        </div>
         <table class="tabela">
           <thead>
             <tr>
@@ -635,13 +605,11 @@
           <tbody id="tbodyQuintas"></tbody>
         </table>
 
-        <div class="observacao">
-          A edição das quintas é feita pelos campos e botões da tabela abaixo.
-          O valor exibido em cada quinta é o <strong>desvio em relação à quinta justa</strong>.
-        </div>
+
       </div>
     </div>
   </div>
+</div>
 
 <div class="subpainel">
   <h2>Tabela de intervalos - Desvios</h2>
@@ -1073,7 +1041,6 @@ function recalcularTemperamento() {
 
   renderTabelaQuintas();
   renderizarCirculoDOM();
-  renderResumoTemperamento();
   renderTabelaIntervalosMatriz();
 }
 
@@ -1857,25 +1824,6 @@ function renderTabelaIntervalos() {
 
 
     // =========================================================
-    // RESUMO
-    // =========================================================
-function renderResumoTemperamento() {
-  const classeDo = estadoTemperamento.mapaCentsPorPc[0];
-  const classeSol = estadoTemperamento.mapaCentsPorPc[7];
-  const quintaDoSol = normalizarClasseCents(classeSol - classeDo);
-  const passoTxt = "frações locais por quinta (c.p. / c.s.)";
-
-  resumoTemperamentoEl.innerHTML = `
-    <strong>Modo de edição:</strong> ${passoTxt}<br>
-    <strong>Quinta justa:</strong> ${QUINTA_JUSTA_CENTS.toFixed(6)} c<br>
-    <strong>Quinta Do→Sol atual:</strong> ${quintaDoSol.toFixed(6)} c
-    <span class="tag">ajuste ${formatSignedCents(estadoTemperamento.quintas[0].ajusteCents)}</span><br>
-    <strong>Quinta do lobo implícita:</strong> ${estadoTemperamento.loboCents.toFixed(6)} c
-
-  `;
-}
-
-    // =========================================================
     // DESENHO DO CÍRCULO
     // =========================================================
 
@@ -1933,8 +1881,8 @@ function renderizarCirculoDOM() {
     const vy = my - cy;
     const n = Math.hypot(vx, vy) || 1;
 
-    const rx = mx + (vx / n) * 15;
-    const ry = my + (vy / n) * 15;
+    const rx = mx + (vx / n) * 18;
+    const ry = my + (vy / n) * 18;
 
     const linhas = obterLinhasComa(estadoTemperamento.quintas[i], i);
     const indiceResidual = obterIndiceQuintaResidual();
