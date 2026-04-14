@@ -1,10 +1,10 @@
-# 🎵 Afinador FFT com Círculo de Quintas Editável
+# Afinador FFT com Círculo de Quintas Editável
 
-Afinador de instrumentos baseado em **FFT (Fast Fourier Transform)** com suporte a **temperamentos históricos e customizados**, incluindo edição detalhada via **frações de comas pitagórico e sintônico**.
+Afinador de instrumentos baseado em **FFT (Fast Fourier Transform)** com suporte a **temperamentos históricos e customizados**, incluindo edição via **frações de comas pitagórico e sintônico**.
 
 ---
 
-## 📌 Visão Geral
+## Visão Geral
 
 Este projeto implementa um afinador em HTML/JavaScript que:
 
@@ -12,83 +12,40 @@ Este projeto implementa um afinador em HTML/JavaScript que:
 - Identifica nota musical com base em um **temperamento configurável**
 - Mostra desvio em **cents**
 - Permite editar o **círculo de quintas**
-- Suporta diversos **temperamentos históricos**
 - Exibe análise visual:
   - Espectro FFT
   - Medidor de afinação
   - Círculo de quintas interativo
-  - Tabela de intervalos
+  - Tabela de qualidade de intervalos
 
 ---
 
-## ⚙️ Funcionalidades
+## Funcionalidades
 
-### 🎤 Detecção de áudio
+### Detecção de áudio
 - Usa `Web Audio API`
 - FFT para análise espectral
 - Identificação do **pico dominante**
 - Refinamento por interpolação parabólica
 
-### 🎼 Sistema de temperamento
+### Sistema de temperamento
 - Representação em **cents**
 - Construção via:
   - Quintas sucessivas
   - Ajustes por comas
-- Suporte a:
-  - Temperamento igual
-  - Pitagórico
-  - Mesotônico
-  - Werckmeister
-  - Kirnberger
-  - Vallotti
-  - Young
-  - Neidhardt
-  - Bach (Barnes / Lehman)
 
-### 🔧 Edição avançada
+### Edição
 - Ajuste de cada quinta via:
-  - Frações de **coma pitagórico (c.p.)**
-  - Frações de **coma sintônico (c.s.)**
-- Acúmulo fracionário preciso
+  - Frações de **coma pitagórico (c.p.)** (≈ 23.46 cents)
+  - Frações de **coma sintônico (c.s.)** (≈ 21.51 cents)
+- Acúmulo fracionário
 - Quinta residual automática (fechamento do ciclo)
 
-### 📊 Visualizações
-- Espectro FFT em tempo real
-- Medidor de cents (±40)
-- Círculo de quintas interativo
-- Tabela de intervalos com erro relativo
-
 ---
 
-## 🧠 Conceitos Importantes
+## Como usar
 
-### 🎯 Quinta justa
-3:2 ≈ 701.955 cents
-
-### 🎯 Comas
-- Coma pitagórico ≈ 23.46 cents  
-- Coma sintônico ≈ 21.51 cents  
-
-### 🎯 Fechamento do círculo
-O sistema garante:
-
-12 quintas = 7 oitavas (8400 cents)
-
-A diferença é absorvida como:
-- **quinta residual (lobo)**
-
----
-
-## 🚀 Como usar
-
-### 1. Abrir o projeto
-Basta abrir o arquivo `.html` no navegador.
-
-> ⚠️ Necessário permitir acesso ao microfone.
-
----
-
-### 2. Ativar o microfone
+### 1. Ativar o microfone
 
 Clique em:
 
@@ -101,24 +58,24 @@ Isso inicia:
 
 ---
 
-### 3. Configurações
+### 2. Configurações
 
-#### 🎚️ A4 (Referência)
+#### A4 (Referência)
 Define a frequência do Lá:
 
 Padrão: 440 Hz
 
-#### 📈 Máx. gráfico
+#### Máx. gráfico
 Limite superior do espectro FFT exibido.
 
-#### 🎛️ Estabilidade
+#### Estabilidade
 Controla suavização:
 - Alto → mais estável
 - Baixo → mais responsivo
 
 ---
 
-### 4. Temperamento
+### 3. Temperamento
 
 Selecione um preset:
 
@@ -134,7 +91,7 @@ Selecione um preset:
 
 ---
 
-### 5. Ajuste manual
+### 4. Ajuste manual
 
 Cada quinta pode ser modificada via:
 
@@ -160,15 +117,11 @@ Escolha o ponto de corte:
 - Sol#  
 - Lab  
 
-Isso altera:
-- Nomeação das notas
-- Posição da quinta residual
-
 ---
 
-## 🔬 Funcionamento Interno
+## Funcionamento Interno
 
-### 🎧 Pipeline de áudio
+### Pipeline de áudio
 
 1. Microfone → `MediaStream`
 2. → `AnalyserNode`
@@ -178,7 +131,7 @@ Isso altera:
 
 ---
 
-### 📐 Detecção de nota
+### Detecção de nota
 
 Para cada frequência detectada:
 
@@ -191,9 +144,9 @@ cents = 1200 * log2(freq / freqNota)
 
 ---
 
-### 🔄 Construção do temperamento
+### Construção do temperamento
 
-- Parte de Do = 0 cents
+- Parte de Dó
 - Soma quintas sucessivas:
 
 C → G → D → A → ...
@@ -202,7 +155,7 @@ C → G → D → A → ...
 
 ---
 
-### 📊 Tabela de intervalos
+### Tabela de intervalos
 
 Calcula desvios para:
 
@@ -218,17 +171,7 @@ Coloração:
 
 ---
 
-### 🎯 Medidor de cents
-
-- Intervalo: ±40 cents
-- Cor dinâmica:
-  - Verde: afinado
-  - Amarelo: leve desvio
-  - Vermelho: fora
-
----
-
-## 🧩 Estrutura do Código
+## Estrutura do Código
 
 ### Principais blocos:
 
@@ -239,7 +182,7 @@ Coloração:
 
 ---
 
-## ⚠️ Limitações
+## Limitações
 
 - Pode detectar harmônicos em vez da fundamental
 - Sensível a ruído
@@ -248,7 +191,7 @@ Coloração:
 
 ---
 
-## 💡 Possíveis melhorias
+## Possíveis melhorias
 
 - Detecção por autocorrelação (YIN)
 - Filtro de harmônicos
@@ -258,9 +201,9 @@ Coloração:
 
 ---
 
-## 📜 Licença
+## Licença
 
-Livre para uso e modificação.
+Este projeto está licenciado sob a Licença MIT — veja o arquivo [LICENSE](![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)) para detalhes.
 
 ---
 
