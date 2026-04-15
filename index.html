@@ -1064,14 +1064,7 @@
       // PRESETS
       // =========================================================
       function zerarAjustes() {
-        estadoTemperamento.quintas.forEach(q => {
-          q.ajusteCents = 0;
-          q.acumCpNum = 0;
-          q.acumCpDen = 1;
-          q.acumCsNum = 0;
-          q.acumCsDen = 1;
-        });
-        recalcularTemperamento();
+        aplicarPreset(presetTemperamento.value);
       }
 
       function aplicarPreset(nome) {
