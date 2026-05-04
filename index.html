@@ -515,10 +515,10 @@
           <div id="valorSuavizacao">70</div>
         </div>
         <div class="campo">
-          <label for="limiarSom">Limiar de intensidade</label>
-          <input type="range" id="limiarSom" min="0" max="100" value="50">
-          <div id="valorLimiarSom">0.0050</div>
-          <small>Valores maiores ignoram sons mais fracos.</small>
+          <label for="sensibilidadeSom">Sensibilidade</label>
+          <input type="range" id="sensibilidadeSom" min="0" max="100" value="50">
+          <div id="valorSensibilidadeSom">50%</div>
+          <small>100% detecta sons mais fracos; 0% exige som mais forte.</small>
         </div>
       </div>
       <div class="botoneria">
@@ -660,8 +660,8 @@
       const freqMaxGraficoInput = document.getElementById("freqMaxGrafico");
       const suavizacaoInput = document.getElementById("suavizacao");
       const valorSuavizacaoEl = document.getElementById("valorSuavizacao");
-      const limiarSomInput = document.getElementById("limiarSom");
-      const valorLimiarSomEl = document.getElementById("valorLimiarSom");
+      const sensibilidadeSomInput = document.getElementById("sensibilidadeSom");
+      const valorSensibilidadeSomEl = document.getElementById("valorSensibilidadeSom");
       const escalaCentsEl = document.getElementById("escalaCents");
       const ponteiroCentsEl = document.getElementById("ponteiroCents");
       const rotuloEsquerdaEl = document.getElementById("rotuloEsquerda");
@@ -851,12 +851,16 @@
       }
 
       function obterLimiarSom() {
-        const valor = parseFloat(limiarSomInput.value) || 0;
-        // Mapeia 0–100 para 0.0000–0.0100
-        return valor / 10000;
+        const sensibilidade = parseFloat(sensibilidadeSomInput.value) || 0;
+        const limiarMin = 0.0005; // 100%: pega sons bem fracos
+        const limiarMax = 0.0200; // 0%: exige som forte
+        const t = sensibilidade / 100;
+        return limiarMax - t * (limiarMax - limiarMin);
       }
-      // Inicializa o texto do limiar quando a página carrega
-      valorLimiarSomEl.textContent = obterLimiarSom().toFixed(4);
+
+      function atualizarValorSensibilidadeSom() {
+        valorSensibilidadeSomEl.textContent = `${sensibilidadeSomInput.value}%`;
+      }
 
       function calcularRMS(buffer) {
         let somaQuadrados = 0;
@@ -1383,6 +1387,7 @@
         return `
     
 																		
+																			
 																			<div style="
       background:${cor};
       color:#fff;
@@ -1600,6 +1605,7 @@
           tdQualidade.innerHTML = `
       
 																		
+																			
 																			<div style="
         width: 90px;
         height: 12px;
@@ -1649,6 +1655,7 @@
           nota.innerHTML = `
       
 																		
+																			
 																			<div class="nome">${obterNomeLatinoCirculo(pc)}</div>
 																			<div class="valor">${estadoTemperamento.mapaCentsPorPc[pc].toFixed(1)} c</div>
     `;
@@ -1677,6 +1684,7 @@
           rotulo.style.top = `${ry}px`;
           rotulo.innerHTML = linhas.map(l => `
 																		
+																			
 																			<div>${l}</div>`).join("");
           el.appendChild(rotulo);
         }
@@ -1874,9 +1882,8 @@
       suavizacaoInput.addEventListener("input", () => {
         valorSuavizacaoEl.textContent = suavizacaoInput.value;
       });
-      limiarSomInput.addEventListener("input", () => {
-        valorLimiarSomEl.textContent = obterLimiarSom().toFixed(4);
-      });
+      sensibilidadeSomInput.addEventListener("input", atualizarValorSensibilidadeSom);
+      atualizarValorSensibilidadeSom();
       btnIniciar.addEventListener("click", iniciarMicrofone);
       presetTemperamento.addEventListener("change", () => {
         aplicarPreset(presetTemperamento.value);
