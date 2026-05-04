@@ -514,6 +514,12 @@
           <input type="range" id="suavizacao" min="0" max="100" value="70">
           <div id="valorSuavizacao">70</div>
         </div>
+        <div class="campo">
+          <label for="limiarSom">Limiar de intensidade</label>
+          <input type="range" id="limiarSom" min="0" max="100" value="50">
+          <div id="valorLimiarSom">0.0050</div>
+          <small>Valores maiores ignoram sons mais fracos.</small>
+        </div>
       </div>
       <div class="botoneria">
         <button id="btnIniciar" type="button">Ativar microfone</button>
@@ -644,7 +650,7 @@
       let animationId = null;
       let freqSuavizada = null;
       let suavizado = null;
-      const LIMIAR = 0.003;
+      const LIMIAR_PADRAO = 0.003;
       const btnIniciar = document.getElementById("btnIniciar");
       const statusEl = document.getElementById("status");
       const frequenciaEl = document.getElementById("frequenciaDetectada");
@@ -654,6 +660,8 @@
       const freqMaxGraficoInput = document.getElementById("freqMaxGrafico");
       const suavizacaoInput = document.getElementById("suavizacao");
       const valorSuavizacaoEl = document.getElementById("valorSuavizacao");
+      const limiarSomInput = document.getElementById("limiarSom");
+      const valorLimiarSomEl = document.getElementById("valorLimiarSom");
       const escalaCentsEl = document.getElementById("escalaCents");
       const ponteiroCentsEl = document.getElementById("ponteiroCents");
       const rotuloEsquerdaEl = document.getElementById("rotuloEsquerda");
@@ -841,6 +849,14 @@
         const valor = parseFloat(suavizacaoInput.value) || 50;
         return valor / 100;
       }
+
+      function obterLimiarSom() {
+        const valor = parseFloat(limiarSomInput.value) || 0;
+        // Mapeia 0–100 para 0.0000–0.0100
+        return valor / 10000;
+      }
+      // Inicializa o texto do limiar quando a página carrega
+      valorLimiarSomEl.textContent = obterLimiarSom().toFixed(4);
 
       function calcularRMS(buffer) {
         let somaQuadrados = 0;
@@ -1366,7 +1382,8 @@
         const cor = corDesvioIntervalo(erroAbs, item.corMax);
         return `
     
-																		<div style="
+																		
+																			<div style="
       background:${cor};
       color:#fff;
       border-radius:8px;
@@ -1376,9 +1393,9 @@
       flex-direction:column;
       justify-content:center;
     ">
-																			<div style="font-weight:bold;">${obterNomeIntervaloExibido(item.pcBase, item.pcAlvo)}</div>
-																			<div style="font-size:13px; margin-top:4px;">${formatSignedCents(erro, 3)}</div>
-																		</div>
+																				<div style="font-weight:bold;">${obterNomeIntervaloExibido(item.pcBase, item.pcAlvo)}</div>
+																				<div style="font-size:13px; margin-top:4px;">${formatSignedCents(erro, 3)}</div>
+																			</div>
   `;
       }
 
@@ -1582,7 +1599,8 @@
           const tdQualidade = document.createElement("td");
           tdQualidade.innerHTML = `
       
-																		<div style="
+																		
+																			<div style="
         width: 90px;
         height: 12px;
         border-radius: 999px;
@@ -1630,8 +1648,9 @@
           nota.style.top = `${y}px`;
           nota.innerHTML = `
       
-																		<div class="nome">${obterNomeLatinoCirculo(pc)}</div>
-																		<div class="valor">${estadoTemperamento.mapaCentsPorPc[pc].toFixed(1)} c</div>
+																		
+																			<div class="nome">${obterNomeLatinoCirculo(pc)}</div>
+																			<div class="valor">${estadoTemperamento.mapaCentsPorPc[pc].toFixed(1)} c</div>
     `;
           el.appendChild(nota);
         }
@@ -1657,7 +1676,8 @@
           rotulo.style.left = `${rx}px`;
           rotulo.style.top = `${ry}px`;
           rotulo.innerHTML = linhas.map(l => `
-																		<div>${l}</div>`).join("");
+																		
+																			<div>${l}</div>`).join("");
           el.appendChild(rotulo);
         }
         atualizarNomeTemperamentoCentro();
@@ -1788,7 +1808,7 @@
           suavizado[i] = alpha * suavizado[i] + beta * freqDataArray[i];
         }
         const rms = calcularRMS(timeDataArray);
-        if (rms <= LIMIAR) {
+        if (rms < obterLimiarSom()) {
           statusEl.textContent = "";
           limparNota();
           desenharGrafico(suavizado, audioContext.sampleRate, analyser.fftSize, null);
@@ -1853,6 +1873,9 @@
       valorSuavizacaoEl.textContent = suavizacaoInput.value;
       suavizacaoInput.addEventListener("input", () => {
         valorSuavizacaoEl.textContent = suavizacaoInput.value;
+      });
+      limiarSomInput.addEventListener("input", () => {
+        valorLimiarSomEl.textContent = obterLimiarSom().toFixed(4);
       });
       btnIniciar.addEventListener("click", iniciarMicrofone);
       presetTemperamento.addEventListener("change", () => {
