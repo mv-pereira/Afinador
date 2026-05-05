@@ -742,6 +742,16 @@
       let animationId = null;
       let freqSuavizada = null;
       let suavizado = null;
+
+const ANALISES_POR_SEGUNDO = 30;
+const DESENHOS_GRAFICO_POR_SEGUNDO = 25;
+
+const INTERVALO_ANALISE_MS = 1000 / ANALISES_POR_SEGUNDO;
+const INTERVALO_DESENHO_GRAFICO_MS = 1000 / DESENHOS_GRAFICO_POR_SEGUNDO;
+
+let ultimaAnalise = 0;
+let ultimoDesenhoGrafico = 0;
+
       const LIMIAR_PADRAO = 0.003;
       const btnIniciar = document.getElementById("btnIniciar");
       const statusEl = document.getElementById("status");
@@ -1851,6 +1861,21 @@ const raioNotas = tamanho * raioNotasFator;
         };
       }
 
+
+
+function desenharGraficoLimitado(array, sampleRate, fftSize, peakFrequency = null) {
+  const agora = performance.now();
+
+  if (agora - ultimoDesenhoGrafico < INTERVALO_DESENHO_GRAFICO_MS) {
+    return;
+  }
+
+  ultimoDesenhoGrafico = agora;
+  desenharGrafico(array, sampleRate, fftSize, peakFrequency);
+}
+
+
+
       function desenharGrafico(array, sampleRate, fftSize, peakFrequency = null) {
         const width = canvasGrafico.width;
         const height = canvasGrafico.height;
@@ -1898,6 +1923,19 @@ const raioNotas = tamanho * raioNotasFator;
       }
 
       function atualizarAnalise() {
+  animationId = requestAnimationFrame(atualizarAnalise);
+
+  const agora = performance.now();
+
+  if (agora - ultimaAnalise < INTERVALO_ANALISE_MS) {
+    return;
+  }
+
+  ultimaAnalise = agora;
+
+  if (!analyser || !timeDataArray || !freqDataArray || !audioContext) {
+    return;
+  }
         if (!analyser || !timeDataArray || !freqDataArray || !audioContext) return;
         analyser.getFloatTimeDomainData(timeDataArray);
         analyser.getByteFrequencyData(freqDataArray);
@@ -1913,8 +1951,7 @@ const raioNotas = tamanho * raioNotasFator;
         if (rms < obterLimiarSom()) {
           statusEl.textContent = "";
           limparNota();
-          desenharGrafico(suavizado, audioContext.sampleRate, analyser.fftSize, null);
-          animationId = requestAnimationFrame(atualizarAnalise);
+          desenharGraficoLimitado(suavizado, audioContext.sampleRate, analyser.fftSize, null);
           return;
         }
         statusEl.textContent = "";
@@ -1934,12 +1971,12 @@ const raioNotas = tamanho * raioNotasFator;
           notaEl.textContent = resultado.notaCompletaLatina;
           centsEl.textContent = "Desvio: " + Math.round(resultado.cents) + " c";
           atualizarMedidorCents(resultado.cents);
-          desenharGrafico(suavizado, audioContext.sampleRate, analyser.fftSize, freqSuavizada);
+          desenharGraficoLimitado(suavizado, audioContext.sampleRate, analyser.fftSize, freqSuavizada);
         } else {
           limparNota();
-          desenharGrafico(suavizado, audioContext.sampleRate, analyser.fftSize, null);
+          desenharGraficoLimitado(suavizado, audioContext.sampleRate, analyser.fftSize, null);
         }
-        animationId = requestAnimationFrame(atualizarAnalise);
+
       }
       async function iniciarMicrofone() {
         try {
