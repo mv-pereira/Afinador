@@ -589,7 +589,8 @@
       <div class="bloco-info">
         <strong>Instruções de uso:</strong>
         <br>
-        <br> • <strong>Ativar microfone:</strong> inicia a captação de áudio e exibe a frequência detectada, nota e desvio em cents. <br> • <strong>Zerar ajustes:</strong> remove todas as alterações aplicadas às quintas, retornando ao estado base do preset selecionado. <br> • <strong>Preset de temperamento:</strong> carrega distribuições históricas de quintas (pitagórico, igual, mesotônico, etc.). <br> • <strong>Ajuste das quintas:</strong> cada intervalo pode ser alterado por frações de coma pitagórico (c.p.) ou sintônico (c.s.), acumuladas localmente. O fechamento do círculo gera um intervalo residual, localizado entre <strong>Mib–Sol#</strong> ou <strong>Lab–Do#</strong>, conforme a enarmonia selecionada. <br> • <strong>Estabilidade:</strong> controla a suavização da frequência detectada. Valores maiores tornam a leitura mais estável (menos variação), porém mais lenta para reagir; valores menores deixam a resposta mais rápida, porém mais sensível a flutuações. <br>
+        <br> • <strong>Ativar microfone:</strong> inicia a captação de áudio e exibe a frequência detectada, nota e desvio em cents. <br> • <strong>Zerar ajustes:</strong> remove todas as alterações aplicadas às quintas, retornando ao estado base do preset selecionado. <br> • <strong>Preset de temperamento:</strong> carrega distribuições históricas de quintas (pitagórico, igual, mesotônico, etc.). <br> • <strong>Ajuste das quintas:</strong> cada intervalo pode ser alterado por frações de coma pitagórico (c.p.) ou sintônico (c.s.), acumuladas localmente. O fechamento do círculo gera um intervalo residual, localizado entre <strong>Mib–Sol#</strong> ou <strong>Lab–Do#</strong>, conforme a enarmonia selecionada. <br> • <strong>Estabilidade:</strong> controla a suavização da frequência detectada. Valores maiores tornam a leitura mais estável (menos variação), porém mais lenta para reagir; valores menores deixam a resposta mais rápida, porém mais sensível a flutuações. <br> • <strong>Sensibilidade:</strong> controla o volume mínimo necessário para o afinador detectar o som. Valores maiores detectam sons mais fracos; valores menores exigem um som mais forte e ajudam a evitar ruídos do ambiente.
+  <br>
       </div>
       <div class="linha-config">
         <div class="campo">
@@ -1970,7 +1971,7 @@ const raioNotas = tamanho * raioNotasFator;
       }
       // =========================================================
       // EVENTOS
-      // =========================================================
+      // ========================================================	=
       valorSuavizacaoEl.textContent = suavizacaoInput.value;
       suavizacaoInput.addEventListener("input", () => {
         valorSuavizacaoEl.textContent = suavizacaoInput.value;
