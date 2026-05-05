@@ -13,6 +13,8 @@ Este projeto implementa um afinador em HTML/JavaScript que:
 - Detecta frequência em tempo real via microfone
 - Identifica nota musical com base em um **temperamento configurável**
 - Mostra desvio em **cents**
+- Permite ajustar **sensibilidade de captação**
+- Permite selecionar modo de **desempenho** para diferentes aparelhos
 - Permite editar o **círculo de quintas**
 - Exibe análise visual:
   - Espectro FFT
@@ -29,6 +31,14 @@ Este projeto implementa um afinador em HTML/JavaScript que:
 - FFT para análise espectral
 - Identificação do **pico dominante**
 - Refinamento por interpolação parabólica
+- Controle de **sensibilidade** para ajustar o limiar mínimo de detecção sonora
+
+### Desempenho
+- Modos selecionáveis:
+  - **Econômico**: reduz a frequência de análise e redesenho do gráfico
+  - **Normal**: equilíbrio entre resposta e uso de processamento
+  - **Completo**: usa a resposta máxima permitida pelo aparelho
+- Útil para adaptar o afinador a celulares antigos ou dispositivos mais lentos
 
 ### Sistema de temperamento
 - Representação em **cents**
@@ -74,6 +84,19 @@ Limite superior do espectro FFT exibido.
 Controla suavização:
 - Alto → mais estável
 - Baixo → mais responsivo
+
+#### Sensibilidade
+Controla o volume mínimo necessário para o afinador detectar o som:
+
+- Alto → detecta sons mais fracos
+- Baixo → exige som mais forte e reduz interferência de ruídos
+
+#### Desempenho
+Define o modo de processamento do afinador:
+
+- **Econômico** → menor uso de processamento, indicado para celulares antigos
+- **Normal** → equilíbrio entre fluidez e resposta
+- **Completo** → sem limite artificial de análise/desenho, como o funcionamento original
 
 ---
 
@@ -128,8 +151,10 @@ Escolha o ponto de corte:
 1. Microfone → `MediaStream`
 2. → `AnalyserNode`
 3. → FFT (`frequencyBinCount`)
-4. → Detecção de pico
-5. → Conversão para frequência
+4. → Aplicação do limiar de sensibilidade
+5. → Detecção de pico dominante
+6. → Conversão para frequência
+7. → Comparação com a tabela de notas do temperamento atual
 
 ---
 
@@ -187,9 +212,9 @@ Coloração:
 ## Limitações
 
 - Pode detectar harmônicos em vez da fundamental
-- Sensível a ruído
-- Requer navegador moderno
-- Latência depende do hardware
+- Pode sofrer interferência de ruído ambiente, conforme a sensibilidade escolhida
+- Requer navegador moderno com suporte à `Web Audio API`
+- Latência e fluidez dependem do hardware e do modo de desempenho selecionado
 
 ---
 
