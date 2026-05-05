@@ -4,583 +4,570 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Afinador editável via FFT</title>
-<style>
-  :root {
-    --bg: #f4f4f4;
-    --panel: #ffffff;
-    --text: #222;
-    --muted: #666;
-    --line: #d8d8d8;
-    --blue: #1565c0;
-    --red: #d32f2f;
-    --green: #1b5e20;
-    --amber: #8d6e00;
-
-    /* Tamanhos principais do círculo de quintas */
-    --circulo-tamanho: min(760px, 92vw);
-
-    --raio-notas: 0.42;
-
-    --nota-tamanho: 30%;
-    --nota-min: 60px;
-    --nota-max: 82px;
-    --nota-fonte: 22px;
-    --nota-valor-fonte: 12px;
-
-    --miolo-tamanho: 50%;
-    --miolo-min: 200px;
-    --miolo-padding: 18px;
-    --miolo-titulo-fonte: 22px;
-    --miolo-nome-fonte: clamp(20px, 2.5vw, 30px);
-
-    --rotulo-min: 38px;
-    --rotulo-padding-y: 7px;
-    --rotulo-padding-x: 10px;
-    --rotulo-fonte: 9px;
-    --rotulo-radius: 12px;
-  }
-
-  * {
-    box-sizing: border-box;
-  }
-
-  body {
-    font-family: Arial, sans-serif;
-    margin: 24px;
-    background: var(--bg);
-    color: var(--text);
-    text-align: center;
-  }
-
-  .painel {
-    max-width: 1400px;
-    margin: 24px auto;
-    background: var(--panel);
-    border-radius: 12px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-    padding: 24px;
-  }
-
-  h1 {
-    margin-top: 0;
-    font-size: 30px;
-  }
-
-  h2 {
-    margin-top: 0;
-    font-size: 22px;
-  }
-
-  p {
-    line-height: 1.5;
-  }
-
-  button,
-  input,
-  select {
-    padding: 10px 12px;
-    font-size: 16px;
-    box-sizing: border-box;
-  }
-
-  button {
-    cursor: pointer;
-  }
-
-  .linha-config {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-    justify-content: center;
-    margin: 18px 0;
-  }
-
-  .campo {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    min-width: 180px;
-    text-align: left;
-  }
-
-  .campo small {
-    color: var(--muted);
-  }
-
-  #status {
-    min-height: 24px;
-    font-weight: bold;
-    margin-bottom: 10px;
-    color: var(--green);
-  }
-
-  #frequenciaDetectada,
-  #notaDetectada,
-  #desvioCents {
-    font-family: monospace;
-    font-size: 16px;
-    color: #444;
-    margin-top: 6px;
-  }
-
-  #notaDetectada {
-    font-size: 28px;
-    font-weight: bold;
-    color: #111;
-    margin-top: 14px;
-  }
-
-  .grade {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 24px;
-    align-items: start;
-    margin-top: 20px;
-  }
-
-  .subpainel {
-    border: 1px solid #e6e6e6;
-    border-radius: 10px;
-    padding: 18px;
-    background: #fff;
-  }
-
-  canvas {
-    width: 100%;
-    display: block;
-    margin: 12px auto 0;
-    background: #fff;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-  }
-
-  #grafico {
-    max-width: 700px;
-    height: 280px;
-  }
-
-  #circuloQuintas {
-    touch-action: manipulation;
-  }
-
-  .observacao {
-    font-size: 13px;
-    color: var(--muted);
-    margin-top: 18px;
-    line-height: 1.5;
-  }
-
-  .bloco-info {
-    text-align: left;
-    margin-top: 16px;
-    line-height: 1.6;
-    font-size: 15px;
-  }
-
-  .bloco-info strong {
-    color: #111;
-  }
-
-  .botoneria {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    justify-content: center;
-    margin-top: 12px;
-  }
-
-  .botoneria button {
-    min-width: 120px;
-  }
-
-  .tabela {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 18px;
-    font-size: 14px;
-    text-align: left;
-  }
-
-  .tabela th,
-  .tabela td {
-    border: 1px solid #ddd;
-    padding: 8px;
-  }
-
-  .tabela th {
-    background: #f7f7f7;
-  }
-
-  .tag {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 999px;
-    background: #f0f0f0;
-    font-size: 12px;
-    margin-left: 8px;
-    vertical-align: middle;
-  }
-
-  .warn {
-    color: var(--amber);
-    font-weight: bold;
-  }
-
-  .ok {
-    color: var(--green);
-    font-weight: bold;
-  }
-
-  .tabela th small {
-    display: block;
-    font-size: 12px;
-    font-weight: normal;
-    color: #666;
-    margin-top: 2px;
-  }
-
-  #medidorCents {
-    max-width: 520px;
-    margin: 14px auto 0;
-  }
-
-  #escalaCents {
-    position: relative;
-    height: 24px;
-    border-radius: 999px;
-    border: 1px solid #bbb;
-    background: #eee;
-    overflow: hidden;
-  }
-
-  .marca-centro {
-    position: absolute;
-    left: 50%;
-    top: 0;
-    width: 2px;
-    height: 100%;
-    background: #222;
-    transform: translateX(-50%);
-    opacity: 0.85;
-  }
-
-  .marca-guia {
-    position: absolute;
-    top: 3px;
-    width: 1px;
-    height: 18px;
-    background: rgba(0, 0, 0, 0.28);
-    transform: translateX(-50%);
-  }
-
-  .guia-menos-20 {
-    left: 25%;
-  }
-
-  .guia-menos-5 {
-    left: 43.75%;
-  }
-
-  .guia-mais-5 {
-    left: 56.25%;
-  }
-
-  .guia-mais-20 {
-    left: 75%;
-  }
-
-  #ponteiroCents {
-    position: absolute;
-    top: -4px;
-    width: 3px;
-    height: 32px;
-    background: #111;
-    left: 50%;
-    transform: translateX(-50%);
-    border-radius: 2px;
-    box-shadow: 0 0 2px rgba(0, 0, 0, 0.35);
-  }
-
-  #rotulosCents {
-    position: relative;
-    height: 18px;
-    margin-top: 4px;
-    font-size: 12px;
-    color: #555;
-  }
-
-  #rotulosCents span {
-    position: absolute;
-    transform: translateX(-50%);
-    white-space: nowrap;
-  }
-
-  #rotuloEsquerda {
-    left: 0%;
-    transform: translateX(0);
-  }
-
-  #rotuloMenos20 {
-    left: 25%;
-  }
-
-  #rotuloMenos5 {
-    left: 43.75%;
-  }
-
-  #rotuloZero {
-    left: 50%;
-  }
-
-  #rotuloMais5 {
-    left: 56.25%;
-  }
-
-  #rotuloMais20 {
-    left: 75%;
-  }
-
-  #rotuloDireita {
-    left: 100%;
-    transform: translateX(-100%);
-  }
-
-  .circulo-quintas-dom {
-    position: relative;
-    width: var(--circulo-tamanho);
-    aspect-ratio: 1 / 1;
-    height: auto;
-    margin: 18px auto 0;
-    border-radius: 50%;
-    background:
-      radial-gradient(circle at center,
-        #ffffff 0 28%,
-        #f7f9fc 28% 48%,
-        #eef3f8 48% 50%,
-        #ffffff 50% 100%);
-    box-shadow:
-      0 14px 36px rgba(0, 0, 0, 0.10),
-      inset 0 0 0 1px #dfe6ee;
-    overflow: hidden;
-  }
-
-  .anel-externo,
-  .anel-interno {
-    position: absolute;
-    inset: 0;
-    border-radius: 50%;
-    pointer-events: none;
-  }
-
-  .anel-externo {
-    inset: 6.5%;
-    border: 2px solid #d8e0ea;
-  }
-
-  .anel-interno {
-    inset: 15%;
-    border: 1px solid #e3e8ef;
-  }
-
-  .miolo-circulo {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: var(--miolo-tamanho);
-    height: var(--miolo-tamanho);
-    min-width: var(--miolo-min);
-    min-height: var(--miolo-min);
-    transform: translate(-50%, -50%);
-    border-radius: 50%;
-    background: linear-gradient(180deg, #ffffff 0%, #f7f9fc 100%);
-    box-shadow:
-      0 8px 24px rgba(0, 0, 0, 0.10),
-      inset 0 0 0 1px #dce4ec;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: var(--miolo-padding);
-    z-index: 5;
-  }
-
-  .miolo-titulo {
-    font-size: var(--miolo-titulo-fonte);
-    font-weight: 700;
-    color: #111;
-  }
-
-  .miolo-nome {
-    margin-top: 10px;
-    font-size: var(--miolo-nome-fonte);
-    font-weight: 700;
-    color: #1565c0;
-    line-height: 1.2;
-    max-width: 90%;
-  }
-
-  .nota-item {
-    position: absolute;
-    width: var(--nota-tamanho);
-    height: var(--nota-tamanho);
-    min-width: var(--nota-min);
-    min-height: var(--nota-min);
-    max-width: var(--nota-max);
-    max-height: var(--nota-max);
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
-    background: linear-gradient(180deg, #ffffff 0%, #edf3f9 100%);
-    box-shadow:
-      0 6px 18px rgba(0, 0, 0, 0.10),
-      inset 0 0 0 1px #d9e2ec;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    user-select: none;
-    z-index: 4;
-  }
-
-  .nota-item .nome {
-    font-size: var(--nota-fonte);
-    font-weight: 700;
-    color: #111;
-    line-height: 1;
-  }
-
-  .nota-item .valor {
-    font-size: var(--nota-valor-fonte);
-    color: #5b6470;
-    margin-top: 6px;
-  }
-
-  .rotulo-ajuste {
-    position: absolute;
-    transform: translate(-50%, -50%);
-    min-width: var(--rotulo-min);
-    padding: var(--rotulo-padding-y) var(--rotulo-padding-x);
-    border-radius: var(--rotulo-radius);
-    background: rgba(255, 255, 255, 0.82);
-    border: 1px solid rgba(219, 227, 236, 0.9);
-    box-shadow: 0 5px 14px rgba(0, 0, 0, 0.08);
-    font-size: var(--rotulo-fonte);
-    font-weight: 600;
-    color: #334155;
-    text-align: center;
-    white-space: nowrap;
-    z-index: 3;
-    backdrop-filter: blur(2px);
-  }
-
-  .rotulo-ajuste.neutra {
-    background: rgba(102, 187, 106, 0.3);
-    border-color: rgba(27, 94, 32, 0.28);
-  }
-
-  .rotulo-ajuste.larga {
-    background: rgba(66, 165, 245, 0.3);
-    border-color: rgba(13, 71, 161, 0.28);
-  }
-
-  .rotulo-ajuste.estreita {
-    background: rgba(239, 83, 80, 0.3);
-    border-color: rgba(183, 28, 28, 0.28);
-  }
-
-  .rotulo-ajuste.residual {
-    color: #8d6e00;
-  }
-
-  @media (max-width: 600px) {
-    body {
-      margin: 8px;
-    }
-
-    .painel {
-      padding: 12px;
-      margin: 8px auto;
-    }
-
-    .subpainel {
-      padding: 10px;
-    }
-
-    h1 {
-      font-size: 24px;
-    }
-
-    h2 {
-      font-size: 19px;
-    }
-
-    button,
-    input,
-    select {
-      font-size: 15px;
-      padding: 9px 10px;
-    }
-
-    .campo {
-      min-width: 150px;
-    }
-
-    :root {
-      --circulo-tamanho: min(96vw, 430px);
-
-      --raio-notas: 0.40;
-
-      --nota-tamanho: 10.5%;
-      --nota-min: 44px;
-      --nota-max: 58px;
-      --nota-fonte: 15px;
-      --nota-valor-fonte: 9px;
-
-      --miolo-tamanho: 26%;
-      --miolo-min: 105px;
-      --miolo-padding: 10px;
-      --miolo-titulo-fonte: 14px;
-      --miolo-nome-fonte: 14px;
-
-      --rotulo-min: 50px;
-      --rotulo-padding-y: 4px;
-      --rotulo-padding-x: 5px;
-      --rotulo-fonte: 9px;
-      --rotulo-radius: 8px;
-    }
-
-    .nota-item .valor {
-      margin-top: 3px;
-    }
-
-    .miolo-nome {
-      margin-top: 6px;
-    }
-  }
-
-  @media (max-width: 380px) {
-    :root {
-      --circulo-tamanho: 96vw;
-
-      --raio-notas: 0.38;
-
-      --nota-min: 38px;
-      --nota-max: 48px;
-      --nota-fonte: 13px;
-      --nota-valor-fonte: 8px;
-
-      --miolo-min: 90px;
-      --miolo-padding: 8px;
-      --miolo-titulo-fonte: 12px;
-      --miolo-nome-fonte: 12px;
-
-      --rotulo-min: 44px;
-      --rotulo-padding-y: 3px;
-      --rotulo-padding-x: 4px;
-      --rotulo-fonte: 8px;
-    }
-  }
-</style>
+    <style>
+      :root {
+        --bg: #f4f4f4;
+        --panel: #ffffff;
+        --text: #222;
+        --muted: #666;
+        --line: #d8d8d8;
+        --blue: #1565c0;
+        --red: #d32f2f;
+        --green: #1b5e20;
+        --amber: #8d6e00;
+        /* Tamanhos principais do círculo de quintas */
+        --circulo-tamanho: min(760px, 92vw);
+        --raio-notas: 0.42;
+        --nota-tamanho: 30%;
+        --nota-min: 60px;
+        --nota-max: 82px;
+        --nota-fonte: 22px;
+        --nota-valor-fonte: 12px;
+        --miolo-tamanho: 50%;
+        --miolo-min: 200px;
+        --miolo-padding: 18px;
+        --miolo-titulo-fonte: 22px;
+        --miolo-nome-fonte: clamp(20px, 2.5vw, 30px);
+        --rotulo-min: 38px;
+        --rotulo-padding-y: 7px;
+        --rotulo-padding-x: 10px;
+        --rotulo-fonte: 9px;
+        --rotulo-radius: 12px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: Arial, sans-serif;
+        margin: 24px;
+        background: var(--bg);
+        color: var(--text);
+        text-align: center;
+      }
+
+      .painel {
+        max-width: 1400px;
+        margin: 24px auto;
+        background: var(--panel);
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        padding: 24px;
+      }
+
+      h1 {
+        margin-top: 0;
+        font-size: 30px;
+      }
+
+      h2 {
+        margin-top: 0;
+        font-size: 22px;
+      }
+
+      p {
+        line-height: 1.5;
+      }
+
+      button,
+      input,
+      select {
+        padding: 10px 12px;
+        font-size: 16px;
+        box-sizing: border-box;
+      }
+
+      button {
+        cursor: pointer;
+      }
+
+      .linha-config {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin: 18px 0;
+      }
+
+      .campo {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-width: 180px;
+        text-align: left;
+      }
+
+      .campo small {
+        color: var(--muted);
+      }
+
+      #status {
+        min-height: 24px;
+        font-weight: bold;
+        margin-bottom: 10px;
+        color: var(--green);
+      }
+
+      #frequenciaDetectada,
+      #notaDetectada,
+      #desvioCents {
+        font-family: monospace;
+        font-size: 16px;
+        color: #444;
+        margin-top: 6px;
+      }
+
+      #notaDetectada {
+        font-size: 28px;
+        font-weight: bold;
+        color: #111;
+        margin-top: 14px;
+      }
+
+      .grade {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 24px;
+        align-items: start;
+        margin-top: 20px;
+      }
+
+      .subpainel {
+        border: 1px solid #e6e6e6;
+        border-radius: 10px;
+        padding: 18px;
+        background: #fff;
+      }
+
+      canvas {
+        width: 100%;
+        display: block;
+        margin: 12px auto 0;
+        background: #fff;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+      }
+
+      #grafico {
+        max-width: 700px;
+        height: 280px;
+      }
+
+      #circuloQuintas {
+        touch-action: manipulation;
+      }
+
+      .observacao {
+        font-size: 13px;
+        color: var(--muted);
+        margin-top: 18px;
+        line-height: 1.5;
+      }
+
+      .bloco-info {
+        text-align: left;
+        margin-top: 16px;
+        line-height: 1.6;
+        font-size: 15px;
+      }
+
+      .bloco-info strong {
+        color: #111;
+      }
+
+      .botoneria {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-top: 12px;
+      }
+
+      .botoneria button {
+        min-width: 120px;
+      }
+
+      .tabela {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 18px;
+        font-size: 14px;
+        text-align: left;
+      }
+
+      .tabela th,
+      .tabela td {
+        border: 1px solid #ddd;
+        padding: 8px;
+      }
+
+      .tabela th {
+        background: #f7f7f7;
+      }
+
+      .tag {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 999px;
+        background: #f0f0f0;
+        font-size: 12px;
+        margin-left: 8px;
+        vertical-align: middle;
+      }
+
+      .warn {
+        color: var(--amber);
+        font-weight: bold;
+      }
+
+      .ok {
+        color: var(--green);
+        font-weight: bold;
+      }
+
+      .tabela th small {
+        display: block;
+        font-size: 12px;
+        font-weight: normal;
+        color: #666;
+        margin-top: 2px;
+      }
+
+      #medidorCents {
+        max-width: 520px;
+        margin: 14px auto 0;
+      }
+
+      #escalaCents {
+        position: relative;
+        height: 24px;
+        border-radius: 999px;
+        border: 1px solid #bbb;
+        background: #eee;
+        overflow: hidden;
+      }
+
+      .marca-centro {
+        position: absolute;
+        left: 50%;
+        top: 0;
+        width: 2px;
+        height: 100%;
+        background: #222;
+        transform: translateX(-50%);
+        opacity: 0.85;
+      }
+
+      .marca-guia {
+        position: absolute;
+        top: 3px;
+        width: 1px;
+        height: 18px;
+        background: rgba(0, 0, 0, 0.28);
+        transform: translateX(-50%);
+      }
+
+      .guia-menos-20 {
+        left: 25%;
+      }
+
+      .guia-menos-5 {
+        left: 43.75%;
+      }
+
+      .guia-mais-5 {
+        left: 56.25%;
+      }
+
+      .guia-mais-20 {
+        left: 75%;
+      }
+
+      #ponteiroCents {
+        position: absolute;
+        top: -4px;
+        width: 3px;
+        height: 32px;
+        background: #111;
+        left: 50%;
+        transform: translateX(-50%);
+        border-radius: 2px;
+        box-shadow: 0 0 2px rgba(0, 0, 0, 0.35);
+      }
+
+      #rotulosCents {
+        position: relative;
+        height: 18px;
+        margin-top: 4px;
+        font-size: 12px;
+        color: #555;
+      }
+
+      #rotulosCents span {
+        position: absolute;
+        transform: translateX(-50%);
+        white-space: nowrap;
+      }
+
+      #rotuloEsquerda {
+        left: 0%;
+        transform: translateX(0);
+      }
+
+      #rotuloMenos20 {
+        left: 25%;
+      }
+
+      #rotuloMenos5 {
+        left: 43.75%;
+      }
+
+      #rotuloZero {
+        left: 50%;
+      }
+
+      #rotuloMais5 {
+        left: 56.25%;
+      }
+
+      #rotuloMais20 {
+        left: 75%;
+      }
+
+      #rotuloDireita {
+        left: 100%;
+        transform: translateX(-100%);
+      }
+
+      .circulo-quintas-dom {
+        position: relative;
+        width: var(--circulo-tamanho);
+        aspect-ratio: 1 / 1;
+        height: auto;
+        margin: 18px auto 0;
+        border-radius: 50%;
+        background:
+          radial-gradient(circle at center,
+            #ffffff 0 28%,
+            #f7f9fc 28% 48%,
+            #eef3f8 48% 50%,
+            #ffffff 50% 100%);
+        box-shadow:
+          0 14px 36px rgba(0, 0, 0, 0.10),
+          inset 0 0 0 1px #dfe6ee;
+        overflow: hidden;
+      }
+
+      .anel-externo,
+      .anel-interno {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        pointer-events: none;
+      }
+
+      .anel-externo {
+        inset: 6.5%;
+        border: 2px solid #d8e0ea;
+      }
+
+      .anel-interno {
+        inset: 15%;
+        border: 1px solid #e3e8ef;
+      }
+
+      .miolo-circulo {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: var(--miolo-tamanho);
+        height: var(--miolo-tamanho);
+        min-width: var(--miolo-min);
+        min-height: var(--miolo-min);
+        transform: translate(-50%, -50%);
+        border-radius: 50%;
+        background: linear-gradient(180deg, #ffffff 0%, #f7f9fc 100%);
+        box-shadow:
+          0 8px 24px rgba(0, 0, 0, 0.10),
+          inset 0 0 0 1px #dce4ec;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: var(--miolo-padding);
+        z-index: 5;
+      }
+
+      .miolo-titulo {
+        font-size: var(--miolo-titulo-fonte);
+        font-weight: 700;
+        color: #111;
+      }
+
+      .miolo-nome {
+        margin-top: 10px;
+        font-size: var(--miolo-nome-fonte);
+        font-weight: 700;
+        color: #1565c0;
+        line-height: 1.2;
+        max-width: 90%;
+      }
+
+      .nota-item {
+        position: absolute;
+        width: var(--nota-tamanho);
+        height: var(--nota-tamanho);
+        min-width: var(--nota-min);
+        min-height: var(--nota-min);
+        max-width: var(--nota-max);
+        max-height: var(--nota-max);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        background: linear-gradient(180deg, #ffffff 0%, #edf3f9 100%);
+        box-shadow:
+          0 6px 18px rgba(0, 0, 0, 0.10),
+          inset 0 0 0 1px #d9e2ec;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        user-select: none;
+        z-index: 4;
+      }
+
+      .nota-item .nome {
+        font-size: var(--nota-fonte);
+        font-weight: 700;
+        color: #111;
+        line-height: 1;
+      }
+
+      .nota-item .valor {
+        font-size: var(--nota-valor-fonte);
+        color: #5b6470;
+        margin-top: 6px;
+      }
+
+      .rotulo-ajuste {
+        position: absolute;
+        transform: translate(-50%, -50%);
+        min-width: var(--rotulo-min);
+        padding: var(--rotulo-padding-y) var(--rotulo-padding-x);
+        border-radius: var(--rotulo-radius);
+        background: rgba(255, 255, 255, 0.82);
+        border: 1px solid rgba(219, 227, 236, 0.9);
+        box-shadow: 0 5px 14px rgba(0, 0, 0, 0.08);
+        font-size: var(--rotulo-fonte);
+        font-weight: 600;
+        color: #334155;
+        text-align: center;
+        white-space: nowrap;
+        z-index: 3;
+        backdrop-filter: blur(2px);
+      }
+
+      .rotulo-ajuste.neutra {
+        background: rgba(102, 187, 106, 0.3);
+        border-color: rgba(27, 94, 32, 0.28);
+      }
+
+      .rotulo-ajuste.larga {
+        background: rgba(66, 165, 245, 0.3);
+        border-color: rgba(13, 71, 161, 0.28);
+      }
+
+      .rotulo-ajuste.estreita {
+        background: rgba(239, 83, 80, 0.3);
+        border-color: rgba(183, 28, 28, 0.28);
+      }
+
+      .rotulo-ajuste.residual {
+        color: #8d6e00;
+      }
+
+      @media (max-width: 600px) {
+        body {
+          margin: 8px;
+        }
+
+        .painel {
+          padding: 12px;
+          margin: 8px auto;
+        }
+
+        .subpainel {
+          padding: 10px;
+        }
+
+        h1 {
+          font-size: 24px;
+        }
+
+        h2 {
+          font-size: 19px;
+        }
+
+        button,
+        input,
+        select {
+          font-size: 15px;
+          padding: 9px 10px;
+        }
+
+        .campo {
+          min-width: 150px;
+        }
+
+        :root {
+          --circulo-tamanho: min(96vw, 430px);
+          --raio-notas: 0.40;
+          --nota-tamanho: 10.5%;
+          --nota-min: 44px;
+          --nota-max: 58px;
+          --nota-fonte: 15px;
+          --nota-valor-fonte: 9px;
+          --miolo-tamanho: 26%;
+          --miolo-min: 105px;
+          --miolo-padding: 10px;
+          --miolo-titulo-fonte: 14px;
+          --miolo-nome-fonte: 14px;
+          --rotulo-min: 50px;
+          --rotulo-padding-y: 4px;
+          --rotulo-padding-x: 5px;
+          --rotulo-fonte: 9px;
+          --rotulo-radius: 8px;
+        }
+
+        .nota-item .valor {
+          margin-top: 3px;
+        }
+
+        .miolo-nome {
+          margin-top: 6px;
+        }
+      }
+
+      @media (max-width: 380px) {
+        :root {
+          --circulo-tamanho: 96vw;
+          --raio-notas: 0.38;
+          --nota-min: 38px;
+          --nota-max: 48px;
+          --nota-fonte: 13px;
+          --nota-valor-fonte: 8px;
+          --miolo-min: 90px;
+          --miolo-padding: 8px;
+          --miolo-titulo-fonte: 12px;
+          --miolo-nome-fonte: 12px;
+          --rotulo-min: 44px;
+          --rotulo-padding-y: 3px;
+          --rotulo-padding-x: 4px;
+          --rotulo-fonte: 8px;
+        }
+      }
+    </style>
   </head>
   <body>
     <div class="painel">
@@ -589,8 +576,7 @@
       <div class="bloco-info">
         <strong>Instruções de uso:</strong>
         <br>
-        <br> • <strong>Ativar microfone:</strong> inicia a captação de áudio e exibe a frequência detectada, nota e desvio em cents. <br> • <strong>Zerar ajustes:</strong> remove todas as alterações aplicadas às quintas, retornando ao estado base do preset selecionado. <br> • <strong>Preset de temperamento:</strong> carrega distribuições históricas de quintas (pitagórico, igual, mesotônico, etc.). <br> • <strong>Ajuste das quintas:</strong> cada intervalo pode ser alterado por frações de coma pitagórico (c.p.) ou sintônico (c.s.), acumuladas localmente. O fechamento do círculo gera um intervalo residual, localizado entre <strong>Mib–Sol#</strong> ou <strong>Lab–Do#</strong>, conforme a enarmonia selecionada. <br> • <strong>Estabilidade:</strong> controla a suavização da frequência detectada. Valores maiores tornam a leitura mais estável (menos variação), porém mais lenta para reagir; valores menores deixam a resposta mais rápida, porém mais sensível a flutuações. <br> • <strong>Sensibilidade:</strong> controla o volume mínimo necessário para o afinador detectar o som. Valores maiores detectam sons mais fracos; valores menores exigem um som mais forte e ajudam a evitar ruídos do ambiente.
-  <br>
+        <br> • <strong>Ativar microfone:</strong> inicia a captação de áudio e exibe a frequência detectada, nota e desvio em cents. <br> • <strong>Zerar ajustes:</strong> remove todas as alterações aplicadas às quintas, retornando ao estado base do preset selecionado. <br> • <strong>Preset de temperamento:</strong> carrega distribuições históricas de quintas (pitagórico, igual, mesotônico, etc.). <br> • <strong>Ajuste das quintas:</strong> cada intervalo pode ser alterado por frações de coma pitagórico (c.p.) ou sintônico (c.s.), acumuladas localmente. O fechamento do círculo gera um intervalo residual, localizado entre <strong>Mib–Sol#</strong> ou <strong>Lab–Do#</strong>, conforme a enarmonia selecionada. <br> • <strong>Estabilidade:</strong> controla a suavização da frequência detectada. Valores maiores tornam a leitura mais estável (menos variação), porém mais lenta para reagir; valores menores deixam a resposta mais rápida, porém mais sensível a flutuações. <br> • <strong>Sensibilidade:</strong> controla o volume mínimo necessário para o afinador detectar o som. Valores maiores detectam sons mais fracos; valores menores exigem um som mais forte e ajudam a evitar ruídos do ambiente. <br>
       </div>
       <div class="linha-config">
         <div class="campo">
@@ -611,6 +597,15 @@
           <input type="range" id="sensibilidadeSom" min="0" max="100" value="50">
           <div id="valorSensibilidadeSom">50%</div>
           <small>100% detecta sons mais fracos; 0% exige som mais forte.</small>
+        </div>
+        <div class="campo">
+          <label for="modoDesempenho">Desempenho</label>
+          <select id="modoDesempenho">
+            <option value="economico">Econômico</option>
+            <option value="normal">Normal</option>
+            <option value="completo" selected>Completo</option>
+          </select>
+          <small>Econômico reduz processamento; Completo usa a resposta máxima do aparelho.</small>
         </div>
       </div>
       <div class="botoneria">
@@ -742,16 +737,12 @@
       let animationId = null;
       let freqSuavizada = null;
       let suavizado = null;
-
-const ANALISES_POR_SEGUNDO = 30;
-const DESENHOS_GRAFICO_POR_SEGUNDO = 25;
-
-const INTERVALO_ANALISE_MS = 1000 / ANALISES_POR_SEGUNDO;
-const INTERVALO_DESENHO_GRAFICO_MS = 1000 / DESENHOS_GRAFICO_POR_SEGUNDO;
-
-let ultimaAnalise = 0;
-let ultimoDesenhoGrafico = 0;
-
+      let ANALISES_POR_SEGUNDO = 0;
+      let DESENHOS_GRAFICO_POR_SEGUNDO = 0;
+      let INTERVALO_ANALISE_MS = 0;
+      let INTERVALO_DESENHO_GRAFICO_MS = 0;
+      let ultimaAnalise = 0;
+      let ultimoDesenhoGrafico = 0;
       const LIMIAR_PADRAO = 0.003;
       const btnIniciar = document.getElementById("btnIniciar");
       const statusEl = document.getElementById("status");
@@ -1490,7 +1481,8 @@ let ultimoDesenhoGrafico = 0;
     
 																		
 																			
-																			<div style="
+																			
+																				<div style="
       background:${cor};
       color:#fff;
       border-radius:8px;
@@ -1500,9 +1492,9 @@ let ultimoDesenhoGrafico = 0;
       flex-direction:column;
       justify-content:center;
     ">
-																				<div style="font-weight:bold;">${obterNomeIntervaloExibido(item.pcBase, item.pcAlvo)}</div>
-																				<div style="font-size:13px; margin-top:4px;">${formatSignedCents(erro, 3)}</div>
-																			</div>
+																					<div style="font-weight:bold;">${obterNomeIntervaloExibido(item.pcBase, item.pcAlvo)}</div>
+																					<div style="font-size:13px; margin-top:4px;">${formatSignedCents(erro, 3)}</div>
+																				</div>
   `;
       }
 
@@ -1708,7 +1700,8 @@ let ultimoDesenhoGrafico = 0;
       
 																		
 																			
-																			<div style="
+																			
+																				<div style="
         width: 90px;
         height: 12px;
         border-radius: 999px;
@@ -1735,9 +1728,9 @@ let ultimoDesenhoGrafico = 0;
         const tamanho = Math.min(rect.width, rect.height);
         const cx = tamanho / 2;
         const cy = tamanho / 2;
-const estilos = getComputedStyle(document.documentElement);
-const raioNotasFator = parseFloat(estilos.getPropertyValue("--raio-notas")) || 0.42;
-const raioNotas = tamanho * raioNotasFator;
+        const estilos = getComputedStyle(document.documentElement);
+        const raioNotasFator = parseFloat(estilos.getPropertyValue("--raio-notas")) || 0.42;
+        const raioNotas = tamanho * raioNotasFator;
         const ordemPcs = estadoTemperamento.quintas.map(q => q.pcDe);
         const anguloInicial = -Math.PI / 2;
         const posicoes = [];
@@ -1760,8 +1753,9 @@ const raioNotas = tamanho * raioNotasFator;
       
 																		
 																			
-																			<div class="nome">${obterNomeLatinoCirculo(pc)}</div>
-																			<div class="valor">${estadoTemperamento.mapaCentsPorPc[pc].toFixed(1)} c</div>
+																			
+																				<div class="nome">${obterNomeLatinoCirculo(pc)}</div>
+																				<div class="valor">${estadoTemperamento.mapaCentsPorPc[pc].toFixed(1)} c</div>
     `;
           el.appendChild(nota);
         }
@@ -1789,7 +1783,8 @@ const raioNotas = tamanho * raioNotasFator;
           rotulo.innerHTML = linhas.map(l => `
 																		
 																			
-																			<div>${l}</div>`).join("");
+																			
+																				<div>${l}</div>`).join("");
           el.appendChild(rotulo);
         }
         atualizarNomeTemperamentoCentro();
@@ -1861,20 +1856,14 @@ const raioNotas = tamanho * raioNotasFator;
         };
       }
 
-
-
-function desenharGraficoLimitado(array, sampleRate, fftSize, peakFrequency = null) {
-  const agora = performance.now();
-
-  if (agora - ultimoDesenhoGrafico < INTERVALO_DESENHO_GRAFICO_MS) {
-    return;
-  }
-
-  ultimoDesenhoGrafico = agora;
-  desenharGrafico(array, sampleRate, fftSize, peakFrequency);
-}
-
-
+      function desenharGraficoLimitado(array, sampleRate, fftSize, peakFrequency = null) {
+        const agora = performance.now();
+        if (agora - ultimoDesenhoGrafico < INTERVALO_DESENHO_GRAFICO_MS) {
+          return;
+        }
+        ultimoDesenhoGrafico = agora;
+        desenharGrafico(array, sampleRate, fftSize, peakFrequency);
+      }
 
       function desenharGrafico(array, sampleRate, fftSize, peakFrequency = null) {
         const width = canvasGrafico.width;
@@ -1923,20 +1912,15 @@ function desenharGraficoLimitado(array, sampleRate, fftSize, peakFrequency = nul
       }
 
       function atualizarAnalise() {
-  animationId = requestAnimationFrame(atualizarAnalise);
-
-  const agora = performance.now();
-
-  if (agora - ultimaAnalise < INTERVALO_ANALISE_MS) {
-    return;
-  }
-
-  ultimaAnalise = agora;
-
-  if (!analyser || !timeDataArray || !freqDataArray || !audioContext) {
-    return;
-  }
-        if (!analyser || !timeDataArray || !freqDataArray || !audioContext) return;
+        animationId = requestAnimationFrame(atualizarAnalise);
+        const agora = performance.now();
+        if (INTERVALO_ANALISE_MS > 0 && agora - ultimaAnalise < INTERVALO_ANALISE_MS) { // 0 - sem limite
+          return;
+        }
+        ultimaAnalise = agora;
+        if (!analyser || !timeDataArray || !freqDataArray || !audioContext) {
+          return;
+        }
         analyser.getFloatTimeDomainData(timeDataArray);
         analyser.getByteFrequencyData(freqDataArray);
         if (!suavizado) {
@@ -1976,7 +1960,6 @@ function desenharGraficoLimitado(array, sampleRate, fftSize, peakFrequency = nul
           limparNota();
           desenharGraficoLimitado(suavizado, audioContext.sampleRate, analyser.fftSize, null);
         }
-
       }
       async function iniciarMicrofone() {
         try {
@@ -2006,6 +1989,23 @@ function desenharGraficoLimitado(array, sampleRate, fftSize, peakFrequency = nul
           alert("Erro: " + erro.name + " | " + erro.message);
         }
       }
+
+      function aplicarModoDesempenho(modo) {
+        if (modo === "economico") {
+          ANALISES_POR_SEGUNDO = 20;
+          DESENHOS_GRAFICO_POR_SEGUNDO = 10;
+        }
+        if (modo === "normal") {
+          ANALISES_POR_SEGUNDO = 30;
+          DESENHOS_GRAFICO_POR_SEGUNDO = 20;
+        }
+        if (modo === "completo") {
+          ANALISES_POR_SEGUNDO = 0; // sem limite, como era antes
+          DESENHOS_GRAFICO_POR_SEGUNDO = 0; // sem limite, como era antes
+        }
+        INTERVALO_ANALISE_MS = ANALISES_POR_SEGUNDO > 0 ? 1000 / ANALISES_POR_SEGUNDO : 0;
+        INTERVALO_DESENHO_GRAFICO_MS = DESENHOS_GRAFICO_POR_SEGUNDO > 0 ? 1000 / DESENHOS_GRAFICO_POR_SEGUNDO : 0;
+      }
       // =========================================================
       // EVENTOS
       // ========================================================	=
@@ -2033,6 +2033,11 @@ function desenharGraficoLimitado(array, sampleRate, fftSize, peakFrequency = nul
           aplicarPreset(presetTemperamento.value);
         }
       });
+      const modoDesempenhoSelect = document.getElementById("modoDesempenho");
+      modoDesempenhoSelect.addEventListener("change", () => {
+        aplicarModoDesempenho(modoDesempenhoSelect.value);
+      });
+      aplicarModoDesempenho(modoDesempenhoSelect.value);
       // =========================================================
       // INIT
       // =========================================================
