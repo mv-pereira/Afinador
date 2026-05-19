@@ -1905,10 +1905,33 @@
           ctxGrafico.font = "14px Arial";
           ctxGrafico.fillText(peakFrequency.toFixed(1) + " Hz", Math.min(xPeak + 6, width - 90), 18);
         }
+
+        const a4Atual = parseFloat(a4RefInput.value) || 440;
+        const textoA4 = `a¹ = ${Number.isInteger(a4Atual) ? a4Atual.toFixed(0) : a4Atual.toFixed(1)} Hz`;
+
+        ctxGrafico.save();
+
+        ctxGrafico.fillStyle = "rgba(255, 243, 205, 0.95)";
+        ctxGrafico.strokeStyle = "#d6a800";
+        ctxGrafico.lineWidth = 1;
+
+        ctxGrafico.beginPath();
+        ctxGrafico.roundRect(10, 10, 108, 28, 8);
+        ctxGrafico.fill();
+        ctxGrafico.stroke();
+
+        ctxGrafico.fillStyle = "#111";
+        ctxGrafico.font = "bold 14px Arial";
+        ctxGrafico.fillText(textoA4, 18, 29);
+
+        ctxGrafico.restore();
+
         ctxGrafico.fillStyle = "#444";
         ctxGrafico.font = "12px Arial";
         ctxGrafico.fillText("0 Hz", 6, height - 6);
         ctxGrafico.fillText(freqMax.toFixed(0) + " Hz", width - 58, height - 6);
+
+
       }
 
       function atualizarAnalise() {
@@ -1996,12 +2019,12 @@
           DESENHOS_GRAFICO_POR_SEGUNDO = 15;
         }
         if (modo === "normal") {
-          ANALISES_POR_SEGUNDO = 40;
-          DESENHOS_GRAFICO_POR_SEGUNDO = 30;
+          ANALISES_POR_SEGUNDO = 50;
+          DESENHOS_GRAFICO_POR_SEGUNDO = 40;
         }
         if (modo === "completo") {
-          ANALISES_POR_SEGUNDO = 0; // sem limite, como era antes
-          DESENHOS_GRAFICO_POR_SEGUNDO = 0; // sem limite, como era antes
+          ANALISES_POR_SEGUNDO = 0; // sem limite
+          DESENHOS_GRAFICO_POR_SEGUNDO = 0; // sem limite
         }
         INTERVALO_ANALISE_MS = ANALISES_POR_SEGUNDO > 0 ? 1000 / ANALISES_POR_SEGUNDO : 0;
         INTERVALO_DESENHO_GRAFICO_MS = DESENHOS_GRAFICO_POR_SEGUNDO > 0 ? 1000 / DESENHOS_GRAFICO_POR_SEGUNDO : 0;
