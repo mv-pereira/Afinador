@@ -786,7 +786,7 @@
           <h2>Espectro FFT</h2>
           <div class="controle-modo-deteccao">
             <span>Pico</span>
-            <button id="seletorModoDeteccao" class="seletor-modo" type="button" role="switch" aria-checked="false" title="Alternar método de detecção">
+            <button id="seletorModoDeteccao" class="seletor-modo" type="button" role="switch" aria-checked="true" title="Alternar método de detecção">
               <span class="seletor-bolinha"></span>
             </button>
             <span>Fundamental</span>
@@ -905,8 +905,11 @@
         btnAjuda.setAttribute("aria-expanded", String(!ajudaAberta));
         btnAjuda.lastChild.textContent = ajudaAberta ? " Ajuda" : " Fechar ajuda";
       });
-      let modoDeteccao = "dominante";
+      let modoDeteccao = "fundamental";
       const seletorModoDeteccao = document.getElementById("seletorModoDeteccao");
+      seletorModoDeteccao.classList.add("ativo");
+      seletorModoDeteccao.setAttribute("aria-checked", "true");
+      seletorModoDeteccao.title = "Modo atual: fundamental provável";
       seletorModoDeteccao.addEventListener("click", () => {
         modoDeteccao = modoDeteccao === "dominante" ? "fundamental" : "dominante";
         const fundamentalAtivo = modoDeteccao === "fundamental";
@@ -1657,6 +1660,7 @@
 																			
 																			
 																				
+												
 												<div style="
       background:${cor};
       color:#fff;
@@ -1877,6 +1881,7 @@
 																			
 																			
 																				
+												
 												<div style="
         width: 90px;
         height: 12px;
@@ -1931,6 +1936,7 @@
 																			
 																			
 																				
+												
 												<div class="nome">${obterNomeLatinoCirculo(pc)}</div>
 												<div class="valor">${estadoTemperamento.mapaCentsPorPc[pc].toFixed(1)} c</div>
     `;
@@ -1962,6 +1968,7 @@
 																			
 																			
 																				
+												
 												<div>${l}</div>`).join("");
           el.appendChild(rotulo);
         }
@@ -2090,7 +2097,7 @@
           return null;
         }
         const pisoEspectral = calcularPisoEspectral(array, startIndex, endIndex);
-        const amplitudeMinima = Math.max(pisoEspectral + 8, magnitudeDominante * 0.35);
+        const amplitudeMinima = Math.max(pisoEspectral + 8, magnitudeDominante * 0.40);
         let melhorCandidato = null;
         let melhorPontuacao = -Infinity;
         for (let i = startIndex; i <= endIndex; i++) {
@@ -2127,63 +2134,28 @@
           if (amplitudeNormalizada < 0.50 && harmonicosEncontrados < 2) {
             continue;
           }
-const magnitudeSegundoHarmonico = obterMagnitudeProxima(
-  array,
-  i * 2,
-  2
-);
-
-const magnitudeTerceiroHarmonico = obterMagnitudeProxima(
-  array,
-  i * 3,
-  2
-);
-
-const segundoMuitoMaisForte =
-  magnitudeSegundoHarmonico > magnitude * 2.5;
-
-const terceiroFraco =
-  magnitudeTerceiroHarmonico <
-  Math.max(
-    pisoEspectral + 6,
-    magnitudeDominante * 0.10
-  );
-
-if (
-  amplitudeNormalizada < 0.50 &&
-  segundoMuitoMaisForte &&
-  terceiroFraco
-) {
-  continue;
-}
-const bonusGrave = 0.08 * (
-  1 - (frequencia - freqMin) / (freqMax - freqMin)
-);
-
-const pontuacaoFinal = pontuacao + bonusGrave;
-
-const margemPontuacao = 0.12;
-
-const deveSubstituir =
-  melhorCandidato === null ||
-  pontuacaoFinal > melhorPontuacao + margemPontuacao ||
-  (
-    Math.abs(pontuacaoFinal - melhorPontuacao) <= margemPontuacao &&
-    frequencia < melhorCandidato.frequency
-  );
-
-if (deveSubstituir) {
-  melhorPontuacao = pontuacaoFinal;
-
-  melhorCandidato = {
-    index: refinarIndicePico(array, i),
-    frequency: frequencia,
-    magnitude,
-    pontuacao: pontuacaoFinal,
-    harmonicosEncontrados
-  };
-}
-}
+          const magnitudeSegundoHarmonico = obterMagnitudeProxima(array, i * 2, 2);
+          const magnitudeTerceiroHarmonico = obterMagnitudeProxima(array, i * 3, 2);
+          const segundoMuitoMaisForte = magnitudeSegundoHarmonico > magnitude * 2.5;
+          const terceiroFraco = magnitudeTerceiroHarmonico < Math.max(pisoEspectral + 6, magnitudeDominante * 0.10);
+          if (amplitudeNormalizada < 0.50 && segundoMuitoMaisForte && terceiroFraco) {
+            continue;
+          }
+          const bonusGrave = 0.08 * (1 - (frequencia - freqMin) / (freqMax - freqMin));
+          const pontuacaoFinal = pontuacao + bonusGrave;
+          const margemPontuacao = 0.12;
+          const deveSubstituir = melhorCandidato === null || pontuacaoFinal > melhorPontuacao + margemPontuacao || (Math.abs(pontuacaoFinal - melhorPontuacao) <= margemPontuacao && frequencia < melhorCandidato.frequency);
+          if (deveSubstituir) {
+            melhorPontuacao = pontuacaoFinal;
+            melhorCandidato = {
+              index: refinarIndicePico(array, i),
+              frequency: frequencia,
+              magnitude,
+              pontuacao: pontuacaoFinal,
+              harmonicosEncontrados
+            };
+          }
+        }
         if (!melhorCandidato) {
           return encontrarPicoDominante(array, sampleRate, fftSize);
         }
