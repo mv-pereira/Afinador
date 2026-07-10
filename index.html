@@ -2090,8 +2090,9 @@
           return null;
         }
         const pisoEspectral = calcularPisoEspectral(array, startIndex, endIndex);
-        const amplitudeMinima = Math.max(pisoEspectral + 8, magnitudeDominante * 0.12);
+        const amplitudeMinima = Math.max(pisoEspectral + 8, magnitudeDominante * 0.35);
         let melhorCandidato = null;
+        let melhorPontuacao = -Infinity;
         for (let i = startIndex; i <= endIndex; i++) {
           const magnitude = array[i];
           const ehMaximoLocal = magnitude > array[i - 1] && magnitude >= array[i + 1];
@@ -2123,21 +2124,65 @@
           const amplitudeNormalizada = magnitude / magnitudeDominante;
           const pontuacao = amplitudeNormalizada * 0.6 + suporteHarmonico + harmonicosEncontrados * 0.25;
           // Um pico fraco precisa de confirmação harmônica.
-          if (amplitudeNormalizada < 0.35 && harmonicosEncontrados === 0) {
+          if (amplitudeNormalizada < 0.50 && harmonicosEncontrados < 2) {
             continue;
           }
-          // Preferência pelo candidato mais grave, desde que ele
-          // tenha uma estrutura harmônica aceitável.
-          if (melhorCandidato === null || frequencia < melhorCandidato.frequency) {
-            melhorCandidato = {
-              index: refinarIndicePico(array, i),
-              frequency: frequencia,
-              magnitude,
-              pontuacao,
-              harmonicosEncontrados
-            };
-          }
-        }
+const magnitudeSegundoHarmonico = obterMagnitudeProxima(
+  array,
+  i * 2,
+  2
+);
+
+const magnitudeTerceiroHarmonico = obterMagnitudeProxima(
+  array,
+  i * 3,
+  2
+);
+
+const segundoMuitoMaisForte =
+  magnitudeSegundoHarmonico > magnitude * 2.5;
+
+const terceiroFraco =
+  magnitudeTerceiroHarmonico <
+  Math.max(
+    pisoEspectral + 6,
+    magnitudeDominante * 0.10
+  );
+
+if (
+  amplitudeNormalizada < 0.50 &&
+  segundoMuitoMaisForte &&
+  terceiroFraco
+) {
+  continue;
+}
+const bonusGrave = 0.08 * (
+  1 - (frequencia - freqMin) / (freqMax - freqMin)
+);
+
+const pontuacaoFinal = pontuacao + bonusGrave;
+
+const margemPontuacao = 0.12;
+
+const deveSubstituir =
+  melhorCandidato === null ||
+  pontuacaoFinal > melhorPontuacao + margemPontuacao ||
+  (
+    Math.abs(pontuacaoFinal - melhorPontuacao) <= margemPontuacao &&
+    frequencia < melhorCandidato.frequency
+  );
+
+if (deveSubstituir) {
+  melhorPontuacao = pontuacaoFinal;
+
+  melhorCandidato = {
+    index: refinarIndicePico(array, i),
+    frequency: frequencia,
+    magnitude,
+    pontuacao: pontuacaoFinal,
+    harmonicosEncontrados
+  };
+}
         if (!melhorCandidato) {
           return encontrarPicoDominante(array, sampleRate, fftSize);
         }
