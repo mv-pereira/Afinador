@@ -165,6 +165,69 @@
         line-height: 1.5;
       }
 
+      .ajuda-container {
+        max-width: 900px;
+        margin: 16px auto;
+        text-align: left;
+      }
+
+      .btn-ajuda {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border: 1px solid #cfd8e3;
+        border-radius: 999px;
+        background: #fff;
+        color: var(--blue);
+        font-weight: bold;
+        padding: 8px 14px;
+        box-shadow: 0 2px 7px rgba(0, 0, 0, 0.08);
+      }
+
+      .btn-ajuda:hover {
+        background: #f3f7fc;
+      }
+
+      .btn-ajuda:focus-visible {
+        outline: 3px solid rgba(21, 101, 192, 0.25);
+        outline-offset: 2px;
+      }
+
+      .icone-ajuda {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: var(--blue);
+        color: #fff;
+        font-size: 14px;
+      }
+
+      .conteudo-ajuda {
+        margin-top: 12px;
+        padding: 16px 18px;
+        border: 1px solid #dfe5ec;
+        border-radius: 10px;
+        background: #f8fafc;
+        color: #333;
+        line-height: 1.55;
+      }
+
+      .conteudo-ajuda ul {
+        margin: 12px 0 0;
+        padding-left: 22px;
+      }
+
+      .conteudo-ajuda li {
+        margin-bottom: 10px;
+      }
+
+      .conteudo-ajuda li:last-child {
+        margin-bottom: 0;
+      }
+
       .bloco-info {
         text-align: left;
         margin-top: 16px;
@@ -487,56 +550,58 @@
         color: #8d6e00;
       }
 
-.cabecalho-fft {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-}
+      .cabecalho-fft {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+      }
 
-.cabecalho-fft h2 {
-  margin: 0;
-}
+      .cabecalho-fft h2 {
+        margin: 0;
+        text-align: center;
+      }
 
-.controle-modo-deteccao {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  color: var(--muted);
-}
+      .controle-modo-deteccao {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: 100%;
+        font-size: 13px;
+        color: var(--muted);
+      }
 
-.seletor-modo {
-  position: relative;
-  width: 52px;
-  height: 28px;
-  padding: 0;
-  border: 0;
-  border-radius: 999px;
-  background: #bdbdbd;
-  transition: background 0.2s ease;
-}
+      .seletor-modo {
+        position: relative;
+        width: 52px;
+        height: 28px;
+        padding: 0;
+        border: 0;
+        border-radius: 999px;
+        background: #bdbdbd;
+        transition: background 0.2s ease;
+      }
 
-.seletor-bolinha {
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
-  transition: transform 0.2s ease;
-}
+      .seletor-bolinha {
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: #fff;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+        transition: transform 0.2s ease;
+      }
 
-.seletor-modo.ativo {
-  background: var(--blue);
-}
+      .seletor-modo.ativo {
+        background: var(--blue);
+      }
 
-.seletor-modo.ativo .seletor-bolinha {
-  transform: translateX(24px);
-}
+      .seletor-modo.ativo .seletor-bolinha {
+        transform: translateX(24px);
+      }
 
       @media (max-width: 600px) {
         body {
@@ -624,10 +689,41 @@
     <div class="painel">
       <h1>Afinador FFT com círculo de quintas editável</h1>
       <p> Círculo de quintas editável por frações de coma sintônico ou pitagórico. </p>
-      <div class="bloco-info">
-        <strong>Instruções de uso:</strong>
-        <br>
-        <br> • <strong>Ativar microfone:</strong> inicia a captação de áudio e exibe a frequência detectada, nota e desvio em cents. <br> • <strong>Zerar ajustes:</strong> remove todas as alterações aplicadas às quintas, retornando ao estado base do preset selecionado. <br> • <strong>Preset de temperamento:</strong> carrega distribuições históricas de quintas (pitagórico, igual, mesotônico, etc.). <br> • <strong>Ajuste das quintas:</strong> cada intervalo pode ser alterado por frações de coma pitagórico (c.p.) ou sintônico (c.s.), acumuladas localmente. O fechamento do círculo gera um intervalo residual, localizado entre <strong>Mib–Sol#</strong> ou <strong>Lab–Do#</strong>, conforme a enarmonia selecionada. <br> • <strong>Estabilidade:</strong> controla a suavização da frequência detectada. Valores maiores tornam a leitura mais estável (menos variação), porém mais lenta para reagir; valores menores deixam a resposta mais rápida, porém mais sensível a flutuações. <br> • <strong>Sensibilidade:</strong> controla o volume mínimo necessário para o afinador detectar o som. Valores maiores detectam sons mais fracos; valores menores exigem um som mais forte e ajudam a evitar ruídos do ambiente. <br>
+      <div class="ajuda-container">
+        <button id="btnAjuda" class="btn-ajuda" type="button" aria-expanded="false" aria-controls="conteudoAjuda">
+          <span class="icone-ajuda">?</span> Ajuda </button>
+        <div id="conteudoAjuda" class="conteudo-ajuda" hidden>
+          <strong>Instruções de uso:</strong>
+          <ul>
+            <li>
+              <strong>Ativar microfone:</strong> inicia a captação de áudio e exibe a frequência detectada, a nota correspondente e o desvio em cents.
+            </li>
+            <li>
+              <strong>Zerar ajustes:</strong> remove todas as alterações aplicadas às quintas, retornando ao estado base do preset selecionado.
+            </li>
+            <li>
+              <strong>Preset de temperamento:</strong> carrega distribuições históricas de quintas, como os sistemas pitagórico, igual, mesotônico e outros.
+            </li>
+            <li>
+              <strong>Ajuste das quintas:</strong> cada intervalo pode ser alterado por frações de coma pitagórico (c.p.) ou sintônico (c.s.), acumuladas localmente. O fechamento do círculo gera um intervalo residual, localizado entre <strong>Mib–Sol#</strong> ou <strong>Lab–Do#</strong>, conforme a enarmonia selecionada.
+            </li>
+            <li>
+              <strong>Estabilidade:</strong> controla a suavização da frequência detectada. Valores maiores tornam a leitura mais estável e menos sujeita a variações, porém deixam a resposta mais lenta. Valores menores deixam a resposta mais rápida, mas também mais sensível a flutuações.
+            </li>
+            <li>
+              <strong>Sensibilidade:</strong> controla o volume mínimo necessário para o afinador detectar o som. Valores maiores permitem detectar sons mais fracos. Valores menores exigem um som mais forte e ajudam a reduzir interferências causadas por ruídos do ambiente.
+            </li>
+          </ul>
+          <strong>Modos de detecção da frequência:</strong>
+          <ul>
+            <li>
+              <strong>Pico dominante:</strong> seleciona a frequência que possui a maior intensidade no espectro FFT. Esse é o método mais direto e responde rapidamente ao componente mais forte do som captado.
+            </li>
+            <li>
+              <strong>Fundamental provável:</strong> procura a frequência mais grave que apresente uma estrutura harmônica coerente. Esse modo tenta identificar a frequência fundamental mesmo quando o segundo, terceiro ou outro harmônico aparece com maior intensidade no espectro.
+            </li>
+          </ul>
+        </div>
       </div>
       <div class="linha-config">
         <div class="campo">
@@ -688,22 +784,13 @@
       <div class="grade">
         <div class="subpainel">
           <h2>Espectro FFT</h2>
-  <div class="controle-modo-deteccao">
-    <span>Pico</span>
-
-    <button
-      id="seletorModoDeteccao"
-      class="seletor-modo"
-      type="button"
-      role="switch"
-      aria-checked="false"
-      title="Alternar método de detecção"
-    >
-      <span class="seletor-bolinha"></span>
-    </button>
-
-    <span>Fundamental</span>
-  </div>
+          <div class="controle-modo-deteccao">
+            <span>Pico</span>
+            <button id="seletorModoDeteccao" class="seletor-modo" type="button" role="switch" aria-checked="false" title="Alternar método de detecção">
+              <span class="seletor-bolinha"></span>
+            </button>
+            <span>Fundamental</span>
+          </div>
           <canvas id="grafico" width="700" height="280"></canvas>
           <div class="observacao"> A frequência é estimada pelo pico dominante da FFT com suavização. Em alguns casos o detector pode capturar um harmônico em vez da fundamental. </div>
         </div>
@@ -810,37 +897,26 @@
       let INTERVALO_DESENHO_GRAFICO_MS = 0;
       let ultimaAnalise = 0;
       let ultimoDesenhoGrafico = 0;
-let modoDeteccao = "dominante";
-
-const seletorModoDeteccao =
-  document.getElementById("seletorModoDeteccao");
-
-seletorModoDeteccao.addEventListener("click", () => {
-  modoDeteccao =
-    modoDeteccao === "dominante"
-      ? "fundamental"
-      : "dominante";
-
-  const fundamentalAtivo = modoDeteccao === "fundamental";
-
-  seletorModoDeteccao.classList.toggle(
-    "ativo",
-    fundamentalAtivo
-  );
-
-  seletorModoDeteccao.setAttribute(
-    "aria-checked",
-    String(fundamentalAtivo)
-  );
-
-  seletorModoDeteccao.title = fundamentalAtivo
-    ? "Modo atual: fundamental provável"
-    : "Modo atual: pico dominante";
-
-  // Impede a suavização antiga de arrastar a leitura
-  // quando ocorre a troca de modo.
-  freqSuavizada = null;
-});
+      const btnAjuda = document.getElementById("btnAjuda");
+      const conteudoAjuda = document.getElementById("conteudoAjuda");
+      btnAjuda.addEventListener("click", () => {
+        const ajudaAberta = !conteudoAjuda.hidden;
+        conteudoAjuda.hidden = ajudaAberta;
+        btnAjuda.setAttribute("aria-expanded", String(!ajudaAberta));
+        btnAjuda.lastChild.textContent = ajudaAberta ? " Ajuda" : " Fechar ajuda";
+      });
+      let modoDeteccao = "dominante";
+      const seletorModoDeteccao = document.getElementById("seletorModoDeteccao");
+      seletorModoDeteccao.addEventListener("click", () => {
+        modoDeteccao = modoDeteccao === "dominante" ? "fundamental" : "dominante";
+        const fundamentalAtivo = modoDeteccao === "fundamental";
+        seletorModoDeteccao.classList.toggle("ativo", fundamentalAtivo);
+        seletorModoDeteccao.setAttribute("aria-checked", String(fundamentalAtivo));
+        seletorModoDeteccao.title = fundamentalAtivo ? "Modo atual: fundamental provável" : "Modo atual: pico dominante";
+        // Impede a suavização antiga de arrastar a leitura
+        // quando ocorre a troca de modo.
+        freqSuavizada = null;
+      });
       const LIMIAR_PADRAO = 0.003;
       const btnIniciar = document.getElementById("btnIniciar");
       const statusEl = document.getElementById("status");
@@ -1580,7 +1656,8 @@ seletorModoDeteccao.addEventListener("click", () => {
 																		
 																			
 																			
-																				<div style="
+																				
+												<div style="
       background:${cor};
       color:#fff;
       border-radius:8px;
@@ -1590,9 +1667,9 @@ seletorModoDeteccao.addEventListener("click", () => {
       flex-direction:column;
       justify-content:center;
     ">
-																					<div style="font-weight:bold;">${obterNomeIntervaloExibido(item.pcBase, item.pcAlvo)}</div>
-																					<div style="font-size:13px; margin-top:4px;">${formatSignedCents(erro, 3)}</div>
-																				</div>
+													<div style="font-weight:bold;">${obterNomeIntervaloExibido(item.pcBase, item.pcAlvo)}</div>
+													<div style="font-size:13px; margin-top:4px;">${formatSignedCents(erro, 3)}</div>
+												</div>
   `;
       }
 
@@ -1799,7 +1876,8 @@ seletorModoDeteccao.addEventListener("click", () => {
 																		
 																			
 																			
-																				<div style="
+																				
+												<div style="
         width: 90px;
         height: 12px;
         border-radius: 999px;
@@ -1852,8 +1930,9 @@ seletorModoDeteccao.addEventListener("click", () => {
 																		
 																			
 																			
-																				<div class="nome">${obterNomeLatinoCirculo(pc)}</div>
-																				<div class="valor">${estadoTemperamento.mapaCentsPorPc[pc].toFixed(1)} c</div>
+																				
+												<div class="nome">${obterNomeLatinoCirculo(pc)}</div>
+												<div class="valor">${estadoTemperamento.mapaCentsPorPc[pc].toFixed(1)} c</div>
     `;
           el.appendChild(nota);
         }
@@ -1882,7 +1961,8 @@ seletorModoDeteccao.addEventListener("click", () => {
 																		
 																			
 																			
-																				<div>${l}</div>`).join("");
+																				
+												<div>${l}</div>`).join("");
           el.appendChild(rotulo);
         }
         atualizarNomeTemperamentoCentro();
@@ -1954,206 +2034,116 @@ seletorModoDeteccao.addEventListener("click", () => {
         };
       }
 
-function refinarIndicePico(array, indice) {
-  if (indice <= 0 || indice >= array.length - 1) {
-    return indice;
-  }
-
-  const y1 = array[indice - 1];
-  const y2 = array[indice];
-  const y3 = array[indice + 1];
-  const denominador = y1 - 2 * y2 + y3;
-
-  if (Math.abs(denominador) < 1e-12) {
-    return indice;
-  }
-
-  const delta = 0.5 * (y1 - y3) / denominador;
-
-  return indice + clamp(delta, -0.5, 0.5);
-}
-
-function obterMagnitudeProxima(array, indice, toleranciaBins = 2) {
-  const centro = Math.round(indice);
-  let maior = 0;
-
-  for (
-    let i = centro - toleranciaBins;
-    i <= centro + toleranciaBins;
-    i++
-  ) {
-    if (i >= 0 && i < array.length) {
-      maior = Math.max(maior, array[i]);
-    }
-  }
-
-  return maior;
-}
-
-function calcularPisoEspectral(array, inicio, fim) {
-  const amostras = [];
-
-  // Amostragem parcial para não ordenar milhares de posições
-  // a cada quadro.
-  const passo = Math.max(1, Math.floor((fim - inicio) / 200));
-
-  for (let i = inicio; i <= fim; i += passo) {
-    amostras.push(array[i]);
-  }
-
-  amostras.sort((a, b) => a - b);
-
-  // Mediana aproximada do espectro.
-  return amostras[Math.floor(amostras.length / 2)] || 0;
-}
-
-function encontrarFundamentalProvavel(array, sampleRate, fftSize) {
-  const binWidth = sampleRate / fftSize;
-  const freqMin = 35;
-  const freqMax = Math.min(
-    parseFloat(freqMaxGraficoInput.value) || 2000,
-    sampleRate / 2
-  );
-
-  const startIndex = Math.max(
-    2,
-    Math.ceil(freqMin / binWidth)
-  );
-
-  const endIndex = Math.min(
-    array.length - 3,
-    Math.floor(freqMax / binWidth)
-  );
-
-  if (endIndex <= startIndex) {
-    return null;
-  }
-
-  let magnitudeDominante = 0;
-
-  for (let i = startIndex; i <= endIndex; i++) {
-    magnitudeDominante = Math.max(
-      magnitudeDominante,
-      array[i]
-    );
-  }
-
-  if (magnitudeDominante <= 0) {
-    return null;
-  }
-
-  const pisoEspectral = calcularPisoEspectral(
-    array,
-    startIndex,
-    endIndex
-  );
-
-  const amplitudeMinima = Math.max(
-    pisoEspectral + 8,
-    magnitudeDominante * 0.12
-  );
-
-  let melhorCandidato = null;
-
-  for (let i = startIndex; i <= endIndex; i++) {
-    const magnitude = array[i];
-
-    const ehMaximoLocal =
-      magnitude > array[i - 1] &&
-      magnitude >= array[i + 1];
-
-    if (!ehMaximoLocal || magnitude < amplitudeMinima) {
-      continue;
-    }
-
-    // Exige alguma proeminência em relação às laterais.
-    const baseLocal = Math.max(
-      array[Math.max(startIndex, i - 3)],
-      array[Math.min(endIndex, i + 3)]
-    );
-
-    const proeminencia = magnitude - baseLocal;
-
-    if (proeminencia < 3) {
-      continue;
-    }
-
-    const frequencia = i * binWidth;
-    let suporteHarmonico = 0;
-    let harmonicosEncontrados = 0;
-
-    for (let harmonico = 2; harmonico <= 5; harmonico++) {
-      const indiceHarmonico = i * harmonico;
-
-      if (indiceHarmonico > endIndex) {
-        break;
+      function refinarIndicePico(array, indice) {
+        if (indice <= 0 || indice >= array.length - 1) {
+          return indice;
+        }
+        const y1 = array[indice - 1];
+        const y2 = array[indice];
+        const y3 = array[indice + 1];
+        const denominador = y1 - 2 * y2 + y3;
+        if (Math.abs(denominador) < 1e-12) {
+          return indice;
+        }
+        const delta = 0.5 * (y1 - y3) / denominador;
+        return indice + clamp(delta, -0.5, 0.5);
       }
 
-      const magnitudeHarmonico = obterMagnitudeProxima(
-        array,
-        indiceHarmonico,
-        2
-      );
-
-      const peso = 1 / Math.sqrt(harmonico);
-
-      suporteHarmonico +=
-        peso * (magnitudeHarmonico / magnitudeDominante);
-
-      if (
-        magnitudeHarmonico >=
-        Math.max(pisoEspectral + 6, magnitudeDominante * 0.08)
-      ) {
-        harmonicosEncontrados++;
+      function obterMagnitudeProxima(array, indice, toleranciaBins = 2) {
+        const centro = Math.round(indice);
+        let maior = 0;
+        for (let i = centro - toleranciaBins; i <= centro + toleranciaBins; i++) {
+          if (i >= 0 && i < array.length) {
+            maior = Math.max(maior, array[i]);
+          }
+        }
+        return maior;
       }
-    }
 
-    // A própria fundamental também participa da pontuação.
-    const amplitudeNormalizada =
-      magnitude / magnitudeDominante;
+      function calcularPisoEspectral(array, inicio, fim) {
+        const amostras = [];
+        // Amostragem parcial para não ordenar milhares de posições
+        // a cada quadro.
+        const passo = Math.max(1, Math.floor((fim - inicio) / 200));
+        for (let i = inicio; i <= fim; i += passo) {
+          amostras.push(array[i]);
+        }
+        amostras.sort((a, b) => a - b);
+        // Mediana aproximada do espectro.
+        return amostras[Math.floor(amostras.length / 2)] || 0;
+      }
 
-    const pontuacao =
-      amplitudeNormalizada * 0.6 +
-      suporteHarmonico +
-      harmonicosEncontrados * 0.25;
-
-    // Um pico fraco precisa de confirmação harmônica.
-    if (
-      amplitudeNormalizada < 0.35 &&
-      harmonicosEncontrados === 0
-    ) {
-      continue;
-    }
-
-    // Preferência pelo candidato mais grave, desde que ele
-    // tenha uma estrutura harmônica aceitável.
-    if (
-      melhorCandidato === null ||
-      frequencia < melhorCandidato.frequency
-    ) {
-      melhorCandidato = {
-        index: refinarIndicePico(array, i),
-        frequency: frequencia,
-        magnitude,
-        pontuacao,
-        harmonicosEncontrados
-      };
-    }
-  }
-
-  if (!melhorCandidato) {
-    return encontrarPicoDominante(
-      array,
-      sampleRate,
-      fftSize
-    );
-  }
-
-  melhorCandidato.frequency =
-    melhorCandidato.index * binWidth;
-
-  return melhorCandidato;
-}
+      function encontrarFundamentalProvavel(array, sampleRate, fftSize) {
+        const binWidth = sampleRate / fftSize;
+        const freqMin = 35;
+        const freqMax = Math.min(parseFloat(freqMaxGraficoInput.value) || 2000, sampleRate / 2);
+        const startIndex = Math.max(2, Math.ceil(freqMin / binWidth));
+        const endIndex = Math.min(array.length - 3, Math.floor(freqMax / binWidth));
+        if (endIndex <= startIndex) {
+          return null;
+        }
+        let magnitudeDominante = 0;
+        for (let i = startIndex; i <= endIndex; i++) {
+          magnitudeDominante = Math.max(magnitudeDominante, array[i]);
+        }
+        if (magnitudeDominante <= 0) {
+          return null;
+        }
+        const pisoEspectral = calcularPisoEspectral(array, startIndex, endIndex);
+        const amplitudeMinima = Math.max(pisoEspectral + 8, magnitudeDominante * 0.12);
+        let melhorCandidato = null;
+        for (let i = startIndex; i <= endIndex; i++) {
+          const magnitude = array[i];
+          const ehMaximoLocal = magnitude > array[i - 1] && magnitude >= array[i + 1];
+          if (!ehMaximoLocal || magnitude < amplitudeMinima) {
+            continue;
+          }
+          // Exige alguma proeminência em relação às laterais.
+          const baseLocal = Math.max(array[Math.max(startIndex, i - 3)], array[Math.min(endIndex, i + 3)]);
+          const proeminencia = magnitude - baseLocal;
+          if (proeminencia < 3) {
+            continue;
+          }
+          const frequencia = i * binWidth;
+          let suporteHarmonico = 0;
+          let harmonicosEncontrados = 0;
+          for (let harmonico = 2; harmonico <= 5; harmonico++) {
+            const indiceHarmonico = i * harmonico;
+            if (indiceHarmonico > endIndex) {
+              break;
+            }
+            const magnitudeHarmonico = obterMagnitudeProxima(array, indiceHarmonico, 2);
+            const peso = 1 / Math.sqrt(harmonico);
+            suporteHarmonico += peso * (magnitudeHarmonico / magnitudeDominante);
+            if (magnitudeHarmonico >= Math.max(pisoEspectral + 6, magnitudeDominante * 0.08)) {
+              harmonicosEncontrados++;
+            }
+          }
+          // A própria fundamental também participa da pontuação.
+          const amplitudeNormalizada = magnitude / magnitudeDominante;
+          const pontuacao = amplitudeNormalizada * 0.6 + suporteHarmonico + harmonicosEncontrados * 0.25;
+          // Um pico fraco precisa de confirmação harmônica.
+          if (amplitudeNormalizada < 0.35 && harmonicosEncontrados === 0) {
+            continue;
+          }
+          // Preferência pelo candidato mais grave, desde que ele
+          // tenha uma estrutura harmônica aceitável.
+          if (melhorCandidato === null || frequencia < melhorCandidato.frequency) {
+            melhorCandidato = {
+              index: refinarIndicePico(array, i),
+              frequency: frequencia,
+              magnitude,
+              pontuacao,
+              harmonicosEncontrados
+            };
+          }
+        }
+        if (!melhorCandidato) {
+          return encontrarPicoDominante(array, sampleRate, fftSize);
+        }
+        melhorCandidato.frequency = melhorCandidato.index * binWidth;
+        return melhorCandidato;
+      }
 
       function desenharGraficoLimitado(array, sampleRate, fftSize, peakFrequency = null) {
         const agora = performance.now();
@@ -2204,33 +2194,24 @@ function encontrarFundamentalProvavel(array, sampleRate, fftSize) {
           ctxGrafico.font = "14px Arial";
           ctxGrafico.fillText(peakFrequency.toFixed(1) + " Hz", Math.min(xPeak + 6, width - 90), 18);
         }
-
         const a4Atual = parseFloat(a4RefInput.value) || 440;
         const textoA4 = `a¹ = ${Number.isInteger(a4Atual) ? a4Atual.toFixed(0) : a4Atual.toFixed(1)} Hz`;
-
         ctxGrafico.save();
-
         ctxGrafico.fillStyle = "rgba(255, 243, 205, 0.95)";
         ctxGrafico.strokeStyle = "#d6a800";
         ctxGrafico.lineWidth = 1;
-
         ctxGrafico.beginPath();
         ctxGrafico.roundRect(10, 10, 108, 28, 8);
         ctxGrafico.fill();
         ctxGrafico.stroke();
-
         ctxGrafico.fillStyle = "#111";
         ctxGrafico.font = "bold 14px Arial";
         ctxGrafico.fillText(textoA4, 18, 29);
-
         ctxGrafico.restore();
-
         ctxGrafico.fillStyle = "#444";
         ctxGrafico.font = "12px Arial";
         ctxGrafico.fillText("0 Hz", 6, height - 6);
         ctxGrafico.fillText(freqMax.toFixed(0) + " Hz", width - 58, height - 6);
-
-
       }
 
       function atualizarAnalise() {
@@ -2272,12 +2253,7 @@ function encontrarFundamentalProvavel(array, sampleRate, fftSize) {
           }
         }
         if (pico && pico.frequency > 0 && isFinite(pico.frequency) && freqSuavizada !== null) {
-          frequenciaEl.textContent =
-  (modoDeteccao === "fundamental"
-    ? "Fundamental provável: "
-    : "Frequência dominante: ") +
-  freqSuavizada.toFixed(2) +
-  " Hz";
+          frequenciaEl.textContent = (modoDeteccao === "fundamental" ? "Fundamental provável: " : "Frequência dominante: ") + freqSuavizada.toFixed(2) + " Hz";
           const resultado = frequenciaParaNotaTemperada(freqSuavizada);
           notaEl.textContent = resultado.notaCompletaLatina;
           centsEl.textContent = "Desvio: " + Math.round(resultado.cents) + " c";
