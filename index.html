@@ -1061,25 +1061,16 @@
         <span class="secao-acao" aria-hidden="true"><span class="secao-texto-acao"></span><span class="secao-seta">⌄</span></span>
       </summary>
       <div class="secao-conteudo">
-      <p class="gerador-intro">Selecione uma nota e uma oitava, ou escolha diretamente a notação histórica do cravo.
-        As duas notações ficam sincronizadas. O som usa o mesmo A4 e os mesmos ajustes do círculo de quintas.</p>
+      <p class="gerador-intro">O som emitido usará o Lá = <strong id="geradorIntroLa">440 Hz</strong> e os mesmos ajustes de temperamento selecionados.</p>
       <div class="gerador-seletores">
-        <div class="campo">
-          <label for="geradorNota">Nota</label>
-          <select id="geradorNota" aria-label="Nota na notação científica"></select>
-        </div>
-        <div class="campo">
-          <label for="geradorOitava">Oitava</label>
-          <select id="geradorOitava" aria-label="Oitava na notação científica"></select>
-        </div>
         <div class="campo campo-historica">
-          <label for="geradorNotaHistorica">Notação do cravo</label>
-          <select id="geradorNotaHistorica" aria-label="Escolher nota pela notação histórica"></select>
+          <label for="geradorNotaHistorica">Nota</label>
+          <select id="geradorNotaHistorica" aria-label="Selecionar nota (notação de Helmholtz e científica)"></select>
         </div>
       </div>
       <div class="gerador-dupla" aria-live="polite">
         <div class="gerador-etiqueta"><span>Notação científica</span><strong id="geradorExibeCientifica">F1</strong></div>
-        <div class="gerador-etiqueta"><span>Notação do cravo</span><strong id="geradorExibeHistorica">FF</strong></div>
+        <div class="gerador-etiqueta"><span>Notação de Helmholtz</span><strong id="geradorExibeHistorica">FF</strong></div>
       </div>
       <div id="geradorFrequencia" class="gerador-frequencia">— Hz</div>
       <div id="geradorTemperamento" class="gerador-detalhe"></div>
@@ -2567,9 +2558,8 @@
       // =========================================================
       // EMISSOR DE NOTAS: utiliza a tabela já calculada pelo afinador
       // =========================================================
-      const geradorNota = document.getElementById("geradorNota");
-      const geradorOitava = document.getElementById("geradorOitava");
       const geradorNotaHistorica = document.getElementById("geradorNotaHistorica");
+      const geradorIntroLa = document.getElementById("geradorIntroLa");
       const geradorAmpliar = document.getElementById("geradorAmpliar");
       const geradorExibeCientifica = document.getElementById("geradorExibeCientifica");
       const geradorExibeHistorica = document.getElementById("geradorExibeHistorica");
@@ -2638,19 +2628,7 @@
       }
 
       function sincronizarCamposGerador() {
-        const { pc, oitava } = nomesNotaGerador(midiGerador);
         const { min, max } = limiteMidiGerador();
-        geradorNota.innerHTML = "";
-        NOMES_NOTAS.forEach((_, i) => {
-          geradorNota.add(new Option(nomeModernoGerador(i), String(i)));
-        });
-        geradorNota.value = String(pc);
-        geradorOitava.innerHTML = "";
-        for (let oct = -1; oct <= 9; oct++) {
-          const midi = (oct + 1) * 12 + pc;
-          if (midi >= min && midi <= max) geradorOitava.add(new Option(String(oct), String(oct)));
-        }
-        geradorOitava.value = String(oitava);
         geradorNotaHistorica.innerHTML = "";
         for (let midi = min; midi <= max; midi++) {
           const { pc: p, oitava: o } = nomesNotaGerador(midi);
@@ -2674,6 +2652,7 @@
         geradorExibeCientifica.textContent = `${nomeModernoGerador(pc)}${oitava}`;
         geradorExibeHistorica.textContent = nomeHistoricoGerador(midiGerador);
         geradorFrequencia.textContent = `${f.toFixed(3)} Hz`;
+        geradorIntroLa.textContent = `${parseFloat(a4RefInput.value) || 440} Hz`;
         const nome = presetFoiModificado ? `Personalizado (base: ${nomeTemperamentoBase})` : nomeTemperamentoAtual;
         geradorTemperamento.textContent = `A4 = ${parseFloat(a4RefInput.value) || 440} Hz · ${nome}`;
         const nomeLimite = (midi) => {
@@ -2690,16 +2669,6 @@
           osciladorGerador.frequency.setTargetAtTime(f, agora, 0.012);
           geradorStatus.textContent = `Emitindo ${geradorExibeCientifica.textContent} / ${geradorExibeHistorica.textContent}.`;
         }
-      }
-
-      function selecionarNotaGerador(pc) {
-        const limites = limiteMidiGerador();
-        const oitavaAtual = nomesNotaGerador(midiGerador).oitava;
-        let midiNovo = (oitavaAtual + 1) * 12 + pc;
-        if (midiNovo < limites.min) midiNovo += 12;
-        if (midiNovo > limites.max) midiNovo -= 12;
-        midiGerador = clamp(midiNovo, limites.min, limites.max);
-        atualizarGeradorNotas();
       }
 
       function pararSomGerador() {
@@ -2754,11 +2723,6 @@
         }
       }
 
-      geradorNota.addEventListener("change", () => selecionarNotaGerador(Number(geradorNota.value)));
-      geradorOitava.addEventListener("change", () => {
-        midiGerador = (Number(geradorOitava.value) + 1) * 12 + mod(midiGerador, 12);
-        atualizarGeradorNotas();
-      });
       geradorNotaHistorica.addEventListener("change", () => {
         midiGerador = Number(geradorNotaHistorica.value);
         atualizarGeradorNotas();
