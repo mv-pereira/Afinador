@@ -777,6 +777,77 @@
         .gerador-seletores .campo-historica { flex: 1 1 100%; }
         .gerador-opcoes .campo { flex: 1 1 100%; }
       }
+
+      /* Painéis expansíveis: ficam recolhidos ao iniciar, sem interromper os cálculos. */
+      .secao-extensivel {
+        padding: 0;
+        overflow: hidden;
+        text-align: left;
+      }
+      .secao-extensivel > .secao-cabecalho {
+        list-style: none;
+        cursor: pointer;
+        user-select: none;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 18px 22px;
+        border-radius: inherit;
+        background: #f5f8fc;
+        color: #1e344f;
+        transition: background-color 0.15s ease;
+      }
+      .secao-extensivel > .secao-cabecalho::-webkit-details-marker {
+        display: none;
+      }
+      .secao-extensivel > .secao-cabecalho:hover {
+        background: #eaf2fc;
+      }
+      .secao-extensivel > .secao-cabecalho:focus-visible {
+        outline: 3px solid var(--blue);
+        outline-offset: -3px;
+      }
+      .secao-extensivel[open] > .secao-cabecalho {
+        background: #eef5fd;
+        border-radius: 10px 10px 0 0;
+        border-bottom: 1px solid #dce7f4;
+      }
+      .secao-titulo {
+        font-size: clamp(17px, 2.5vw, 21px);
+        font-weight: 700;
+        line-height: 1.3;
+      }
+      .secao-acao {
+        color: var(--blue);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        white-space: nowrap;
+        font-size: 13px;
+        font-weight: bold;
+      }
+      .secao-texto-acao::before { content: "Abrir"; }
+      .secao-extensivel[open] .secao-texto-acao::before { content: "Fechar"; }
+      .secao-seta {
+        display: inline-block;
+        font-size: 25px;
+        font-weight: 400;
+        line-height: 0.7;
+        transition: transform 0.18s ease;
+      }
+      .secao-extensivel[open] .secao-seta { transform: rotate(180deg); }
+      .secao-extensivel > .secao-conteudo { padding: 12px 22px 24px; }
+      .secao-comas { margin-top: 18px; }
+      .secao-comas > .secao-conteudo,
+      .secao-intervalos > .secao-conteudo { overflow-x: auto; }
+      .secao-intervalos { max-width: 1400px; margin: 20px auto; }
+      .gerador-notas > .secao-conteudo { text-align: center; }
+      @media (max-width: 600px) {
+        .secao-extensivel > .secao-cabecalho { padding: 15px 12px; }
+        .secao-extensivel > .secao-conteudo { padding: 10px 12px 18px; }
+        .secao-acao { font-size: 12px; }
+      }
     </style>
   </head>
   <body>
@@ -929,8 +1000,12 @@
             </div>
           </div>
           <button id="btnZerarAjustes" type="button">Zerar ajustes</button>
-          <div class="subpainel">
-            <h2>Tabela de ajuste de comas</h2>
+          <details class="subpainel secao-extensivel secao-comas">
+            <summary class="secao-cabecalho">
+              <span class="secao-titulo">Tabela de ajuste de comas</span>
+              <span class="secao-acao" aria-hidden="true"><span class="secao-texto-acao"></span><span class="secao-seta">⌄</span></span>
+            </summary>
+            <div class="secao-conteudo">
             <div class="observacao"> A edição das quintas é feita pelos campos e botões da tabela abaixo. O valor exibido em cada quinta é o <strong>desvio em relação à quinta justa</strong>. </div>
             <table class="tabela">
               <thead>
@@ -943,12 +1018,17 @@
               </thead>
               <tbody id="tbodyQuintas"></tbody>
             </table>
-          </div>
+            </div>
+          </details>
         </div>
       </div>
     </div>
-    <div class="subpainel">
-      <h2>Tabela de intervalos - Desvios</h2>
+    <details class="subpainel secao-extensivel secao-intervalos">
+      <summary class="secao-cabecalho">
+        <span class="secao-titulo">Tabela de intervalos - Desvios</span>
+        <span class="secao-acao" aria-hidden="true"><span class="secao-texto-acao"></span><span class="secao-seta">⌄</span></span>
+      </summary>
+      <div class="secao-conteudo">
       <table class="tabela">
         <thead>
           <tr>
@@ -971,11 +1051,16 @@
         </thead>
         <tbody id="tbodyIntervalosMatriz"></tbody>
       </table>
-    </div>
+      </div>
+    </details>
 
     <!-- Emissor separado das tabelas: usa exatamente o temperamento já calculado. -->
-    <section class="painel gerador-notas" aria-labelledby="tituloGerador">
-      <h2 id="tituloGerador">Emissor de notas — temperamento atual</h2>
+    <details class="painel gerador-notas secao-extensivel">
+      <summary class="secao-cabecalho" id="tituloGerador">
+        <span class="secao-titulo">Emissor de notas — temperamento atual</span>
+        <span class="secao-acao" aria-hidden="true"><span class="secao-texto-acao"></span><span class="secao-seta">⌄</span></span>
+      </summary>
+      <div class="secao-conteudo">
       <p class="gerador-intro">Selecione uma nota e uma oitava, ou escolha diretamente a notação histórica do cravo.
         As duas notações ficam sincronizadas. O som usa o mesmo A4 e os mesmos ajustes do círculo de quintas.</p>
       <div class="gerador-seletores">
@@ -1033,7 +1118,8 @@
       <p class="observacao">A forma de onda altera somente o timbre, não a frequência ou o temperamento.
         Você pode mudá-la enquanto a nota estiver tocando. Ao mudar a nota, A4, preset ou círculo de quintas,
         a frequência acompanha o ajuste. Se usar o microfone ao mesmo tempo, prefira fones de ouvido para evitar realimentação.</p>
-    </section>
+      </div>
+    </details>
     <script>
       // =========================================================
       // ÁUDIO / FFT
