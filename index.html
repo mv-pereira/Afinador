@@ -683,6 +683,89 @@
           --rotulo-fonte: 8px;
         }
       }
+
+      /* Emissor de notas, independente das tabelas e do microfone. */
+      .gerador-notas {
+        max-width: 1100px;
+        margin: 24px auto 36px;
+      }
+      .gerador-intro {
+        color: var(--muted);
+        max-width: 760px;
+        margin: 8px auto 18px;
+      }
+      .gerador-seletores {
+        display: flex;
+        gap: 14px;
+        justify-content: center;
+        align-items: end;
+        flex-wrap: wrap;
+        margin: 16px 0;
+      }
+      .gerador-seletores .campo { min-width: 120px; }
+      .gerador-seletores .campo-historica { min-width: 210px; }
+      .gerador-notas select { max-width: 100%; }
+      .gerador-dupla {
+        display: flex;
+        align-items: stretch;
+        justify-content: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin: 18px auto;
+      }
+      .gerador-etiqueta {
+        flex: 1 1 190px;
+        max-width: 330px;
+        background: #f7f9fc;
+        border: 1px solid #dce5ef;
+        border-radius: 12px;
+        padding: 14px;
+      }
+      .gerador-etiqueta span {
+        display: block;
+        font-size: 13px;
+        color: var(--muted);
+        margin-bottom: 6px;
+      }
+      .gerador-etiqueta strong {
+        display: block;
+        font-size: clamp(32px, 6vw, 48px);
+        color: var(--blue);
+        line-height: 1.2;
+      }
+      .gerador-frequencia {
+        font-size: 23px;
+        font-weight: bold;
+        margin: 12px auto 4px;
+      }
+      .gerador-detalhe {
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .gerador-opcoes {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin: 20px auto;
+        text-align: left;
+      }
+      .gerador-opcoes .campo { min-width: 240px; }
+      .gerador-check { display: inline-flex; align-items: center; gap: 7px; cursor: pointer; }
+      .gerador-check input { width: 18px; height: 18px; }
+      .gerador-acoes { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin: 16px auto; }
+      .gerador-acoes button { border-radius: 8px; border: 1px solid #ccd5df; background: #fff; }
+      .gerador-acoes .gerador-tocar { color: #fff; border-color: var(--blue); background: var(--blue); font-weight: bold; }
+      .gerador-acoes button:disabled { opacity: 0.5; cursor: not-allowed; }
+      .gerador-volume { display: flex; gap: 12px; justify-content: center; align-items: center; margin: 10px auto; }
+      .gerador-volume input { width: min(260px, 54vw); }
+      #geradorStatus { min-height: 20px; font-weight: bold; color: var(--green); margin-top: 12px; }
+      @media (max-width: 600px) {
+        .gerador-seletores .campo { flex: 1 1 95px; min-width: 95px; }
+        .gerador-seletores .campo-historica { flex: 1 1 100%; }
+        .gerador-opcoes .campo { flex: 1 1 100%; }
+      }
     </style>
   </head>
   <body>
@@ -878,6 +961,58 @@
         <tbody id="tbodyIntervalosMatriz"></tbody>
       </table>
     </div>
+
+    <!-- Emissor separado das tabelas: usa exatamente o temperamento já calculado. -->
+    <section class="painel gerador-notas" aria-labelledby="tituloGerador">
+      <h2 id="tituloGerador">Emissor de notas — temperamento atual</h2>
+      <p class="gerador-intro">Selecione uma nota e uma oitava, ou escolha diretamente a notação histórica do cravo.
+        As duas notações ficam sincronizadas. O som usa o mesmo A4 e os mesmos ajustes do círculo de quintas.</p>
+      <div class="gerador-seletores">
+        <div class="campo">
+          <label for="geradorNota">Nota</label>
+          <select id="geradorNota" aria-label="Nota na notação científica"></select>
+        </div>
+        <div class="campo">
+          <label for="geradorOitava">Oitava</label>
+          <select id="geradorOitava" aria-label="Oitava na notação científica"></select>
+        </div>
+        <div class="campo campo-historica">
+          <label for="geradorNotaHistorica">Notação do cravo</label>
+          <select id="geradorNotaHistorica" aria-label="Escolher nota pela notação histórica"></select>
+        </div>
+      </div>
+      <div class="gerador-dupla" aria-live="polite">
+        <div class="gerador-etiqueta"><span>Notação científica</span><strong id="geradorExibeCientifica">F2</strong></div>
+        <div class="gerador-etiqueta"><span>Notação do cravo</span><strong id="geradorExibeHistorica">FF</strong></div>
+      </div>
+      <div id="geradorFrequencia" class="gerador-frequencia">— Hz</div>
+      <div id="geradorTemperamento" class="gerador-detalhe"></div>
+      <div class="gerador-opcoes">
+        <label class="gerador-check" for="geradorAmpliar"><input type="checkbox" id="geradorAmpliar"> Ampliar extensão (C0–B9)</label>
+        <div class="campo">
+          <label for="geradorConvencao">Correspondência das oitavas</label>
+          <select id="geradorConvencao">
+            <option value="solicitada" selected>F2 = FF (como solicitado)</option>
+            <option value="convencional">F1 = FF (convencional)</option>
+          </select>
+          <small id="geradorExtensaoTexto">Extensão padrão: F2 (FF) até F8 (f⁴).</small>
+        </div>
+      </div>
+      <div class="gerador-acoes">
+        <button id="geradorAnterior" type="button" title="Descer um semitom">◀ Semitom</button>
+        <button id="geradorTocar" class="gerador-tocar" type="button">▶ Emitir nota</button>
+        <button id="geradorParar" type="button" disabled>■ Parar som</button>
+        <button id="geradorProximo" type="button" title="Subir um semitom">Semitom ▶</button>
+      </div>
+      <label class="gerador-volume" for="geradorVolume">Volume
+        <input type="range" id="geradorVolume" min="0" max="100" value="20">
+        <span id="geradorValorVolume">20%</span>
+      </label>
+      <div id="geradorStatus" role="status" aria-live="polite">Pronto para emitir a nota.</div>
+      <p class="observacao">O som é senoidal (frequência pura) e continua até você clicar em <strong>Parar som</strong>.
+        Ao mudar a nota, A4, preset ou círculo de quintas durante a reprodução, a frequência acompanha o ajuste.
+        Se usar o microfone ao mesmo tempo, prefira fones de ouvido para evitar realimentação.</p>
+    </section>
     <script>
       // =========================================================
       // ÁUDIO / FFT
@@ -1314,6 +1449,7 @@
         renderTabelaQuintas();
         renderizarCirculoDOM();
         renderTabelaIntervalosMatriz();
+        atualizarGeradorNotas();
       }
 
       function corDesvioIntervalo(erroAbs, erroMax) {
@@ -2327,6 +2463,220 @@
         INTERVALO_ANALISE_MS = ANALISES_POR_SEGUNDO > 0 ? 1000 / ANALISES_POR_SEGUNDO : 0;
         INTERVALO_DESENHO_GRAFICO_MS = DESENHOS_GRAFICO_POR_SEGUNDO > 0 ? 1000 / DESENHOS_GRAFICO_POR_SEGUNDO : 0;
       }
+
+      // =========================================================
+      // EMISSOR DE NOTAS: utiliza a tabela já calculada pelo afinador
+      // =========================================================
+      const geradorNota = document.getElementById("geradorNota");
+      const geradorOitava = document.getElementById("geradorOitava");
+      const geradorNotaHistorica = document.getElementById("geradorNotaHistorica");
+      const geradorConvencao = document.getElementById("geradorConvencao");
+      const geradorAmpliar = document.getElementById("geradorAmpliar");
+      const geradorExibeCientifica = document.getElementById("geradorExibeCientifica");
+      const geradorExibeHistorica = document.getElementById("geradorExibeHistorica");
+      const geradorFrequencia = document.getElementById("geradorFrequencia");
+      const geradorTemperamento = document.getElementById("geradorTemperamento");
+      const geradorExtensaoTexto = document.getElementById("geradorExtensaoTexto");
+      const geradorAnterior = document.getElementById("geradorAnterior");
+      const geradorProximo = document.getElementById("geradorProximo");
+      const geradorTocar = document.getElementById("geradorTocar");
+      const geradorParar = document.getElementById("geradorParar");
+      const geradorVolume = document.getElementById("geradorVolume");
+      const geradorValorVolume = document.getElementById("geradorValorVolume");
+      const geradorStatus = document.getElementById("geradorStatus");
+      let midiGerador = 41; // F2. Modo solicitado: F2 = FF.
+      let contextoGerador = null;
+      let osciladorGerador = null;
+      let ganhoGerador = null;
+      let iniciandoGerador = false;
+
+      function limiteMidiGerador() {
+        if (geradorAmpliar.checked) return { min: 12, max: 131 }; // C0..B9
+        // São seis oitavas entre FF e f⁴ nas duas convenções.
+        const inicio = geradorConvencao.value === "convencional" ? 29 : 41;
+        return { min: inicio, max: inicio + 72 };
+      }
+
+      function nomeModernoGerador(pc) {
+        return (pc === 8 && obterCorteEnarmonico() === "lab") ? "Ab" : NOMES_NOTAS[pc];
+      }
+
+      function nomesNotaGerador(midi) {
+        return { pc: mod(midi, 12), oitava: Math.floor(midi / 12) - 1 };
+      }
+
+      function indiceSobrescrito(n) {
+        const algarismos = "⁰¹²³⁴⁵⁶⁷⁸⁹";
+        return String(n).split("").map(c => algarismos[Number(c)]).join("");
+      }
+
+      function nomeHistoricoGerador(midi) {
+        const { pc, oitava } = nomesNotaGerador(midi);
+        const moderno = nomeModernoGerador(pc);
+        const letra = moderno[0];
+        const acidente = moderno.slice(1).replace(/#/g, "♯").replace(/b/g, "♭");
+        // A correspondência F2=FF foi solicitada; a alternativa
+        // convencional é F1=FF (e C4=c¹, o dó central).
+        const oitavaMaiuscula = geradorConvencao.value === "convencional" ? 2 : 3;
+        if (oitava <= oitavaMaiuscula) {
+          return letra.toUpperCase().repeat(oitavaMaiuscula - oitava + 1) + acidente;
+        }
+        const indice = oitava - (oitavaMaiuscula + 1);
+        return letra.toLowerCase() + acidente + (indice > 0 ? indiceSobrescrito(indice) : "");
+      }
+
+      function frequenciaMidiGerador(midi) {
+        const calculada = estadoTemperamento.tabelaFrequenciasMidi[midi];
+        if (Number.isFinite(calculada) && calculada > 0) return calculada;
+        // A tabela existente termina no MIDI 127. Para extensão superior,
+        // usa-se a MESMA fórmula e o MESMO mapa de cents do afinador.
+        const centsA = estadoTemperamento.mapaCentsPorPc[9];
+        const a4 = parseFloat(a4RefInput.value) || 440;
+        const freqDo0 = a4 / (16 * centsToRatio(centsA));
+        const pc = mod(midi, 12);
+        const oitava = Math.floor(midi / 12) - 1;
+        return freqDo0 * Math.pow(2, oitava) * centsToRatio(estadoTemperamento.mapaCentsPorPc[pc]);
+      }
+
+      function sincronizarCamposGerador() {
+        const { pc, oitava } = nomesNotaGerador(midiGerador);
+        const { min, max } = limiteMidiGerador();
+        geradorNota.innerHTML = "";
+        NOMES_NOTAS.forEach((_, i) => {
+          geradorNota.add(new Option(nomeModernoGerador(i), String(i)));
+        });
+        geradorNota.value = String(pc);
+        geradorOitava.innerHTML = "";
+        for (let oct = -1; oct <= 9; oct++) {
+          const midi = (oct + 1) * 12 + pc;
+          if (midi >= min && midi <= max) geradorOitava.add(new Option(String(oct), String(oct)));
+        }
+        geradorOitava.value = String(oitava);
+        geradorNotaHistorica.innerHTML = "";
+        for (let midi = min; midi <= max; midi++) {
+          const { pc: p, oitava: o } = nomesNotaGerador(midi);
+          const rotulo = `${nomeHistoricoGerador(midi)} — ${nomeModernoGerador(p)}${o}`;
+          geradorNotaHistorica.add(new Option(rotulo, String(midi)));
+        }
+        geradorNotaHistorica.value = String(midiGerador);
+      }
+
+      function nivelVolumeGerador() {
+        return 0.18 * Number(geradorVolume.value) / 100;
+      }
+
+      function atualizarGeradorNotas() {
+        const { min, max } = limiteMidiGerador();
+        midiGerador = clamp(midiGerador, min, max);
+        sincronizarCamposGerador();
+        const { pc, oitava } = nomesNotaGerador(midiGerador);
+        const f = frequenciaMidiGerador(midiGerador);
+        geradorExibeCientifica.textContent = `${nomeModernoGerador(pc)}${oitava}`;
+        geradorExibeHistorica.textContent = nomeHistoricoGerador(midiGerador);
+        geradorFrequencia.textContent = `${f.toFixed(3)} Hz`;
+        const nome = presetFoiModificado ? `Personalizado (base: ${nomeTemperamentoBase})` : nomeTemperamentoAtual;
+        geradorTemperamento.textContent = `A4 = ${parseFloat(a4RefInput.value) || 440} Hz · ${nome}`;
+        const nomeLimite = (midi) => {
+          const { pc: p, oitava: o } = nomesNotaGerador(midi);
+          return `${nomeModernoGerador(p)}${o} (${nomeHistoricoGerador(midi)})`;
+        };
+        geradorExtensaoTexto.textContent = geradorAmpliar.checked
+          ? `Extensão ampliada: ${nomeLimite(min)} até ${nomeLimite(max)}.`
+          : `Extensão padrão: ${nomeLimite(min)} até ${nomeLimite(max)}.`;
+        geradorAnterior.disabled = midiGerador <= min;
+        geradorProximo.disabled = midiGerador >= max;
+        if (osciladorGerador && contextoGerador) {
+          const agora = contextoGerador.currentTime;
+          osciladorGerador.frequency.setTargetAtTime(f, agora, 0.012);
+          geradorStatus.textContent = `Emitindo ${geradorExibeCientifica.textContent} / ${geradorExibeHistorica.textContent}.`;
+        }
+      }
+
+      function selecionarNotaGerador(pc) {
+        const limites = limiteMidiGerador();
+        const oitavaAtual = nomesNotaGerador(midiGerador).oitava;
+        let midiNovo = (oitavaAtual + 1) * 12 + pc;
+        if (midiNovo < limites.min) midiNovo += 12;
+        if (midiNovo > limites.max) midiNovo -= 12;
+        midiGerador = clamp(midiNovo, limites.min, limites.max);
+        atualizarGeradorNotas();
+      }
+
+      function pararSomGerador() {
+        if (!osciladorGerador || !contextoGerador) return;
+        const oscilador = osciladorGerador;
+        const ganho = ganhoGerador;
+        const agora = contextoGerador.currentTime;
+        ganho.gain.cancelScheduledValues(agora);
+        ganho.gain.setValueAtTime(ganho.gain.value, agora);
+        ganho.gain.linearRampToValueAtTime(0, agora + 0.04);
+        oscilador.stop(agora + 0.05);
+        oscilador.onended = () => {
+          try { oscilador.disconnect(); ganho.disconnect(); } catch (_) {}
+        };
+        osciladorGerador = null;
+        ganhoGerador = null;
+        geradorTocar.disabled = false;
+        geradorParar.disabled = true;
+        geradorStatus.textContent = "Som desligado.";
+      }
+
+      async function emitirNotaGerador() {
+        if (osciladorGerador || iniciandoGerador) return;
+        iniciandoGerador = true;
+        geradorTocar.disabled = true;
+        try {
+          if (!contextoGerador || contextoGerador.state === "closed") {
+            contextoGerador = new (window.AudioContext || window.webkitAudioContext)();
+          }
+          await contextoGerador.resume();
+          const freq = frequenciaMidiGerador(midiGerador);
+          if (!isFinite(freq) || freq <= 0 || freq >= contextoGerador.sampleRate / 2) {
+            throw new Error("A frequência está fora da faixa reproduzível do dispositivo.");
+          }
+          ganhoGerador = contextoGerador.createGain();
+          osciladorGerador = contextoGerador.createOscillator();
+          osciladorGerador.type = "sine";
+          osciladorGerador.frequency.setValueAtTime(freq, contextoGerador.currentTime);
+          ganhoGerador.gain.setValueAtTime(0, contextoGerador.currentTime);
+          ganhoGerador.gain.linearRampToValueAtTime(nivelVolumeGerador(), contextoGerador.currentTime + 0.04);
+          osciladorGerador.connect(ganhoGerador);
+          ganhoGerador.connect(contextoGerador.destination);
+          osciladorGerador.start();
+          geradorParar.disabled = false;
+          geradorStatus.textContent = `Emitindo ${geradorExibeCientifica.textContent} / ${geradorExibeHistorica.textContent}.`;
+        } catch (erro) {
+          geradorTocar.disabled = false;
+          geradorStatus.textContent = `Não foi possível emitir o som: ${erro.message}`;
+          console.error(erro);
+        } finally {
+          iniciandoGerador = false;
+        }
+      }
+
+      geradorNota.addEventListener("change", () => selecionarNotaGerador(Number(geradorNota.value)));
+      geradorOitava.addEventListener("change", () => {
+        midiGerador = (Number(geradorOitava.value) + 1) * 12 + mod(midiGerador, 12);
+        atualizarGeradorNotas();
+      });
+      geradorNotaHistorica.addEventListener("change", () => {
+        midiGerador = Number(geradorNotaHistorica.value);
+        atualizarGeradorNotas();
+      });
+      geradorConvencao.addEventListener("change", atualizarGeradorNotas);
+      geradorAmpliar.addEventListener("change", atualizarGeradorNotas);
+      geradorAnterior.addEventListener("click", () => { midiGerador--; atualizarGeradorNotas(); });
+      geradorProximo.addEventListener("click", () => { midiGerador++; atualizarGeradorNotas(); });
+      geradorTocar.addEventListener("click", emitirNotaGerador);
+      geradorParar.addEventListener("click", pararSomGerador);
+      geradorVolume.addEventListener("input", () => {
+        geradorValorVolume.textContent = `${geradorVolume.value}%`;
+        if (ganhoGerador && contextoGerador) {
+          ganhoGerador.gain.setTargetAtTime(nivelVolumeGerador(), contextoGerador.currentTime, 0.015);
+        }
+      });
+      window.addEventListener("pagehide", pararSomGerador);
+
       // =========================================================
       // EVENTOS
       // ========================================================	=
