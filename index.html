@@ -761,6 +761,17 @@
       .gerador-volume { display: flex; gap: 12px; justify-content: center; align-items: center; margin: 10px auto; }
       .gerador-volume input { width: min(260px, 54vw); }
       #geradorStatus { min-height: 20px; font-weight: bold; color: var(--green); margin-top: 12px; }
+      .gerador-forma-onda {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin: 20px auto 8px;
+      }
+      .gerador-aviso { margin: -8px auto 16px; color: var(--amber); font-size: 13px; font-weight: 600; }
+      .gerador-forma-onda label { font-weight: bold; }
+      .gerador-forma-onda select { width: min(280px, 100%); }
       @media (max-width: 600px) {
         .gerador-seletores .campo { flex: 1 1 95px; min-width: 95px; }
         .gerador-seletores .campo-historica { flex: 1 1 100%; }
@@ -998,6 +1009,7 @@
           <small id="geradorExtensaoTexto">Extensão padrão: F2 (FF) até F8 (f⁴).</small>
         </div>
       </div>
+      <p id="geradorAvisoInarmonicidade" class="gerador-aviso" role="note" hidden>Aviso: o afinador não considera a inarmonicidade.</p>
       <div class="gerador-acoes">
         <button id="geradorAnterior" type="button" title="Descer um semitom">◀ Semitom</button>
         <button id="geradorTocar" class="gerador-tocar" type="button">▶ Emitir nota</button>
@@ -1009,9 +1021,18 @@
         <span id="geradorValorVolume">20%</span>
       </label>
       <div id="geradorStatus" role="status" aria-live="polite">Pronto para emitir a nota.</div>
-      <p class="observacao">O som é senoidal (frequência pura) e continua até você clicar em <strong>Parar som</strong>.
-        Ao mudar a nota, A4, preset ou círculo de quintas durante a reprodução, a frequência acompanha o ajuste.
-        Se usar o microfone ao mesmo tempo, prefira fones de ouvido para evitar realimentação.</p>
+      <div class="gerador-forma-onda">
+        <label for="geradorFormaOnda">Forma de onda</label>
+        <select id="geradorFormaOnda" aria-label="Forma de onda do emissor">
+          <option value="sine" selected>Senoidal — som puro</option>
+          <option value="triangle">Triangular — suave</option>
+          <option value="square">Quadrada — harmônicos ímpares</option>
+          <option value="sawtooth">Dente de serra — som brilhante</option>
+        </select>
+      </div>
+      <p class="observacao">A forma de onda altera somente o timbre, não a frequência ou o temperamento.
+        Você pode mudá-la enquanto a nota estiver tocando. Ao mudar a nota, A4, preset ou círculo de quintas,
+        a frequência acompanha o ajuste. Se usar o microfone ao mesmo tempo, prefira fones de ouvido para evitar realimentação.</p>
     </section>
     <script>
       // =========================================================
@@ -2477,6 +2498,7 @@
       const geradorFrequencia = document.getElementById("geradorFrequencia");
       const geradorTemperamento = document.getElementById("geradorTemperamento");
       const geradorExtensaoTexto = document.getElementById("geradorExtensaoTexto");
+      const geradorAvisoInarmonicidade = document.getElementById("geradorAvisoInarmonicidade");
       const geradorAnterior = document.getElementById("geradorAnterior");
       const geradorProximo = document.getElementById("geradorProximo");
       const geradorTocar = document.getElementById("geradorTocar");
@@ -2484,6 +2506,7 @@
       const geradorVolume = document.getElementById("geradorVolume");
       const geradorValorVolume = document.getElementById("geradorValorVolume");
       const geradorStatus = document.getElementById("geradorStatus");
+      const geradorFormaOnda = document.getElementById("geradorFormaOnda");
       let midiGerador = 41; // F2. Modo solicitado: F2 = FF.
       let contextoGerador = null;
       let osciladorGerador = null;
@@ -2566,6 +2589,7 @@
       }
 
       function atualizarGeradorNotas() {
+        geradorAvisoInarmonicidade.hidden = !geradorAmpliar.checked;
         const { min, max } = limiteMidiGerador();
         midiGerador = clamp(midiGerador, min, max);
         sincronizarCamposGerador();
@@ -2636,7 +2660,7 @@
           }
           ganhoGerador = contextoGerador.createGain();
           osciladorGerador = contextoGerador.createOscillator();
-          osciladorGerador.type = "sine";
+          osciladorGerador.type = geradorFormaOnda.value;
           osciladorGerador.frequency.setValueAtTime(freq, contextoGerador.currentTime);
           ganhoGerador.gain.setValueAtTime(0, contextoGerador.currentTime);
           ganhoGerador.gain.linearRampToValueAtTime(nivelVolumeGerador(), contextoGerador.currentTime + 0.04);
@@ -2667,6 +2691,11 @@
       geradorAmpliar.addEventListener("change", atualizarGeradorNotas);
       geradorAnterior.addEventListener("click", () => { midiGerador--; atualizarGeradorNotas(); });
       geradorProximo.addEventListener("click", () => { midiGerador++; atualizarGeradorNotas(); });
+      geradorFormaOnda.addEventListener("change", () => {
+        // A forma de onda altera somente os harmônicos, sem recalcular as notas.
+        // OscillatorNode permite a alteração do tipo durante a reprodução.
+        if (osciladorGerador) osciladorGerador.type = geradorFormaOnda.value;
+      });
       geradorTocar.addEventListener("click", emitirNotaGerador);
       geradorParar.addEventListener("click", pararSomGerador);
       geradorVolume.addEventListener("input", () => {
