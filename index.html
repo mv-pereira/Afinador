@@ -1078,21 +1078,14 @@
         </div>
       </div>
       <div class="gerador-dupla" aria-live="polite">
-        <div class="gerador-etiqueta"><span>Notação científica</span><strong id="geradorExibeCientifica">F2</strong></div>
+        <div class="gerador-etiqueta"><span>Notação científica</span><strong id="geradorExibeCientifica">F1</strong></div>
         <div class="gerador-etiqueta"><span>Notação do cravo</span><strong id="geradorExibeHistorica">FF</strong></div>
       </div>
       <div id="geradorFrequencia" class="gerador-frequencia">— Hz</div>
       <div id="geradorTemperamento" class="gerador-detalhe"></div>
       <div class="gerador-opcoes">
         <label class="gerador-check" for="geradorAmpliar"><input type="checkbox" id="geradorAmpliar"> Ampliar extensão (C0–B9)</label>
-        <div class="campo">
-          <label for="geradorConvencao">Correspondência das oitavas</label>
-          <select id="geradorConvencao">
-            <option value="solicitada" selected>F2 = FF (como solicitado)</option>
-            <option value="convencional">F1 = FF (convencional)</option>
-          </select>
-          <small id="geradorExtensaoTexto">Extensão padrão: F2 (FF) até F8 (f⁴).</small>
-        </div>
+        <small id="geradorExtensaoTexto">Extensão padrão: F1 (FF) até F7 (f⁴).</small>
       </div>
       <p id="geradorAvisoInarmonicidade" class="gerador-aviso" role="note" hidden>Aviso: o afinador não considera a inarmonicidade.</p>
       <div class="gerador-acoes">
@@ -2577,7 +2570,6 @@
       const geradorNota = document.getElementById("geradorNota");
       const geradorOitava = document.getElementById("geradorOitava");
       const geradorNotaHistorica = document.getElementById("geradorNotaHistorica");
-      const geradorConvencao = document.getElementById("geradorConvencao");
       const geradorAmpliar = document.getElementById("geradorAmpliar");
       const geradorExibeCientifica = document.getElementById("geradorExibeCientifica");
       const geradorExibeHistorica = document.getElementById("geradorExibeHistorica");
@@ -2593,7 +2585,7 @@
       const geradorValorVolume = document.getElementById("geradorValorVolume");
       const geradorStatus = document.getElementById("geradorStatus");
       const geradorFormaOnda = document.getElementById("geradorFormaOnda");
-      let midiGerador = 41; // F2. Modo solicitado: F2 = FF.
+      let midiGerador = 29; // F1 = FF, na notação histórica convencional.
       let contextoGerador = null;
       let osciladorGerador = null;
       let ganhoGerador = null;
@@ -2601,9 +2593,8 @@
 
       function limiteMidiGerador() {
         if (geradorAmpliar.checked) return { min: 12, max: 131 }; // C0..B9
-        // São seis oitavas entre FF e f⁴ nas duas convenções.
-        const inicio = geradorConvencao.value === "convencional" ? 29 : 41;
-        return { min: inicio, max: inicio + 72 };
+        // Extensão histórica convencional: FF (F1) até f⁴ (F7).
+        return { min: 29, max: 101 };
       }
 
       function nomeModernoGerador(pc) {
@@ -2624,9 +2615,8 @@
         const moderno = nomeModernoGerador(pc);
         const letra = moderno[0];
         const acidente = moderno.slice(1).replace(/#/g, "♯").replace(/b/g, "♭");
-        // A correspondência F2=FF foi solicitada; a alternativa
-        // convencional é F1=FF (e C4=c¹, o dó central).
-        const oitavaMaiuscula = geradorConvencao.value === "convencional" ? 2 : 3;
+        // Notação histórica convencional: F1=FF e C4=c¹ (dó central).
+        const oitavaMaiuscula = 2;
         if (oitava <= oitavaMaiuscula) {
           return letra.toUpperCase().repeat(oitavaMaiuscula - oitava + 1) + acidente;
         }
@@ -2773,7 +2763,6 @@
         midiGerador = Number(geradorNotaHistorica.value);
         atualizarGeradorNotas();
       });
-      geradorConvencao.addEventListener("change", atualizarGeradorNotas);
       geradorAmpliar.addEventListener("change", atualizarGeradorNotas);
       geradorAnterior.addEventListener("click", () => { midiGerador--; atualizarGeradorNotas(); });
       geradorProximo.addEventListener("click", () => { midiGerador++; atualizarGeradorNotas(); });
