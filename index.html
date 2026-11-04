@@ -1072,7 +1072,7 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
           <strong>Instruções de uso:</strong>
           <ul>
             <li>
-              <strong>Ativar microfone:</strong> inicia a captação de áudio e exibe a frequência detectada, a nota correspondente e o desvio em cents.
+              <strong>Ativar / desativar microfone:</strong> o botão inicia a captação e mostra a frequência, a nota e o desvio em cents. Quando o microfone está ativo, o mesmo botão permite desligá-lo.
             </li>
             <li>
               <strong>Zerar ajustes:</strong> remove todas as alterações aplicadas às quintas, retornando ao estado base do preset selecionado.
@@ -1097,6 +1097,30 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
             </li>
             <li>
               <strong>Fundamental provável:</strong> procura a frequência mais grave que apresente uma estrutura harmônica coerente. Esse modo tenta identificar a frequência fundamental mesmo quando o segundo, terceiro ou outro harmônico aparece com maior intensidade no espectro.
+            </li>
+          </ul>
+          <strong>Emissor de notas:</strong>
+          <ul>
+            <li>
+              <strong>Abrir o emissor:</strong> expanda o painel “Emissor de notas — temperamento atual”, localizado abaixo das tabelas. Ele permanece recolhido até você abri-lo.
+            </li>
+            <li>
+              <strong>Selecionar uma nota:</strong> use o campo <strong>Nota</strong>. A nota aparece nas notações científica e de Helmholtz (histórica), acompanhada da frequência em Hz.
+            </li>
+            <li>
+              <strong>Temperamento e Lá de referência:</strong> a emissão respeita o A4 escolhido, o preset e os ajustes manuais do círculo de quintas. A frequência acompanha mudanças nesses controles, mesmo durante a reprodução.
+            </li>
+            <li>
+              <strong>Ouvir e navegar:</strong> clique em <strong>Emitir nota</strong> para tocar e em <strong>Parar som</strong> para interromper. Os botões <strong>Semitom</strong> avançam ou recuam uma nota cromática, respeitando o temperamento atual.
+            </li>
+            <li>
+              <strong>Volume e forma de onda:</strong> ajuste o volume e escolha entre senoidal (padrão), triangular, quadrada ou dente de serra. A forma de onda muda o timbre, não a frequência fundamental.
+            </li>
+            <li>
+              <strong>Ampliar extensão:</strong> habilite a faixa C0–B9 quando necessário. O afinador não considera a inarmonicidade.
+            </li>
+            <li>
+              <strong>Emissor e microfone juntos:</strong> os dois podem funcionar simultaneamente; prefira fones de ouvido para que o som emitido não interfira na captação.
             </li>
           </ul>
         </div>
@@ -1132,7 +1156,7 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
         </div>
       </div>
       <div class="botoneria">
-        <button id="btnIniciar" type="button">Ativar microfone</button>
+        <button id="btnIniciar" type="button" aria-pressed="false">Ativar microfone</button>
       </div>
       <div id="status">Microfone desligado.</div>
       <div id="frequenciaDetectada">Frequência dominante: -- Hz</div>
@@ -2720,7 +2744,50 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
           desenharGraficoLimitado(suavizado, audioContext.sampleRate, analyser.fftSize, null);
         }
       }
+      let microfoneAtivo = false;
+      let microfoneIniciando = false;
+
+      function desativarMicrofone() {
+        // Para a FFT e libera os recursos para permitir nova ativação.
+        if (animationId !== null) {
+          cancelAnimationFrame(animationId);
+          animationId = null;
+        }
+        if (source) {
+          source.disconnect();
+          source = null;
+        }
+        if (analyser) {
+          analyser.disconnect();
+          analyser = null;
+        }
+        if (stream) {
+          stream.getTracks().forEach(trilha => trilha.stop());
+          stream = null;
+        }
+        if (audioContext) {
+          const contextoAnterior = audioContext;
+          audioContext = null;
+          contextoAnterior.close().catch(erro => console.warn("Erro ao encerrar o áudio do microfone:", erro));
+        }
+        timeDataArray = null;
+        freqDataArray = null;
+        freqSuavizada = null;
+        suavizado = null;
+        ultimaAnalise = 0;
+        ultimoDesenhoGrafico = 0;
+        microfoneAtivo = false;
+        btnIniciar.textContent = "Ativar microfone";
+        btnIniciar.setAttribute("aria-pressed", "false");
+        statusEl.textContent = "Microfone desligado.";
+        limparNota();
+        ctxGrafico.clearRect(0, 0, canvasGrafico.width, canvasGrafico.height);
+      }
+
       async function iniciarMicrofone() {
+        if (microfoneAtivo || microfoneIniciando) return;
+        microfoneIniciando = true;
+        btnIniciar.disabled = true; // Impede ativação duplicada durante a permissão.
         try {
           statusEl.textContent = "Solicitando acesso ao microfone...";
           stream = await navigator.mediaDevices.getUserMedia({
@@ -2738,14 +2805,23 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
           timeDataArray = new Float32Array(analyser.fftSize);
           freqDataArray = new Uint8Array(analyser.frequencyBinCount);
           source.connect(analyser);
+          stream.getAudioTracks().forEach(trilha => trilha.addEventListener("ended", () => {
+            // Também atualiza a interface se o dispositivo for desconectado.
+            if (microfoneAtivo) desativarMicrofone();
+          }, { once: true }));
+          microfoneAtivo = true;
           statusEl.textContent = "Microfone ativo.";
-          btnIniciar.disabled = true;
-          btnIniciar.textContent = "Microfone ativo";
+          btnIniciar.textContent = "Desativar microfone ativo";
+          btnIniciar.setAttribute("aria-pressed", "true");
           atualizarAnalise();
         } catch (erro) {
+          desativarMicrofone();
           statusEl.textContent = "Não foi possível acessar o microfone.";
           console.error(erro);
           alert("Erro: " + erro.name + " | " + erro.message);
+        } finally {
+          microfoneIniciando = false;
+          btnIniciar.disabled = false;
         }
       }
 
@@ -2965,7 +3041,13 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
       });
       sensibilidadeSomInput.addEventListener("input", atualizarValorSensibilidadeSom);
       atualizarValorSensibilidadeSom();
-      btnIniciar.addEventListener("click", iniciarMicrofone);
+      btnIniciar.addEventListener("click", () => {
+        if (microfoneAtivo) desativarMicrofone();
+        else iniciarMicrofone();
+      });
+      window.addEventListener("pagehide", () => {
+        if (microfoneAtivo) desativarMicrofone();
+      });
       presetTemperamento.addEventListener("change", () => {
         aplicarPreset(presetTemperamento.value);
       });
