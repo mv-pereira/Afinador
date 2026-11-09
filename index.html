@@ -1056,7 +1056,57 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
 .app-eyebrow .app-mark {display:inline-flex; align-items:center; gap:9px;}
 .app-eyebrow .app-mark::before {content:'✺'; border:1px solid #b6d6ef; border-radius:12px; padding:9px; font-size:17px; background:#eaf6ff;}
 #notaDetectada {background:linear-gradient(135deg,#edf7ff,#f9fcff);}
-#medidorCents {border-left:3px solid #8ec1e9;}
+      #medidorCents {border-left:3px solid #8ec1e9;}
+      #diagnosticoDeteccao {display:flex; flex-wrap:wrap; justify-content:center;
+        gap:8px 18px; margin:-15px auto 18px; font-size:12px; color:var(--ui-muted);}
+      #diagnosticoDeteccao span {background:var(--ui-surface); padding:6px 12px;
+        border:1px solid var(--ui-border); border-radius:999px;}
+      /* Afinação de nota escolhida: controles independentes do emissor e do detector. */
+      .controle-afinacao {max-width:740px; margin:13px auto 18px; text-align:center;
+        padding:15px 18px; border:1px solid var(--ui-border); border-radius:var(--ui-radius-md);
+        background:var(--ui-surface);}
+      .controle-afinacao-titulo {color:var(--ui-label); font-weight:800; font-size:11px;
+        text-transform:uppercase; letter-spacing:.12em; margin-bottom:11px;}
+      .controle-afinacao-modos {display:flex; align-items:center; justify-content:center;
+        gap:12px; font-size:13px; font-weight:700;}
+      .controle-afinacao-modos button {flex:0 0 52px;}
+      .painel-nota-alvo {margin:14px auto 0; border-top:1px solid var(--ui-border);
+        padding-top:15px;}
+      .painel-nota-alvo[hidden], #avisoDesvioForaEscala[hidden], #legendaFFTAlvo[hidden] {display:none !important;}
+      .controle-passo-alvo {display:flex; align-items:center; justify-content:center; gap:12px;}
+      .btn-passo-alvo {width:50px; height:50px; flex:0 0 50px; padding:0;
+        font-size:24px; font-weight:750; background:var(--ui-panel); color:var(--ui-accent);}
+      .btn-passo-alvo:disabled {opacity:.4; cursor:not-allowed;}
+      .valor-nota-alvo {min-width:170px; max-width:300px; flex:1 1 200px;
+        padding:10px 13px; background:var(--ui-readout); border:1px solid var(--ui-border);
+        border-radius:12px;}
+      .valor-nota-alvo small {display:block; color:var(--ui-muted); font-size:11px;
+        letter-spacing:.07em; text-transform:uppercase;}
+      #notaAlvoNome {display:block; margin:5px 0 3px; color:var(--ui-accent);
+        font-family:var(--ui-heading); font-size:clamp(20px,4vw,27px);}
+      #notaAlvoFrequencia {display:block; font-family:var(--ui-mono); font-size:13px;
+        font-weight:750; color:var(--ui-heading-text);}
+      .opcao-zoom-alvo {display:inline-flex; align-items:center; gap:9px;
+        cursor:pointer; font-size:12px; margin:14px 0 0; font-weight:650;}
+      .opcao-zoom-alvo input {width:17px; height:17px; margin:0;}
+      .nota-alvo-ajuda {display:block; margin:8px auto 0; color:var(--ui-muted);
+        font-size:11px; line-height:1.45; max-width:530px;}
+      #avisoNotaAlvoForaFaixa {display:block; margin:9px auto 0; max-width:550px;
+        font-size:11px; font-weight:750; color:var(--ui-warning); line-height:1.5;}
+      #avisoNotaAlvoForaFaixa[hidden] {display:none !important;}
+      #avisoDesvioForaEscala {color:var(--ui-warning); font-size:12px;
+        font-weight:750; margin:-17px auto 19px;}
+      #legendaFFTAlvo {margin:8px 0 0; display:flex; justify-content:center;
+        flex-wrap:wrap; gap:8px 18px; font-size:11px; color:var(--ui-muted);}
+      #legendaFFTAlvo .legenda-cor {display:inline-block; width:16px; height:3px;
+        margin-right:6px; vertical-align:middle;}
+      @media(max-width:420px) {
+        .controle-afinacao {padding:14px 9px;}
+        .controle-afinacao-modos {gap:9px; font-size:12px;}
+        .controle-passo-alvo {gap:7px;}
+        .valor-nota-alvo {min-width:0; padding:9px 6px;}
+        .btn-passo-alvo {width:43px; height:47px; flex-basis:43px;}
+      }
 
 </style>
   </head>
@@ -1084,19 +1134,31 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
               <strong>Ajuste das quintas:</strong> cada intervalo pode ser alterado por frações de coma pitagórico (c.p.) ou sintônico (c.s.), acumuladas localmente. O fechamento do círculo gera um intervalo residual, localizado entre <strong>Mib–Sol#</strong> ou <strong>Lab–Do#</strong>, conforme a enarmonia selecionada.
             </li>
             <li>
-              <strong>Estabilidade:</strong> controla a suavização da frequência detectada. Valores maiores tornam a leitura mais estável e menos sujeita a variações, porém deixam a resposta mais lenta. Valores menores deixam a resposta mais rápida, mas também mais sensível a flutuações.
+              <strong>Estabilidade:</strong> suaviza a leitura em cents somente dentro de uma mesma nota. O valor 0% desativa a suavização; mudanças maiores de nota reiniciam a leitura para não mostrar frequências intermediárias artificiais.
             </li>
             <li>
               <strong>Sensibilidade:</strong> controla o volume mínimo necessário para o afinador detectar o som. Valores maiores permitem detectar sons mais fracos. Valores menores exigem um som mais forte e ajudam a reduzir interferências causadas por ruídos do ambiente.
             </li>
           </ul>
+          <strong>Modos de afinação:</strong>
+          <ul>
+            <li><strong>Automático (padrão):</strong> a nota mais próxima é identificada automaticamente.</li>
+            <li><strong>Nota fixa:</strong> escolha a nota-alvo com os botões &lt; e &gt;, começando em Dó4 (C4).
+              O afinador continua medindo a frequência real do som, mas calcula os cents em relação ao alvo,
+              inclusive para desvios acima de ±40 cents. O ponteiro limita-se a ±40 cents, não o número.</li>
+            <li><strong>Linhas no FFT:</strong> verde tracejado indica a frequência-alvo e vermelho a frequência medida.
+              Se o alvo estiver acima do máximo configurado, a escala visual aumenta temporariamente para incluí-lo.
+              Opcionalmente, amplie a região para ±100 cents. O zoom não aumenta a resolução física da FFT.</li>
+            <li><strong>Silêncio:</strong> a nota-alvo continua visível, enquanto os campos de frequência medida e
+              desvio são apagados. Mudar A4, temperamento ou quintas atualiza o alvo imediatamente.</li>
+          </ul>
           <strong>Modos de detecção da frequência:</strong>
           <ul>
             <li>
-              <strong>Pico dominante:</strong> seleciona a frequência que possui a maior intensidade no espectro FFT. Esse é o método mais direto e responde rapidamente ao componente mais forte do som captado.
+              <strong>Pico dominante:</strong> seleciona a frequência do componente mais intenso da FFT. Pode ser um harmônico e não necessariamente a nota tocada.
             </li>
             <li>
-              <strong>Fundamental provável:</strong> procura a frequência mais grave que apresente uma estrutura harmônica coerente. Esse modo tenta identificar a frequência fundamental mesmo quando o segundo, terceiro ou outro harmônico aparece com maior intensidade no espectro.
+              <strong>Fundamental (YIN + FFT):</strong> estima a periodicidade do sinal com janelas temporais adaptativas, mesmo quando um harmônico é mais intenso que a fundamental. Usa o espectro para conferir a coerência do resultado e mostra a confiança. É voltado para <strong>notas isoladas</strong>; acordes, ruídos e fundamental ausente ambígua podem produzir leituras inconclusivas.
             </li>
           </ul>
           <strong>Emissor de notas:</strong>
@@ -1152,13 +1214,46 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
             <option value="normal">Normal</option>
             <option value="completo" selected>Completo</option>
           </select>
-          <small>Econômico reduz processamento; Completo usa a resposta máxima do aparelho.</small>
+          <small>Econômico reduz o custo do YIN; Completo analisa até 25 vezes/s para proteger o aparelho.</small>
         </div>
       </div>
       <div class="botoneria">
         <button id="btnIniciar" type="button" aria-pressed="false">Ativar microfone</button>
       </div>
       <div id="status">Microfone desligado.</div>
+      <div class="controle-afinacao" aria-label="Controle de modo de afinação">
+        <div class="controle-afinacao-titulo">Modo de afinação</div>
+        <div class="controle-afinacao-modos">
+          <span>Automático</span>
+          <button id="seletorModoAfinacao" class="seletor-modo" type="button" role="switch"
+                  aria-checked="false" aria-label="Usar nota fixa para afinação"
+                  aria-controls="painelNotaAlvo" title="Modo atual: identificação automática">
+            <span class="seletor-bolinha"></span>
+          </button>
+          <span>Nota fixa</span>
+        </div>
+        <div id="painelNotaAlvo" class="painel-nota-alvo" hidden>
+          <div class="controle-passo-alvo">
+            <button id="notaAlvoAnterior" class="btn-passo-alvo" type="button"
+                    aria-label="Descer um semitom" title="Descer um semitom">&lt;</button>
+            <div class="valor-nota-alvo" aria-live="polite" aria-atomic="true">
+              <small>Nota-alvo</small>
+              <strong id="notaAlvoNome">Dó4 · C4</strong>
+              <span id="notaAlvoFrequencia">-- Hz</span>
+            </div>
+            <button id="notaAlvoProxima" class="btn-passo-alvo" type="button"
+                    aria-label="Subir um semitom" title="Subir um semitom">&gt;</button>
+          </div>
+          <label class="opcao-zoom-alvo" for="zoomNotaAlvo">
+            <input id="zoomNotaAlvo" type="checkbox"> Ampliar região da nota no FFT (±100 cents)
+          </label>
+          <small class="nota-alvo-ajuda">O desvio será medido sempre em relação à nota escolhida,
+            com a frequência calculada pelo temperamento atual. A escala do FFT se adapta para mostrar o alvo.</small>
+          <small id="avisoNotaAlvoForaFaixa" role="note" hidden>Atenção: a frequência do alvo está fora da
+            faixa de 16–4600 Hz do detector. A nota pode ser exibida, mas sua afinação não poderá ser
+            verificada de modo confiável com a configuração atual.</small>
+        </div>
+      </div>
       <div id="frequenciaDetectada">Frequência dominante: -- Hz</div>
       <div id="notaDetectada">--</div>
       <div id="desvioCents">Desvio: -- cents</div>
@@ -1181,6 +1276,12 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
           <span id="rotuloDireita">+40</span>
         </div>
       </div>
+      <p id="avisoDesvioForaEscala" role="note" hidden>O desvio ultrapassa ±40 cents;
+        o ponteiro está no limite, mas o valor numérico acima é o desvio completo.</p>
+      <div id="diagnosticoDeteccao" aria-live="off">
+        <span id="confiancaDeteccao">Confiança: --</span>
+        <span id="janelaDeteccao">Janela YIN: --</span>
+      </div>
       <div class="grade">
         <div class="subpainel">
           <h2>Espectro FFT</h2>
@@ -1191,8 +1292,12 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
             </button>
             <span>Fundamental</span>
           </div>
-          <canvas id="grafico" width="700" height="280"></canvas>
-          <div class="observacao"> A frequência é estimada pelo pico dominante da FFT com suavização. Em alguns casos o detector pode capturar um harmônico em vez da fundamental. </div>
+          <canvas id="grafico" width="700" height="280" aria-label="Espectro de frequências e marcadores de afinação"></canvas>
+          <div id="legendaFFTAlvo" hidden>
+            <span><i class="legenda-cor" style="background:#128866"></i>Verde tracejado: nota-alvo</span>
+            <span><i class="legenda-cor" style="background:#d32f2f"></i>Vermelho: frequência detectada</span>
+          </div>
+          <div class="observacao"> No modo <strong>Fundamental</strong>, a periodicidade do som é estimada por YIN e confirmada pelos componentes da FFT. No modo <strong>Pico</strong>, é exibido o componente espectral mais intenso, que pode ser um harmônico. A FFT visual permanece em 8192 pontos. Use uma única nota por vez e evite ruídos. </div>
         </div>
         <div class="subpainel">
           <h2>Preset de temperamento</h2>
@@ -1344,14 +1449,21 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
       // ÁUDIO / FFT
       // =========================================================
       let audioContext = null;
-      let analyser = null;
+      let analyser = null; // FFT de 8192 pontos: gráfico e confirmação espectral.
+      let analyserTempo = null; // Captura temporal independente para o YIN.
       let timeDataArray = null;
       let freqDataArray = null;
+      let floatFreqDataArray = null;
+      let janelaYinAtual = null;
       let source = null;
       let stream = null;
       let animationId = null;
       let freqSuavizada = null;
       let suavizado = null;
+      let ultimoSinalConfiavel = null;
+      const FREQ_MIN_YIN = 16; // Inclui Dó0 (16,35 Hz); depende do microfone.
+      const FREQ_MAX_YIN = 4600;
+      const TAXA_YIN_ALVO = 24000;
       let ANALISES_POR_SEGUNDO = 0;
       let DESENHOS_GRAFICO_POR_SEGUNDO = 0;
       let INTERVALO_ANALISE_MS = 0;
@@ -1380,6 +1492,9 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
         // Impede a suavização antiga de arrastar a leitura
         // quando ocorre a troca de modo.
         freqSuavizada = null;
+        ultimoSinalConfiavel = null;
+        limparNota();
+        redesenharGraficoAfinacao();
       });
       const LIMIAR_PADRAO = 0.003;
       const btnIniciar = document.getElementById("btnIniciar");
@@ -1387,6 +1502,8 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
       const frequenciaEl = document.getElementById("frequenciaDetectada");
       const notaEl = document.getElementById("notaDetectada");
       const centsEl = document.getElementById("desvioCents");
+      const confiancaEl = document.getElementById("confiancaDeteccao");
+      const janelaEl = document.getElementById("janelaDeteccao");
       const a4RefInput = document.getElementById("a4Ref");
       const freqMaxGraficoInput = document.getElementById("freqMaxGrafico");
       const suavizacaoInput = document.getElementById("suavizacao");
@@ -1404,6 +1521,21 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
       const rotuloDireitaEl = document.getElementById("rotuloDireita");
       const canvasGrafico = document.getElementById("grafico");
       const ctxGrafico = canvasGrafico.getContext("2d");
+      const seletorModoAfinacao = document.getElementById("seletorModoAfinacao");
+      const painelNotaAlvo = document.getElementById("painelNotaAlvo");
+      const notaAlvoAnterior = document.getElementById("notaAlvoAnterior");
+      const notaAlvoProxima = document.getElementById("notaAlvoProxima");
+      const notaAlvoNome = document.getElementById("notaAlvoNome");
+      const notaAlvoFrequencia = document.getElementById("notaAlvoFrequencia");
+      const zoomNotaAlvo = document.getElementById("zoomNotaAlvo");
+      const legendaFFTAlvo = document.getElementById("legendaFFTAlvo");
+      const avisoDesvioForaEscala = document.getElementById("avisoDesvioForaEscala");
+      const avisoNotaAlvoForaFaixa = document.getElementById("avisoNotaAlvoForaFaixa");
+      let modoAfinacao = "automatico"; // Padrão original, independente de Pico / Fundamental.
+      let midiAlvoAfinacao = 60; // Dó central = C4.
+      const MIDI_ALVO_MIN = 12;  // C0, dentro da faixa atual de análise temporal.
+      const MIDI_ALVO_MAX = 108; // C8, dentro do limite de 4600 Hz do detector.
+      const espectroVazio = new Float32Array(4096);
       // =========================================================
       // TEMPERAMENTO
       // =========================================================
@@ -1577,8 +1709,8 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
       }
 
       function obterCoeficienteSuavizacao() {
-        const valor = parseFloat(suavizacaoInput.value) || 50;
-        return valor / 100;
+        const valor = Number(suavizacaoInput.value);
+        return Number.isFinite(valor) ? Math.min(0.95, clamp(valor / 100, 0, 1)) : 0.5;
       }
 
       function obterLimiarSom() {
@@ -1593,18 +1725,22 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
         valorSensibilidadeSomEl.textContent = `${sensibilidadeSomInput.value}%`;
       }
 
-      function calcularRMS(buffer) {
+      function calcularRMS(buffer, amostrasRecentes = buffer.length) {
+        // Para silêncio, não considerar som antigo retido na janela longa do YIN.
+        const inicio = Math.max(0, buffer.length - amostrasRecentes);
         let somaQuadrados = 0;
-        for (let i = 0; i < buffer.length; i++) {
+        for (let i = inicio; i < buffer.length; i++) {
           somaQuadrados += buffer[i] * buffer[i];
         }
-        return Math.sqrt(somaQuadrados / buffer.length);
+        return Math.sqrt(somaQuadrados / Math.max(1, buffer.length - inicio));
       }
 
       function limparNota() {
         frequenciaEl.textContent = "Frequência dominante: -- Hz";
-        notaEl.textContent = "--";
+        notaEl.textContent = modoAfinacao === "fixo" ? descricaoNotaAlvo().nome : "--";
+        notaEl.title = modoAfinacao === "fixo" ? "Nota-alvo selecionada; aguardando medição" : "Nota detectada automaticamente";
         centsEl.textContent = "Desvio: -- cents";
+        avisoDesvioForaEscala.hidden = true;
         ponteiroCentsEl.style.left = "50%";
         escalaCentsEl.style.background = "#eee";
         rotuloEsquerdaEl.textContent = "-40";
@@ -1614,6 +1750,8 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
         rotuloMais5El.textContent = "+5";
         rotuloMais20El.textContent = "+20";
         rotuloDireitaEl.textContent = "+40";
+        if (confiancaEl) confiancaEl.textContent = "Confiança: --";
+        if (janelaEl) janelaEl.textContent = "Janela YIN: --";
       }
 
       function calcularIntervaloEntrePc(pcBase, pcAlvo) {
@@ -1776,6 +1914,7 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
         renderizarCirculoDOM();
         renderTabelaIntervalosMatriz();
         atualizarGeradorNotas();
+        atualizarNotaAlvo();
       }
 
       function corDesvioIntervalo(erroAbs, erroMax) {
@@ -2443,7 +2582,7 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
         let melhorMidi = 69;
         let melhorErroAbs = Infinity;
         let melhorCents = 0;
-        for (let midi = 24; midi <= 108; midi++) {
+        for (let midi = 12; midi <= 108; midi++) { // C0–C8, incluindo notas graves. 
           const f = estadoTemperamento.tabelaFrequenciasMidi[midi];
           if (!f || !isFinite(f) || f <= 0) continue;
           const cents = 1200 * Math.log2(freq / f);
@@ -2468,161 +2607,332 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
         };
       }
       // =========================================================
+      // AFINAÇÃO POR NOTA ESCOLHIDA
+      // =========================================================
+      function descricaoNotaAlvo() {
+        const pc = mod(midiAlvoAfinacao, 12);
+        const oitava = Math.floor(midiAlvoAfinacao / 12) - 1;
+        const nomesComAcento = {"Do": "Dó", "Re": "Ré", "Mi": "Mi", "Fa": "Fá",
+          "Sol": "Sol", "La": "Lá", "Si": "Si", "Lab": "Lá♭", "Mib": "Mi♭", "Sib": "Si♭"};
+        const latino = obterNomeLatinoCirculo(pc);
+        const nomeAcentuado = nomesComAcento[latino] || latino.replace(/^Do/, "Dó").replace(/^Re/, "Ré").replace(/^Fa/, "Fá").replace(/^La/, "Lá");
+        const nomeCientifico = {"Mib": "Eb", "Lab": "Ab", "Sib": "Bb"}[latino] || NOMES_NOTAS[pc];
+        return {midi: midiAlvoAfinacao, nome: `${nomeAcentuado}${oitava}`,
+          cientifica: `${nomeCientifico}${oitava}`,
+          frequencia: estadoTemperamento.tabelaFrequenciasMidi[midiAlvoAfinacao]};
+      }
+
+      function calcularDesvioAlvo(frequenciaDetectada, frequenciaAlvo) {
+        if (!Number.isFinite(frequenciaDetectada) || frequenciaDetectada <= 0 ||
+            !Number.isFinite(frequenciaAlvo) || frequenciaAlvo <= 0) return null;
+        return 1200 * Math.log2(frequenciaDetectada / frequenciaAlvo);
+      }
+
+      function atualizarExibicaoAfinacao(frequencia) {
+        if (!Number.isFinite(frequencia) || frequencia <= 0) return;
+        let cents;
+        if (modoAfinacao === "fixo") {
+          const alvo = descricaoNotaAlvo();
+          cents = calcularDesvioAlvo(frequencia, alvo.frequencia);
+          if (cents === null) { limparNota(); return; }
+          notaEl.textContent = alvo.nome;
+          notaEl.title = `Nota-alvo: ${alvo.nome} (${alvo.cientifica})`;
+        } else {
+          const resultado = frequenciaParaNotaTemperada(frequencia);
+          cents = resultado.cents;
+          notaEl.textContent = resultado.notaCompletaLatina;
+          notaEl.title = "Nota detectada automaticamente";
+        }
+        centsEl.textContent = "Desvio: " + (cents >= 0 ? "+" : "") + cents.toFixed(1) + " c";
+        atualizarMedidorCents(cents);
+        avisoDesvioForaEscala.hidden = modoAfinacao !== "fixo" || Math.abs(cents) <= 40;
+      }
+
+      function redesenharGraficoAfinacao() {
+        if (microfoneAtivo && analyser && audioContext && suavizado) {
+          // Forçar atualização imediata ao mudar alvo ou escala, sem esperar o próximo quadro.
+          ultimoDesenhoGrafico = 0;
+          desenharGrafico(suavizado, audioContext.sampleRate, analyser.fftSize, freqSuavizada);
+        } else if (modoAfinacao === "fixo") {
+          desenharGrafico(espectroVazio, 48000, 8192, null);
+        } else {
+          ctxGrafico.clearRect(0, 0, canvasGrafico.width, canvasGrafico.height);
+        }
+      }
+
+      function atualizarNotaAlvo() {
+        const alvo = descricaoNotaAlvo();
+        notaAlvoNome.textContent = `${alvo.nome} · ${alvo.cientifica}`;
+        notaAlvoFrequencia.textContent = Number.isFinite(alvo.frequencia)
+          ? `${alvo.frequencia.toFixed(3)} Hz` : "-- Hz";
+        notaAlvoAnterior.disabled = midiAlvoAfinacao <= MIDI_ALVO_MIN;
+        notaAlvoProxima.disabled = midiAlvoAfinacao >= MIDI_ALVO_MAX;
+        avisoNotaAlvoForaFaixa.hidden = Number.isFinite(alvo.frequencia) &&
+          alvo.frequencia >= FREQ_MIN_YIN && alvo.frequencia <= FREQ_MAX_YIN;
+        if (freqSuavizada !== null && microfoneAtivo) atualizarExibicaoAfinacao(freqSuavizada);
+        else limparNota();
+        redesenharGraficoAfinacao();
+      }
+
+      // =========================================================
       // FFT
       // =========================================================
       function encontrarPicoDominante(array, sampleRate, fftSize) {
         const binWidth = sampleRate / fftSize;
-        const freqMin = 20;
-        const freqMax = Math.min(parseFloat(freqMaxGraficoInput.value) || 2000, sampleRate / 2);
-        const startIndex = Math.max(1, Math.floor(freqMin / binWidth));
-        const endIndex = Math.min(array.length - 1, Math.floor(freqMax / binWidth));
-        let maxValue = -1;
-        let maxIndex = -1;
-        for (let i = startIndex; i <= endIndex; i++) {
-          if (array[i] > maxValue) {
-            maxValue = array[i];
-            maxIndex = i;
-          }
+        // O limite de exibição do gráfico não deve restringir o afinador.
+        const inicio = Math.max(1, Math.ceil(FREQ_MIN_YIN / binWidth));
+        const fim = Math.min(array.length - 2, Math.floor(FREQ_MAX_YIN / binWidth));
+        let indice = -1;
+        for (let i = inicio; i <= fim; i++) {
+          if (indice < 0 || array[i] > array[indice]) indice = i;
         }
-        if (maxIndex <= 0) return null;
-        let refinedIndex = maxIndex;
-        if (maxIndex > 0 && maxIndex < array.length - 1) {
-          const y1 = array[maxIndex - 1];
-          const y2 = array[maxIndex];
-          const y3 = array[maxIndex + 1];
-          const denominator = (y1 - 2 * y2 + y3);
-          if (Math.abs(denominator) > 1e-12) {
-            const delta = 0.5 * (y1 - y3) / denominator;
-            refinedIndex = maxIndex + Math.max(-0.5, Math.min(0.5, delta));
-          }
-        }
-        return {
-          index: refinedIndex,
-          frequency: refinedIndex * binWidth,
-          magnitude: maxValue
-        };
+        if (indice < 1 || array[indice] < 2) return null;
+        const refinado = refinarIndicePico(array, indice);
+        return {frequency: refinado * binWidth, index: refinado, magnitude: array[indice]};
       }
 
       function refinarIndicePico(array, indice) {
-        if (indice <= 0 || indice >= array.length - 1) {
-          return indice;
-        }
-        const y1 = array[indice - 1];
-        const y2 = array[indice];
-        const y3 = array[indice + 1];
-        const denominador = y1 - 2 * y2 + y3;
-        if (Math.abs(denominador) < 1e-12) {
-          return indice;
-        }
-        const delta = 0.5 * (y1 - y3) / denominador;
-        return indice + clamp(delta, -0.5, 0.5);
+        if (indice <= 0 || indice >= array.length - 1) return indice;
+        const a = array[indice - 1], b = array[indice], c = array[indice + 1];
+        const denom = a - 2 * b + c;
+        return Math.abs(denom) < 1e-8 ? indice : indice + clamp(0.5 * (a - c) / denom, -0.5, 0.5);
       }
 
-      function obterMagnitudeProxima(array, indice, toleranciaBins = 2) {
-        const centro = Math.round(indice);
-        let maior = 0;
-        for (let i = centro - toleranciaBins; i <= centro + toleranciaBins; i++) {
-          if (i >= 0 && i < array.length) {
-            maior = Math.max(maior, array[i]);
+      // Separar o sinal temporal do gráfico permite janelas YIN adaptativas sem
+      // modificar a resolução (8192) nem a fluidez da FFT visual.
+      function prepararAmostrasYin(buffer, sampleRate) {
+        // Redução de taxa com média anti-aliasing simples, preservando 0–4600 Hz.
+        const fator = Math.max(1, Math.round(sampleRate / TAXA_YIN_ALVO));
+        const tamanho = Math.floor(buffer.length / fator);
+        const saida = new Float32Array(tamanho);
+        const deslocamento = buffer.length - tamanho * fator;
+        for (let i = 0; i < tamanho; i++) {
+          let soma = 0;
+          const base = deslocamento + i * fator;
+          for (let j = 0; j < fator; j++) soma += buffer[base + j];
+          saida[i] = soma / fator;
+        }
+        return {amostras: saida, sampleRate: sampleRate / fator};
+      }
+
+      function selecionarJanelaYin(freqAnterior, sampleRateYin) {
+        // A primeira leitura usa janela intermediária e pesquisa TODAS as notas;
+        // mesmo após uma nota aguda, as graves continuam possíveis.
+        const f = Number.isFinite(freqAnterior) && freqAnterior > 0 ? freqAnterior : 80;
+        const duracao = f >= 220 ? 0.065 : f >= 110 ? 0.09 : f >= 55 ? 0.135 : 0.185;
+        return Math.round(duracao * sampleRateYin);
+      }
+
+      // YIN: diferença quadrática + média cumulativa normalizada (CMNDF),
+      // escolha do primeiro mínimo confiável e interpolação parabólica.
+      // Não exige que a fundamental esteja presente como pico espectral.
+      function estimarFundamentalYIN(buffer, sampleRate, freqAnterior = null) {
+        if (!buffer || buffer.length < 1024 || !Number.isFinite(sampleRate)) return null;
+        const tauMin = Math.max(2, Math.floor(sampleRate / FREQ_MAX_YIN));
+        const tauMax = Math.min(Math.ceil(sampleRate / FREQ_MIN_YIN), Math.floor(buffer.length / 2) - 2);
+        if (tauMax <= tauMin + 2) return null;
+        const janelaDesejada = selecionarJanelaYin(freqAnterior, sampleRate);
+        const janela = Math.min(janelaDesejada, buffer.length - tauMax - 2);
+        if (janela < 512) return null;
+        // A porção comparada se mantém igual para cada atraso (YIN clássico).
+        const inicio = buffer.length - janela - tauMax;
+        const passo = freqAnterior && freqAnterior > 700 ? 2 : 4;
+        const cmndf = new Float64Array(tauMax + 1);
+        let acumulado = 0;
+        cmndf[0] = 1;
+        for (let tau = 1; tau <= tauMax; tau++) {
+          let soma = 0;
+          for (let j = 0; j < janela; j += passo) {
+            const delta = buffer[inicio + j] - buffer[inicio + j + tau];
+            soma += delta * delta;
           }
+          acumulado += soma;
+          cmndf[tau] = acumulado > 1e-18 ? (soma * tau) / acumulado : 1;
+        }
+        const limiarYin = 0.17;
+        let melhorTau = -1;
+        let minimoGlobal = Infinity;
+        let melhorGlobal = -1;
+        for (let tau = tauMin; tau < tauMax; tau++) {
+          if (cmndf[tau] < minimoGlobal) {
+            minimoGlobal = cmndf[tau];
+            melhorGlobal = tau;
+          }
+          if (cmndf[tau] < limiarYin) {
+            while (tau + 1 <= tauMax && cmndf[tau + 1] < cmndf[tau]) tau++;
+            melhorTau = tau;
+            break;
+          }
+        }
+        // Se não cruzou o limiar, aceite apenas um mínimo relativamente forte;
+        // a etapa FFT exigirá evidências harmônicas adicionais.
+        if (melhorTau < 0 && minimoGlobal < 0.28) melhorTau = melhorGlobal;
+        if (melhorTau < 0) return null;
+        const a = cmndf[Math.max(1, melhorTau - 1)];
+        const b = cmndf[melhorTau];
+        const c = cmndf[Math.min(tauMax, melhorTau + 1)];
+        const denom = a - 2 * b + c;
+        const delta = Math.abs(denom) > 1e-10 ? clamp(0.5 * (a - c) / denom, -0.9, 0.9) : 0;
+        const freq = sampleRate / (melhorTau + delta);
+        if (!Number.isFinite(freq) || freq < FREQ_MIN_YIN || freq > FREQ_MAX_YIN) return null;
+        const indiceOitavaInferior = Math.round(sampleRate / (freq / 2));
+        const erroOitavaInferior = indiceOitavaInferior < tauMax ? cmndf[indiceOitavaInferior] : null;
+        return {
+          frequency: freq,
+          erroYin: b,
+          erroOitavaInferior,
+          janelaAmostras: janela,
+          janelaMs: 1000 * janela / sampleRate,
+          trechoMs: 1000 * (janela + tauMax) / sampleRate
+        };
+      }
+
+      function obterPicoDbProximo(espectroDb, indice, raio = 2) {
+        const centro = Math.round(indice);
+        let maior = -Infinity;
+        for (let i = centro - raio; i <= centro + raio; i++) {
+          if (i >= 1 && i < espectroDb.length) maior = Math.max(maior, espectroDb[i]);
         }
         return maior;
       }
 
-      function calcularPisoEspectral(array, inicio, fim) {
+      function calcularPisoEspectralDb(array) {
         const amostras = [];
-        // Amostragem parcial para não ordenar milhares de posições
-        // a cada quadro.
-        const passo = Math.max(1, Math.floor((fim - inicio) / 200));
-        for (let i = inicio; i <= fim; i += passo) {
-          amostras.push(array[i]);
+        const limite = Math.min(array.length - 1, 750);
+        for (let i = 3; i <= limite; i += 5) {
+          if (Number.isFinite(array[i])) amostras.push(array[i]);
         }
         amostras.sort((a, b) => a - b);
-        // Mediana aproximada do espectro.
-        return amostras[Math.floor(amostras.length / 2)] || 0;
+        return amostras.length ? amostras[Math.floor(amostras.length / 2)] : -100;
       }
 
-      function encontrarFundamentalProvavel(array, sampleRate, fftSize) {
-        const binWidth = sampleRate / fftSize;
-        const freqMin = 35;
-        const freqMax = Math.min(parseFloat(freqMaxGraficoInput.value) || 2000, sampleRate / 2);
-        const startIndex = Math.max(2, Math.ceil(freqMin / binWidth));
-        const endIndex = Math.min(array.length - 3, Math.floor(freqMax / binWidth));
-        if (endIndex <= startIndex) {
-          return null;
-        }
-        let magnitudeDominante = 0;
-        for (let i = startIndex; i <= endIndex; i++) {
-          magnitudeDominante = Math.max(magnitudeDominante, array[i]);
-        }
-        if (magnitudeDominante <= 0) {
-          return null;
-        }
-        const pisoEspectral = calcularPisoEspectral(array, startIndex, endIndex);
-        const amplitudeMinima = Math.max(pisoEspectral + 8, magnitudeDominante * 0.40);
-        let melhorCandidato = null;
-        let melhorPontuacao = -Infinity;
-        for (let i = startIndex; i <= endIndex; i++) {
-          const magnitude = array[i];
-          const ehMaximoLocal = magnitude > array[i - 1] && magnitude >= array[i + 1];
-          if (!ehMaximoLocal || magnitude < amplitudeMinima) {
-            continue;
+      function avaliarSuporteFFT(freq, espectroDb, sampleRate, fftSize) {
+        // Usar decibéis para diferença de nível, nunca razões entre bytes de dB.
+        const larguraBin = sampleRate / fftSize;
+        const pisoDb = calcularPisoEspectralDb(espectroDb);
+        let maxDb = -Infinity;
+        for (let i = 3; i < espectroDb.length; i++) maxDb = Math.max(maxDb, espectroDb[i]);
+        let harmonicos = 0;
+        let impares = 0;
+        for (let ordem = 1; ordem <= 7; ordem++) {
+          const fHarmonico = ordem * freq;
+          if (fHarmonico >= sampleRate / 2 - larguraBin) break;
+          const nivelDb = obterPicoDbProximo(espectroDb, fHarmonico / larguraBin, 2);
+          // Critérios em diferença de dB são independentes da escala de bytes.
+          if (nivelDb >= pisoDb + 11 && nivelDb >= maxDb - 33) {
+            harmonicos++;
+            if (ordem > 1 && ordem % 2 === 1) impares++;
           }
-          // Exige alguma proeminência em relação às laterais.
-          const baseLocal = Math.max(array[Math.max(startIndex, i - 3)], array[Math.min(endIndex, i + 3)]);
-          const proeminencia = magnitude - baseLocal;
-          if (proeminencia < 3) {
-            continue;
+        }
+        return {harmonicos, impares, pisoDb};
+      }
+
+      function temHarmonicoImparIndependente(fundamental, espectroDb, sampleRate, fftSize) {
+        // Não confundir a saia (leakage) de um pico vizinho com um novo harmônico.
+        const binHz = sampleRate / fftSize;
+        const piso = calcularPisoEspectralDb(espectroDb);
+        let maiorDb = -Infinity;
+        for (let i = 3; i < espectroDb.length; i++) maiorDb = Math.max(maiorDb, espectroDb[i]);
+        for (const ordem of [3, 5, 7]) {
+          const esperada = fundamental * ordem / binHz;
+          const centro = Math.round(esperada);
+          if (centro < 5 || centro >= espectroDb.length - 5) continue;
+          for (let i = centro - 1; i <= centro + 1; i++) {
+            const db = espectroDb[i];
+            if (db > piso + 13 && db > maiorDb - 31 &&
+                db > espectroDb[i - 1] && db >= espectroDb[i + 1] &&
+                db > Math.max(espectroDb[i - 3], espectroDb[i + 3]) + 5 &&
+                Math.abs(i - esperada) <= 0.85) return true;
           }
-          const frequencia = i * binWidth;
-          let suporteHarmonico = 0;
-          let harmonicosEncontrados = 0;
-          for (let harmonico = 2; harmonico <= 5; harmonico++) {
-            const indiceHarmonico = i * harmonico;
-            if (indiceHarmonico > endIndex) {
-              break;
+        }
+        return false;
+      }
+
+      function conferirCoerenciaPicos(freq, espectroDb, sampleRate, fftSize) {
+        // Checagem extra contra falsa subfundamental por batimentos, p.ex.
+        // instrumento de 110 Hz + interferência elétrica de 60 Hz.
+        const binHz = sampleRate / fftSize;
+        const piso = calcularPisoEspectralDb(espectroDb);
+        let maiorDb = -Infinity;
+        for (let i = 3; i < espectroDb.length; i++) maiorDb = Math.max(maiorDb, espectroDb[i]);
+        const fim = Math.min(espectroDb.length - 4,
+          Math.floor(Math.min(FREQ_MAX_YIN, Math.max(500, 7 * freq)) / binHz));
+        let picos = 0, compativeis = 0, incompativeis = 0;
+        for (let i = 3; i <= fim; i++) {
+          const nivel = espectroDb[i];
+          if (nivel < maiorDb - 28 || nivel < piso + 15 ||
+              nivel <= espectroDb[i - 1] || nivel < espectroDb[i + 1] ||
+              nivel <= Math.max(espectroDb[i - 1], espectroDb[i + 1]) + 1.4) continue;
+          const indice = refinarIndicePico(espectroDb, i);
+          const frequenciaPico = indice * binHz;
+          const ordem = Math.round(frequenciaPico / freq);
+          const afastamentoCents = ordem >= 1 && ordem <= 7 ?
+            Math.abs(1200 * Math.log2(frequenciaPico / (ordem * freq))) : Infinity;
+          picos++;
+          if (afastamentoCents <= 18) compativeis++;
+          else incompativeis++;
+        }
+        return {picos, compativeis, incompativeis,
+          coerente: !(picos >= 2 && compativeis < 2 && incompativeis >= 1)};
+      }
+
+      function encontrarFundamentalProvavel(formaOnda, sampleRateYin, espectroDb, sampleRateFFT, fftSize, frequenciaAnterior = null) {
+        const yin = estimarFundamentalYIN(formaOnda, sampleRateYin, frequenciaAnterior);
+        if (!yin) return null;
+        let suporte = avaliarSuporteFFT(yin.frequency, espectroDb, sampleRateFFT, fftSize);
+        // Verificação de erro de oitava: se o segundo harmônico domina, o YIN
+        // pode parar no primeiro mínimo (2*f0). Um componente ímpar de f0
+        // (3*f0 ou 5*f0) e um mínimo temporal mais forte em f0 permitem
+        // recuperar a fundamental mesmo quando seu próprio pico está ausente.
+        const metade = yin.frequency / 2;
+        if (metade >= FREQ_MIN_YIN && yin.erroYin > 0.004 &&
+            yin.erroOitavaInferior !== null &&
+            yin.erroOitavaInferior < 0.23 &&
+            yin.erroOitavaInferior < yin.erroYin * 0.70) {
+          const suporteMetade = avaliarSuporteFFT(metade, espectroDb, sampleRateFFT, fftSize);
+          if (suporteMetade.impares >= 1 &&
+              suporteMetade.harmonicos >= suporte.harmonicos + 1 &&
+              temHarmonicoImparIndependente(metade, espectroDb, sampleRateFFT, fftSize)) {
+            yin.frequency = metade;
+            yin.erroYin = yin.erroOitavaInferior;
+            suporte = suporteMetade;
+          }
+        }
+        // Refinamento espectral somente quando a fundamental é forte e isolada.
+        // Reduz o viés de interpolação temporal dos timbres muito brilhantes.
+        if (yin.frequency >= 350) {
+          const largura = sampleRateFFT / fftSize;
+          const indice = Math.round(yin.frequency / largura);
+          if (indice > 1 && indice < espectroDb.length - 1) {
+            let pico = indice;
+            for (let i = Math.max(2, indice - 2); i <= Math.min(espectroDb.length - 2, indice + 2); i++) {
+              if (espectroDb[i] > espectroDb[pico]) pico = i;
             }
-            const magnitudeHarmonico = obterMagnitudeProxima(array, indiceHarmonico, 2);
-            const peso = 1 / Math.sqrt(harmonico);
-            suporteHarmonico += peso * (magnitudeHarmonico / magnitudeDominante);
-            if (magnitudeHarmonico >= Math.max(pisoEspectral + 6, magnitudeDominante * 0.08)) {
-              harmonicosEncontrados++;
+            const piso = calcularPisoEspectralDb(espectroDb);
+            let maiorDb = -Infinity;
+            for (let i = 3; i < espectroDb.length; i++) maiorDb = Math.max(maiorDb, espectroDb[i]);
+            const frequenciaFft = refinarIndicePico(espectroDb, pico) * largura;
+            if (espectroDb[pico] > piso + 16 &&
+                espectroDb[pico] > maiorDb - 11 &&
+                Math.abs(1200 * Math.log2(frequenciaFft / yin.frequency)) <= 20) {
+              yin.frequency = frequenciaFft;
             }
           }
-          // A própria fundamental também participa da pontuação.
-          const amplitudeNormalizada = magnitude / magnitudeDominante;
-          const pontuacao = amplitudeNormalizada * 0.6 + suporteHarmonico + harmonicosEncontrados * 0.25;
-          // Um pico fraco precisa de confirmação harmônica.
-          if (amplitudeNormalizada < 0.50 && harmonicosEncontrados < 2) {
-            continue;
-          }
-          const magnitudeSegundoHarmonico = obterMagnitudeProxima(array, i * 2, 2);
-          const magnitudeTerceiroHarmonico = obterMagnitudeProxima(array, i * 3, 2);
-          const segundoMuitoMaisForte = magnitudeSegundoHarmonico > magnitude * 2.5;
-          const terceiroFraco = magnitudeTerceiroHarmonico < Math.max(pisoEspectral + 6, magnitudeDominante * 0.10);
-          if (amplitudeNormalizada < 0.50 && segundoMuitoMaisForte && terceiroFraco) {
-            continue;
-          }
-          const bonusGrave = 0.08 * (1 - (frequencia - freqMin) / (freqMax - freqMin));
-          const pontuacaoFinal = pontuacao + bonusGrave;
-          const margemPontuacao = 0.12;
-          const deveSubstituir = melhorCandidato === null || pontuacaoFinal > melhorPontuacao + margemPontuacao || (Math.abs(pontuacaoFinal - melhorPontuacao) <= margemPontuacao && frequencia < melhorCandidato.frequency);
-          if (deveSubstituir) {
-            melhorPontuacao = pontuacaoFinal;
-            melhorCandidato = {
-              index: refinarIndicePico(array, i),
-              frequency: frequencia,
-              magnitude,
-              pontuacao: pontuacaoFinal,
-              harmonicosEncontrados
-            };
-          }
         }
-        if (!melhorCandidato) {
-          return encontrarPicoDominante(array, sampleRate, fftSize);
-        }
-        melhorCandidato.frequency = melhorCandidato.index * binWidth;
-        return melhorCandidato;
+        // Ruído aleatório e ataques sem periodicidade não devem virar notas.
+        // Senoides puras podem ter só um pico; sons ricos podem ter vários.
+        const muitoPeriodico = yin.erroYin <= 0.085;
+        const periodico = yin.erroYin <= 0.18;
+        const moderado = yin.erroYin <= 0.26;
+        let confianca = null;
+        if (muitoPeriodico && suporte.harmonicos >= 1) confianca = "alta";
+        else if (periodico && suporte.harmonicos >= 1) confianca = "média";
+        else if (moderado && suporte.harmonicos >= 2) confianca = "média";
+        else if (yin.erroYin <= 0.10) confianca = "média"; // FFT insuficiente para nota grave.
+        if (!confianca) return null;
+        const coerencia = conferirCoerenciaPicos(yin.frequency, espectroDb, sampleRateFFT, fftSize);
+        if (!coerencia.coerente) return null;
+        return {...yin, ...suporte, ...coerencia, confianca};
       }
 
       function desenharGraficoLimitado(array, sampleRate, fftSize, peakFrequency = null) {
@@ -2637,6 +2947,30 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
       function desenharGrafico(array, sampleRate, fftSize, peakFrequency = null) {
         const width = canvasGrafico.width;
         const height = canvasGrafico.height;
+        const binHz = sampleRate / fftSize;
+        const nyquist = sampleRate / 2;
+        const alvo = modoAfinacao === "fixo" ? descricaoNotaAlvo() : null;
+        const configurado = clamp(Number(freqMaxGraficoInput.value) || 2000, 200, Math.min(10000, nyquist));
+        let freqMin = 0;
+        let freqMax = configurado;
+        if (alvo && Number.isFinite(alvo.frequencia) && alvo.frequencia > 0) {
+          if (zoomNotaAlvo.checked) {
+            // ±100 cents: ampliação gráfica; a resolução FFT continua em 8192 pontos.
+            freqMin = alvo.frequencia * Math.pow(2, -100 / 1200);
+            freqMax = alvo.frequencia * Math.pow(2, 100 / 1200);
+          } else if (alvo.frequencia > freqMax) {
+            // Permite exibir uma nota escolhida acima do limite do gráfico sem alterar o input.
+            freqMax = Math.min(nyquist, Math.ceil(alvo.frequencia * 1.12 / 100) * 100);
+          }
+        }
+        const largura = Math.max(freqMax - freqMin, 0.00001);
+        const posicao = f => ((f - freqMin) / largura) * width;
+        const magnitudeEm = f => {
+          const index = clamp(f / binHz, 0, array.length - 1);
+          const i = Math.floor(index);
+          const v = (array[i] || 0) * (1 - (index - i)) + (array[Math.min(i + 1, array.length - 1)] || 0) * (index - i);
+          return clamp(v / 255, 0, 1);
+        };
         ctxGrafico.clearRect(0, 0, width, height);
         ctxGrafico.fillStyle = "#ffffff";
         ctxGrafico.fillRect(0, 0, width, height);
@@ -2644,35 +2978,54 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
         ctxGrafico.lineWidth = 1;
         for (let i = 0; i <= 4; i++) {
           const y = (height / 4) * i;
-          ctxGrafico.beginPath();
-          ctxGrafico.moveTo(0, y);
-          ctxGrafico.lineTo(width, y);
-          ctxGrafico.stroke();
+          ctxGrafico.beginPath(); ctxGrafico.moveTo(0, y);
+          ctxGrafico.lineTo(width, y); ctxGrafico.stroke();
         }
-        const freqMax = Math.min(parseFloat(freqMaxGraficoInput.value) || 2000, sampleRate / 2);
-        const maxIndex = Math.min(array.length - 1, Math.floor((freqMax / sampleRate) * fftSize));
+        // Traçado em frequência real, incluindo as bordas mesmo quando o zoom
+        // é menor que a largura de um único bin. Não extrapolar resolução espectral.
         ctxGrafico.strokeStyle = "#1565c0";
         ctxGrafico.lineWidth = 2;
         ctxGrafico.beginPath();
-        for (let i = 0; i <= maxIndex; i++) {
-          const x = (i / maxIndex) * width;
-          const magnitude = array[i] / 255;
-          const y = height - magnitude * height;
-          if (i === 0) ctxGrafico.moveTo(x, y);
-          else ctxGrafico.lineTo(x, y);
+        ctxGrafico.moveTo(0, height - magnitudeEm(freqMin) * height);
+        const primeiro = Math.max(0, Math.ceil(freqMin / binHz));
+        const ultimo = Math.min(array.length - 1, Math.floor(freqMax / binHz));
+        for (let i = primeiro; i <= ultimo; i++) {
+          ctxGrafico.lineTo(posicao(i * binHz), height - (array[i] / 255) * height);
         }
+        ctxGrafico.lineTo(width, height - magnitudeEm(freqMax) * height);
         ctxGrafico.stroke();
-        if (peakFrequency !== null && peakFrequency <= freqMax) {
-          const xPeak = (peakFrequency / freqMax) * width;
+        // Linha-alvo mesmo com microfone desligado, verde tracejada.
+        if (alvo && alvo.frequencia >= freqMin && alvo.frequencia <= freqMax) {
+          const xAlvo = posicao(alvo.frequencia);
+          ctxGrafico.save();
+          ctxGrafico.strokeStyle = "#128866";
+          ctxGrafico.lineWidth = 2.5;
+          ctxGrafico.setLineDash([7, 5]);
+          ctxGrafico.beginPath(); ctxGrafico.moveTo(xAlvo, 0);
+          ctxGrafico.lineTo(xAlvo, height); ctxGrafico.stroke();
+          ctxGrafico.setLineDash([]);
+          ctxGrafico.fillStyle = "#087452";
+          ctxGrafico.font = "bold 12px Arial";
+          ctxGrafico.textAlign = xAlvo > width * 0.64 ? "right" : "left";
+          ctxGrafico.fillText(`Alvo: ${alvo.frequencia.toFixed(2)} Hz`,
+            clamp(xAlvo + (xAlvo > width * 0.64 ? -6 : 6), 6, width - 6), 52);
+          ctxGrafico.restore();
+        }
+        if (Number.isFinite(peakFrequency) && peakFrequency > 0) {
+          const pos = posicao(peakFrequency);
+          const xPeak = clamp(pos, 0, width);
+          const fora = pos < 0 || pos > width;
+          ctxGrafico.save();
           ctxGrafico.strokeStyle = "#d32f2f";
-          ctxGrafico.lineWidth = 2;
-          ctxGrafico.beginPath();
-          ctxGrafico.moveTo(xPeak, 0);
-          ctxGrafico.lineTo(xPeak, height);
-          ctxGrafico.stroke();
           ctxGrafico.fillStyle = "#d32f2f";
-          ctxGrafico.font = "14px Arial";
-          ctxGrafico.fillText(peakFrequency.toFixed(1) + " Hz", Math.min(xPeak + 6, width - 90), 18);
+          ctxGrafico.lineWidth = 2;
+          ctxGrafico.beginPath(); ctxGrafico.moveTo(xPeak, 0);
+          ctxGrafico.lineTo(xPeak, height); ctxGrafico.stroke();
+          ctxGrafico.font = "12px Arial";
+          ctxGrafico.textAlign = xPeak > width * 0.64 ? "right" : "left";
+          ctxGrafico.fillText(`${fora ? "Fora da faixa: " : "Medida: "}${peakFrequency.toFixed(2)} Hz`,
+            clamp(xPeak + (xPeak > width * 0.64 ? -6 : 6), 6, width - 6), 72);
+          ctxGrafico.restore();
         }
         const a4Atual = parseFloat(a4RefInput.value) || 440;
         const textoA4 = `a¹ = ${Number.isInteger(a4Atual) ? a4Atual.toFixed(0) : a4Atual.toFixed(1)} Hz`;
@@ -2680,69 +3033,79 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
         ctxGrafico.fillStyle = "rgba(255, 243, 205, 0.95)";
         ctxGrafico.strokeStyle = "#d6a800";
         ctxGrafico.lineWidth = 1;
-        ctxGrafico.beginPath();
-        ctxGrafico.roundRect(10, 10, 108, 28, 8);
-        ctxGrafico.fill();
-        ctxGrafico.stroke();
+        ctxGrafico.beginPath(); ctxGrafico.roundRect(10, 10, 108, 28, 8);
+        ctxGrafico.fill(); ctxGrafico.stroke();
         ctxGrafico.fillStyle = "#111";
         ctxGrafico.font = "bold 14px Arial";
+        ctxGrafico.textAlign = "left";
         ctxGrafico.fillText(textoA4, 18, 29);
         ctxGrafico.restore();
         ctxGrafico.fillStyle = "#444";
         ctxGrafico.font = "12px Arial";
-        ctxGrafico.fillText("0 Hz", 6, height - 6);
-        ctxGrafico.fillText(freqMax.toFixed(0) + " Hz", width - 58, height - 6);
+        ctxGrafico.textAlign = "left";
+        ctxGrafico.fillText(freqMin.toFixed(freqMin >= 100 ? 0 : 2) + " Hz", 6, height - 6);
+        ctxGrafico.textAlign = "right";
+        ctxGrafico.fillText(freqMax.toFixed(freqMax >= 100 ? 0 : 2) + " Hz", width - 6, height - 6);
       }
 
       function atualizarAnalise() {
         animationId = requestAnimationFrame(atualizarAnalise);
         const agora = performance.now();
-        if (INTERVALO_ANALISE_MS > 0 && agora - ultimaAnalise < INTERVALO_ANALISE_MS) { // 0 - sem limite
-          return;
-        }
+        if (INTERVALO_ANALISE_MS > 0 && agora - ultimaAnalise < INTERVALO_ANALISE_MS) return;
         ultimaAnalise = agora;
-        if (!analyser || !timeDataArray || !freqDataArray || !audioContext) {
-          return;
-        }
-        analyser.getFloatTimeDomainData(timeDataArray);
+        if (!analyser || !analyserTempo || !timeDataArray || !freqDataArray || !floatFreqDataArray || !audioContext) return;
+        analyserTempo.getFloatTimeDomainData(timeDataArray);
         analyser.getByteFrequencyData(freqDataArray);
-        if (!suavizado) {
-          suavizado = new Float32Array(freqDataArray.length);
-        }
+        analyser.getFloatFrequencyData(floatFreqDataArray);
+        if (!suavizado) suavizado = new Float32Array(freqDataArray.length);
         const alpha = obterCoeficienteSuavizacao();
-        const beta = 1 - alpha;
         for (let i = 0; i < freqDataArray.length; i++) {
-          suavizado[i] = alpha * suavizado[i] + beta * freqDataArray[i];
+          suavizado[i] = alpha * suavizado[i] + (1 - alpha) * freqDataArray[i];
         }
-        const rms = calcularRMS(timeDataArray);
+        const rms = calcularRMS(timeDataArray, Math.round(audioContext.sampleRate * 0.065));
         if (rms < obterLimiarSom()) {
-          statusEl.textContent = "";
+          freqSuavizada = null;
+          ultimoSinalConfiavel = null;
+          suavizado.fill(0); // Não carregar picos antigos para a próxima nota.
           limparNota();
+          statusEl.textContent = "Aguardando som...";
           desenharGraficoLimitado(suavizado, audioContext.sampleRate, analyser.fftSize, null);
           return;
         }
-        statusEl.textContent = "";
-        const pico = modoDeteccao === "fundamental" ? encontrarFundamentalProvavel(suavizado, audioContext.sampleRate, analyser.fftSize) : encontrarPicoDominante(suavizado, audioContext.sampleRate, analyser.fftSize);
-        if (pico && pico.frequency > 0) {
-          if (freqSuavizada === null) {
-            freqSuavizada = pico.frequency;
-          } else {
-            const alphaFreq = obterCoeficienteSuavizacao();
-            const betaFreq = 1 - alphaFreq;
-            freqSuavizada = alphaFreq * freqSuavizada + betaFreq * pico.frequency;
-          }
-        }
-        if (pico && pico.frequency > 0 && isFinite(pico.frequency) && freqSuavizada !== null) {
-          frequenciaEl.textContent = (modoDeteccao === "fundamental" ? "Fundamental provável: " : "Frequência dominante: ") + freqSuavizada.toFixed(2) + " Hz";
-          const resultado = frequenciaParaNotaTemperada(freqSuavizada);
-          notaEl.textContent = resultado.notaCompletaLatina;
-          centsEl.textContent = "Desvio: " + Math.round(resultado.cents) + " c";
-          atualizarMedidorCents(resultado.cents);
-          desenharGraficoLimitado(suavizado, audioContext.sampleRate, analyser.fftSize, freqSuavizada);
+        let detectado = null;
+        if (modoDeteccao === "fundamental") {
+          const preparo = prepararAmostrasYin(timeDataArray, audioContext.sampleRate);
+          detectado = encontrarFundamentalProvavel(preparo.amostras, preparo.sampleRate,
+            floatFreqDataArray, audioContext.sampleRate, analyser.fftSize, ultimoSinalConfiavel);
         } else {
-          limparNota();
-          desenharGraficoLimitado(suavizado, audioContext.sampleRate, analyser.fftSize, null);
+          detectado = encontrarPicoDominante(freqDataArray, audioContext.sampleRate, analyser.fftSize);
+          if (detectado) detectado.confianca = "não avaliada (modo pico)";
         }
+        if (!detectado || !Number.isFinite(detectado.frequency)) {
+          // Sem confiança, não inventar uma nota a partir de ruído ou de um harmônico isolado.
+          freqSuavizada = null;
+          ultimoSinalConfiavel = null;
+          limparNota();
+          statusEl.textContent = "Som captado, mas sem altura confiável.";
+          desenharGraficoLimitado(suavizado, audioContext.sampleRate, analyser.fftSize, null);
+          return;
+        }
+        statusEl.textContent = "Microfone ativo.";
+        // Reiniciar a leitura se a nota mudou; não criar frequências intermediárias.
+        const saltoCents = freqSuavizada === null ? Infinity :
+          Math.abs(1200 * Math.log2(detectado.frequency / freqSuavizada));
+        if (saltoCents > 60) {
+          freqSuavizada = detectado.frequency;
+        } else {
+          // Suavização em domínio logarítmico (cents), não média de frequências.
+          freqSuavizada *= Math.pow(detectado.frequency / freqSuavizada, 1 - alpha);
+        }
+        ultimoSinalConfiavel = detectado.frequency;
+        frequenciaEl.textContent = (modoDeteccao === "fundamental" ? "Fundamental estimada: " : "Pico dominante: ") + freqSuavizada.toFixed(2) + " Hz";
+        atualizarExibicaoAfinacao(freqSuavizada);
+        confiancaEl.textContent = "Confiança: " + detectado.confianca + (detectado.harmonicos ? ` · ${detectado.harmonicos} componente(s) compatíveis` : "");
+        janelaEl.textContent = modoDeteccao === "fundamental" ? `Janela YIN: ${Math.round(detectado.janelaMs)} ms (adaptativa)` : "FFT: 8192 pontos";
+        desenharGraficoLimitado(suavizado, audioContext.sampleRate, analyser.fftSize, freqSuavizada);
       }
       let microfoneAtivo = false;
       let microfoneIniciando = false;
@@ -2761,6 +3124,10 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
           analyser.disconnect();
           analyser = null;
         }
+        if (analyserTempo) {
+          analyserTempo.disconnect();
+          analyserTempo = null;
+        }
         if (stream) {
           stream.getTracks().forEach(trilha => trilha.stop());
           stream = null;
@@ -2772,7 +3139,9 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
         }
         timeDataArray = null;
         freqDataArray = null;
+        floatFreqDataArray = null;
         freqSuavizada = null;
+        ultimoSinalConfiavel = null;
         suavizado = null;
         ultimaAnalise = 0;
         ultimoDesenhoGrafico = 0;
@@ -2781,7 +3150,7 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
         btnIniciar.setAttribute("aria-pressed", "false");
         statusEl.textContent = "Microfone desligado.";
         limparNota();
-        ctxGrafico.clearRect(0, 0, canvasGrafico.width, canvasGrafico.height);
+        redesenharGraficoAfinacao();
       }
 
       async function iniciarMicrofone() {
@@ -2802,9 +3171,15 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
           analyser = audioContext.createAnalyser();
           analyser.fftSize = 8192;
           analyser.smoothingTimeConstant = 0;
-          timeDataArray = new Float32Array(analyser.fftSize);
+          analyserTempo = audioContext.createAnalyser();
+          // A FFT visual segue 8192; a leitura de amostras no tempo é independente.
+          analyserTempo.fftSize = audioContext.sampleRate > 60000 ? 32768 : 16384;
+          analyserTempo.smoothingTimeConstant = 0;
+          timeDataArray = new Float32Array(analyserTempo.fftSize);
           freqDataArray = new Uint8Array(analyser.frequencyBinCount);
+          floatFreqDataArray = new Float32Array(analyser.frequencyBinCount);
           source.connect(analyser);
+          source.connect(analyserTempo);
           stream.getAudioTracks().forEach(trilha => trilha.addEventListener("ended", () => {
             // Também atualiza a interface se o dispositivo for desconectado.
             if (microfoneAtivo) desativarMicrofone();
@@ -2827,16 +3202,16 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
 
       function aplicarModoDesempenho(modo) {
         if (modo === "economico") {
-          ANALISES_POR_SEGUNDO = 30;
-          DESENHOS_GRAFICO_POR_SEGUNDO = 15;
+          ANALISES_POR_SEGUNDO = 10; // YIN exige mais CPU que o detector de pico.
+          DESENHOS_GRAFICO_POR_SEGUNDO = 10;
         }
         if (modo === "normal") {
-          ANALISES_POR_SEGUNDO = 50;
-          DESENHOS_GRAFICO_POR_SEGUNDO = 40;
+          ANALISES_POR_SEGUNDO = 18;
+          DESENHOS_GRAFICO_POR_SEGUNDO = 18;
         }
         if (modo === "completo") {
-          ANALISES_POR_SEGUNDO = 0; // sem limite
-          DESENHOS_GRAFICO_POR_SEGUNDO = 0; // sem limite
+          ANALISES_POR_SEGUNDO = 25; // limite para proteger celulares de alto uso de CPU.
+          DESENHOS_GRAFICO_POR_SEGUNDO = 25;
         }
         INTERVALO_ANALISE_MS = ANALISES_POR_SEGUNDO > 0 ? 1000 / ANALISES_POR_SEGUNDO : 0;
         INTERVALO_DESENHO_GRAFICO_MS = DESENHOS_GRAFICO_POR_SEGUNDO > 0 ? 1000 / DESENHOS_GRAFICO_POR_SEGUNDO : 0;
@@ -3035,6 +3410,26 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
       // =========================================================
       // EVENTOS
       // ========================================================	=
+      seletorModoAfinacao.addEventListener("click", () => {
+        modoAfinacao = modoAfinacao === "automatico" ? "fixo" : "automatico";
+        const fixo = modoAfinacao === "fixo";
+        seletorModoAfinacao.classList.toggle("ativo", fixo);
+        seletorModoAfinacao.setAttribute("aria-checked", String(fixo));
+        seletorModoAfinacao.title = fixo ? "Modo atual: nota fixa" : "Modo atual: identificação automática";
+        painelNotaAlvo.hidden = !fixo;
+        legendaFFTAlvo.hidden = !fixo;
+        atualizarNotaAlvo();
+      });
+      notaAlvoAnterior.addEventListener("click", () => {
+        midiAlvoAfinacao = Math.max(MIDI_ALVO_MIN, midiAlvoAfinacao - 1);
+        atualizarNotaAlvo();
+      });
+      notaAlvoProxima.addEventListener("click", () => {
+        midiAlvoAfinacao = Math.min(MIDI_ALVO_MAX, midiAlvoAfinacao + 1);
+        atualizarNotaAlvo();
+      });
+      zoomNotaAlvo.addEventListener("change", redesenharGraficoAfinacao);
+      freqMaxGraficoInput.addEventListener("input", redesenharGraficoAfinacao);
       valorSuavizacaoEl.textContent = suavizacaoInput.value;
       suavizacaoInput.addEventListener("input", () => {
         valorSuavizacaoEl.textContent = suavizacaoInput.value;
