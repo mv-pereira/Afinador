@@ -1057,10 +1057,19 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
 .app-eyebrow .app-mark::before {content:'✺'; border:1px solid #b6d6ef; border-radius:12px; padding:9px; font-size:17px; background:#eaf6ff;}
 #notaDetectada {background:linear-gradient(135deg,#edf7ff,#f9fcff);}
       #medidorCents {border-left:3px solid #8ec1e9;}
-      #diagnosticoDeteccao {display:flex; flex-wrap:wrap; justify-content:center;
-        gap:8px 18px; margin:-15px auto 18px; font-size:12px; color:var(--ui-muted);}
-      #diagnosticoDeteccao span {background:var(--ui-surface); padding:6px 12px;
-        border:1px solid var(--ui-border); border-radius:999px;}
+      /* Diagnósticos com altura invariável, mesmo com troca de nota ou perda de sinal. */
+      #diagnosticoDeteccao {display:grid; grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:10px; width:min(740px,100%); margin:0 auto 18px; font-size:12px;
+        color:var(--ui-muted); box-sizing:border-box;}
+      .diagnostico-cartao {height:58px; min-width:0; padding:6px 10px;
+        background:var(--ui-surface); border:1px solid var(--ui-border);
+        border-radius:12px; display:flex; flex-direction:column; align-items:center;
+        justify-content:center; gap:3px; box-sizing:border-box;}
+      .diagnostico-rotulo {display:block; max-width:100%; color:var(--ui-muted);
+        font-size:10px; letter-spacing:.035em; font-weight:750; white-space:nowrap;}
+      .diagnostico-valor {display:block; max-width:100%; overflow:hidden;
+        text-overflow:ellipsis; white-space:nowrap; font-size:12px; font-weight:750;
+        color:var(--ui-heading-text); line-height:1.35;}
       /* Afinação de nota escolhida: controles independentes do emissor e do detector. */
       .controle-afinacao {max-width:740px; margin:13px auto 18px; text-align:center;
         padding:15px 18px; border:1px solid var(--ui-border); border-radius:var(--ui-radius-md);
@@ -1072,7 +1081,7 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
       .controle-afinacao-modos button {flex:0 0 52px;}
       .painel-nota-alvo {margin:14px auto 0; border-top:1px solid var(--ui-border);
         padding-top:15px;}
-      .painel-nota-alvo[hidden], #avisoDesvioForaEscala[hidden], #legendaFFTAlvo[hidden] {display:none !important;}
+      .painel-nota-alvo[hidden], #legendaFFTAlvo[hidden] {display:none !important;}
       .controle-passo-alvo {display:flex; align-items:center; justify-content:center; gap:12px;}
       .btn-passo-alvo {width:50px; height:50px; flex:0 0 50px; padding:0;
         font-size:24px; font-weight:750; background:var(--ui-panel); color:var(--ui-accent);}
@@ -1091,11 +1100,32 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
       .opcao-zoom-alvo input {width:17px; height:17px; margin:0;}
       .nota-alvo-ajuda {display:block; margin:8px auto 0; color:var(--ui-muted);
         font-size:11px; line-height:1.45; max-width:530px;}
-      #avisoNotaAlvoForaFaixa {display:block; margin:9px auto 0; max-width:550px;
-        font-size:11px; font-weight:750; color:var(--ui-warning); line-height:1.5;}
-      #avisoNotaAlvoForaFaixa[hidden] {display:none !important;}
-      #avisoDesvioForaEscala {color:var(--ui-warning); font-size:12px;
-        font-weight:750; margin:-17px auto 19px;}
+      /* Avisos ocupam a mesma altura visíveis ou ocultos. */
+      #avisoNotaAlvoForaFaixa {display:flex; align-items:center; justify-content:center;
+        height:56px; box-sizing:border-box; margin:9px auto 0; max-width:550px;
+        font-size:11px; font-weight:750; color:var(--ui-warning);
+        line-height:1.4; overflow:hidden;}
+      #avisoNotaAlvoForaFaixa[hidden] {display:flex !important; visibility:hidden;}
+      #avisoDesvioForaEscala {display:flex; align-items:center; justify-content:center;
+        box-sizing:border-box; height:40px; max-width:740px; padding:4px 10px;
+        overflow:hidden; margin:2px auto 8px; color:var(--ui-warning);
+        font-size:12px; font-weight:750; line-height:1.35;}
+      #avisoDesvioForaEscala[hidden] {display:flex !important; visibility:hidden;}
+      #medidorCents {margin-bottom:4px;}
+      /* O texto do status e os três mostradores não alteram mais a altura da página. */
+      #status {height:44px; min-height:44px; margin:10px 0 15px;
+        display:flex; align-items:center; justify-content:center;
+        box-sizing:border-box; padding:3px 7px; line-height:1.4; overflow:hidden;}
+      #frequenciaDetectada, #notaDetectada {height:88px; overflow:hidden; overflow-wrap:anywhere;}
+      #desvioCents {height:88px; overflow:hidden; overflow-wrap:anywhere;}
+      @media(max-width:650px) {
+        #frequenciaDetectada, #notaDetectada {height:80px;}
+        #desvioCents {height:55px;}
+      }
+      @media(max-width:360px) {
+        #avisoDesvioForaEscala {font-size:11px;}
+        .diagnostico-cartao {padding:6px 5px;}
+      }
       #legendaFFTAlvo {margin:8px 0 0; display:flex; justify-content:center;
         flex-wrap:wrap; gap:8px 18px; font-size:11px; color:var(--ui-muted);}
       #legendaFFTAlvo .legenda-cor {display:inline-block; width:16px; height:3px;
@@ -1119,71 +1149,53 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
         <button id="btnAjuda" class="btn-ajuda" type="button" aria-expanded="false" aria-controls="conteudoAjuda">
           <span class="icone-ajuda">?</span> Ajuda </button>
         <div id="conteudoAjuda" class="conteudo-ajuda" hidden>
-          <strong>Instruções de uso:</strong>
+          <h2>Guia de uso do afinador</h2>
+          <p><strong>Comece por aqui:</strong> ative o microfone, selecione o temperamento e toque <strong>uma nota por vez</strong>. O programa mostra a frequência medida e o desvio em cents. Para afinar uma nota determinada, mude de <strong>Automático</strong> para <strong>Nota fixa</strong>.</p>
+
+          <h3>1. Afinação automática ou por nota fixa</h3>
           <ul>
-            <li>
-              <strong>Ativar / desativar microfone:</strong> o botão inicia a captação e mostra a frequência, a nota e o desvio em cents. Quando o microfone está ativo, o mesmo botão permite desligá-lo.
-            </li>
-            <li>
-              <strong>Zerar ajustes:</strong> remove todas as alterações aplicadas às quintas, retornando ao estado base do preset selecionado.
-            </li>
-            <li>
-              <strong>Preset de temperamento:</strong> carrega distribuições históricas de quintas, como os sistemas pitagórico, igual, mesotônico e outros.
-            </li>
-            <li>
-              <strong>Ajuste das quintas:</strong> cada intervalo pode ser alterado por frações de coma pitagórico (c.p.) ou sintônico (c.s.), acumuladas localmente. O fechamento do círculo gera um intervalo residual, localizado entre <strong>Mib–Sol#</strong> ou <strong>Lab–Do#</strong>, conforme a enarmonia selecionada.
-            </li>
-            <li>
-              <strong>Estabilidade:</strong> suaviza a leitura em cents somente dentro de uma mesma nota. O valor 0% desativa a suavização; mudanças maiores de nota reiniciam a leitura para não mostrar frequências intermediárias artificiais.
-            </li>
-            <li>
-              <strong>Sensibilidade:</strong> controla o volume mínimo necessário para o afinador detectar o som. Valores maiores permitem detectar sons mais fracos. Valores menores exigem um som mais forte e ajudam a reduzir interferências causadas por ruídos do ambiente.
-            </li>
+            <li><strong>Automático (padrão):</strong> identifica a nota mais próxima de acordo com as frequências do temperamento selecionado. O desvio acompanha a nota reconhecida.</li>
+            <li><strong>Nota fixa:</strong> inicia em <strong>Dó4 (C4)</strong>. Use <strong>&lt;</strong> para descer ou <strong>&gt;</strong> para subir um semitom, de <strong>C0 a C8</strong>. O som é comparado somente à nota escolhida, mesmo que esteja mais próximo de outra nota.</li>
+            <li><strong>Referência do alvo:</strong> a frequência da nota fixa acompanha o valor de <strong>A4</strong>, o preset, a grafia enarmônica e os ajustes individuais das quintas. O alvo continua visível mesmo sem som.</li>
+            <li><strong>Como ler os cents:</strong> um resultado negativo indica som mais grave que a referência; positivo, mais agudo; <strong>0 cent</strong> significa frequências iguais. O número é calculado por <code>1200 × log2(frequência medida / frequência de referência)</code>.</li>
+            <li><strong>Escala do ponteiro:</strong> o medidor vai de <strong>−40 a +40 cents</strong>. No modo fixo, o valor numérico pode ultrapassar <strong>±40 cents</strong>; o ponteiro fica no extremo e surge um aviso. Pequenas oscilações perto do limite não devem fazer o aviso piscar.</li>
           </ul>
-          <strong>Modos de afinação:</strong>
+
+          <h3>2. Espectro e método de detecção</h3>
           <ul>
-            <li><strong>Automático (padrão):</strong> a nota mais próxima é identificada automaticamente.</li>
-            <li><strong>Nota fixa:</strong> escolha a nota-alvo com os botões &lt; e &gt;, começando em Dó4 (C4).
-              O afinador continua medindo a frequência real do som, mas calcula os cents em relação ao alvo,
-              inclusive para desvios acima de ±40 cents. O ponteiro limita-se a ±40 cents, não o número.</li>
-            <li><strong>Linhas no FFT:</strong> verde tracejado indica a frequência-alvo e vermelho a frequência medida.
-              Se o alvo estiver acima do máximo configurado, a escala visual aumenta temporariamente para incluí-lo.
-              Opcionalmente, amplie a região para ±100 cents. O zoom não aumenta a resolução física da FFT.</li>
-            <li><strong>Silêncio:</strong> a nota-alvo continua visível, enquanto os campos de frequência medida e
-              desvio são apagados. Mudar A4, temperamento ou quintas atualiza o alvo imediatamente.</li>
+            <li><strong>Fundamental (padrão):</strong> combina a periodicidade detectada pelo <strong>YIN</strong> com a coerência dos componentes observados na <strong>FFT</strong>. Utiliza janelas temporais adaptativas para facilitar a leitura das notas graves. Foi projetado para notas isoladas.</li>
+            <li><strong>Pico:</strong> acompanha o componente mais intenso do espectro FFT, que pode ser um harmônico acima da nota realmente tocada. O seletor <strong>Pico / Fundamental</strong> é independente de <strong>Automático / Nota fixa</strong>.</li>
+            <li><strong>Linhas no FFT em Nota fixa:</strong> a linha <strong>verde tracejada</strong> mostra o alvo e a <strong>vermelha</strong> mostra a frequência medida. A escala inclui automaticamente alvos mais agudos que o máximo configurado.</li>
+            <li><strong>Zoom ±100 cents:</strong> amplia apenas a <em>visualização</em> da região do alvo; não melhora a resolução da FFT nem modifica a frequência detectada.</li>
+            <li><strong>Confiança:</strong> resume a coerência da estimativa; <strong>--</strong> indica ausência de leitura confiável. No modo Pico, a confiança não é avaliada como no YIN. A quantidade de componentes compatíveis aparece na dica do indicador.</li>
+            <li><strong>Janela / análise:</strong> indica a duração da janela adaptativa utilizada pelo YIN em milissegundos, ou <strong>FFT 8192 pontos</strong> no modo Pico. Os dois cartões permanecem no lugar mesmo quando os valores mudam.</li>
+            <li><strong>Limites:</strong> a faixa nominal do detector YIN é de <strong>16 a 4600 Hz</strong>. A qualidade real da captação depende do microfone e do instrumento. Sons sem periodicidade confiável, ruído ou acordes podem produzir leitura inconclusiva.</li>
           </ul>
-          <strong>Modos de detecção da frequência:</strong>
+
+          <h3>3. Controles e temperamentos</h3>
           <ul>
-            <li>
-              <strong>Pico dominante:</strong> seleciona a frequência do componente mais intenso da FFT. Pode ser um harmônico e não necessariamente a nota tocada.
-            </li>
-            <li>
-              <strong>Fundamental (YIN + FFT):</strong> estima a periodicidade do sinal com janelas temporais adaptativas, mesmo quando um harmônico é mais intenso que a fundamental. Usa o espectro para conferir a coerência do resultado e mostra a confiança. É voltado para <strong>notas isoladas</strong>; acordes, ruídos e fundamental ausente ambígua podem produzir leituras inconclusivas.
-            </li>
+            <li><strong>Ativar / desativar microfone:</strong> autoriza a captação e inicia ou interrompe a análise. Durante o silêncio, os campos medidos são limpos; no modo fixo, a referência permanece disponível.</li>
+            <li><strong>Lá de referência (A4):</strong> define a frequência de referência, inicialmente <strong>440 Hz</strong>. <strong>Máx. gráfico</strong> controla somente a extensão horizontal da visualização FFT, e não toda a faixa de detecção.</li>
+            <li><strong>Estabilidade:</strong> suaviza pequenas flutuações na leitura; <strong>0%</strong> desliga a suavização. Alterações grandes de nota não devem ser mostradas como frequências intermediárias artificiais.</li>
+            <li><strong>Sensibilidade:</strong> aumenta a capacidade de captar sons fracos ao subir; diminuir ajuda a evitar ruído ambiente. <strong>Desempenho</strong> oferece os modos Econômico, Normal e Completo, com diferentes custos de processamento.</li>
+            <li><strong>Preset de temperamento:</strong> inclui Pitagórico, Igual, Mesotônicos, Kirnberger, Werckmeister, Vallotti, Young, Neidhardt e reconstruções Bach/Barnes e Bach/Lehman.</li>
+            <li><strong>Círculo de quintas:</strong> a tabela permite acrescentar ou subtrair frações de <strong>coma pitagórico (c.p.)</strong> ou <strong>coma sintônico (c.s.)</strong> em cada quinta; uma quinta residual fecha o ciclo. <strong>Zerar ajustes</strong> restaura o preset selecionado.</li>
+            <li><strong>Enarmonia:</strong> altera a nomenclatura de Sol♯ / Lá♭ no ponto de corte. A tabela de intervalos apresenta desvios em relação a razões musicais puras.</li>
           </ul>
-          <strong>Emissor de notas:</strong>
+
+          <h3>4. Emissor de notas</h3>
           <ul>
-            <li>
-              <strong>Abrir o emissor:</strong> expanda o painel “Emissor de notas — temperamento atual”, localizado abaixo das tabelas. Ele permanece recolhido até você abri-lo.
-            </li>
-            <li>
-              <strong>Selecionar uma nota:</strong> use o campo <strong>Nota</strong>. A nota aparece nas notações científica e de Helmholtz (histórica), acompanhada da frequência em Hz.
-            </li>
-            <li>
-              <strong>Temperamento e Lá de referência:</strong> a emissão respeita o A4 escolhido, o preset e os ajustes manuais do círculo de quintas. A frequência acompanha mudanças nesses controles, mesmo durante a reprodução.
-            </li>
-            <li>
-              <strong>Ouvir e navegar:</strong> clique em <strong>Emitir nota</strong> para tocar e em <strong>Parar som</strong> para interromper. Os botões <strong>Semitom</strong> avançam ou recuam uma nota cromática, respeitando o temperamento atual.
-            </li>
-            <li>
-              <strong>Volume e forma de onda:</strong> ajuste o volume e escolha entre senoidal (padrão), triangular, quadrada ou dente de serra. A forma de onda muda o timbre, não a frequência fundamental.
-            </li>
-            <li>
-              <strong>Ampliar extensão:</strong> habilite a faixa C0–B9 quando necessário. O afinador não considera a inarmonicidade.
-            </li>
-            <li>
-              <strong>Emissor e microfone juntos:</strong> os dois podem funcionar simultaneamente; prefira fones de ouvido para que o som emitido não interfira na captação.
-            </li>
+            <li>Abra o painel <strong>Emissor de notas — temperamento atual</strong> abaixo das tabelas. Escolha a nota e use os botões de semitom, <strong>Emitir nota</strong> e <strong>Parar som</strong>.</li>
+            <li>O emissor segue o <strong>A4</strong>, o temperamento e os ajustes do círculo. Permite regular o volume e escolher onda senoidal, triangular, quadrada ou dente de serra.</li>
+            <li>A opção <strong>Ampliar extensão</strong> permite emitir notas de <strong>C0 a B9</strong>. Se emitir e captar ao mesmo tempo, prefira <strong>fones de ouvido</strong> para não medir o próprio gerador.</li>
+          </ul>
+
+          <h3>5. Quando uma leitura parece incorreta</h3>
+          <ul>
+            <li>Toque uma nota sustentada isoladamente, afaste outras fontes sonoras e confirme se o modo <strong>Fundamental</strong> está selecionado.</li>
+            <li>Se aparecer <strong>Som captado, mas sem altura confiável</strong>, ajuste a captação e tente novamente: o afinador prefere não atribuir uma nota a exibir uma estimativa insegura.</li>
+            <li>Se a nota fixa estiver fora de <strong>16–4600 Hz</strong>, o programa avisará que essa referência pode não ser verificável com o detector atual.</li>
+            <li>O algoritmo não corrige a <strong>inarmonicidade</strong> de cordas rígidas, como algumas cordas de piano. O resultado não substitui medições calibradas quando se exige precisão metrológica.</li>
           </ul>
         </div>
       </div>
@@ -1249,9 +1261,7 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
           </label>
           <small class="nota-alvo-ajuda">O desvio será medido sempre em relação à nota escolhida,
             com a frequência calculada pelo temperamento atual. A escala do FFT se adapta para mostrar o alvo.</small>
-          <small id="avisoNotaAlvoForaFaixa" role="note" hidden>Atenção: a frequência do alvo está fora da
-            faixa de 16–4600 Hz do detector. A nota pode ser exibida, mas sua afinação não poderá ser
-            verificada de modo confiável com a configuração atual.</small>
+          <small id="avisoNotaAlvoForaFaixa" role="note" hidden>Nota-alvo fora da faixa nominal de 16–4600 Hz do detector: a medição pode ser inconclusiva.</small>
         </div>
       </div>
       <div id="frequenciaDetectada">Frequência dominante: -- Hz</div>
@@ -1276,11 +1286,16 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
           <span id="rotuloDireita">+40</span>
         </div>
       </div>
-      <p id="avisoDesvioForaEscala" role="note" hidden>O desvio ultrapassa ±40 cents;
-        o ponteiro está no limite, mas o valor numérico acima é o desvio completo.</p>
-      <div id="diagnosticoDeteccao" aria-live="off">
-        <span id="confiancaDeteccao">Confiança: --</span>
-        <span id="janelaDeteccao">Janela YIN: --</span>
+      <p id="avisoDesvioForaEscala" role="note" hidden>⚠ Fora da escala visual (±40 cents). Confira o desvio numérico acima.</p>
+      <div id="diagnosticoDeteccao" aria-live="off" aria-label="Diagnósticos da detecção">
+        <div class="diagnostico-cartao">
+          <span class="diagnostico-rotulo">Confiança</span>
+          <span id="confiancaDeteccao" class="diagnostico-valor" title="Aguardando som">--</span>
+        </div>
+        <div class="diagnostico-cartao">
+          <span class="diagnostico-rotulo">Janela / análise</span>
+          <span id="janelaDeteccao" class="diagnostico-valor" title="Aguardando som">--</span>
+        </div>
       </div>
       <div class="grade">
         <div class="subpainel">
@@ -1530,6 +1545,17 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
       const zoomNotaAlvo = document.getElementById("zoomNotaAlvo");
       const legendaFFTAlvo = document.getElementById("legendaFFTAlvo");
       const avisoDesvioForaEscala = document.getElementById("avisoDesvioForaEscala");
+      let avisoEscalaAtivo = false;
+      function atualizarAvisoEscala(cents) {
+        if (modoAfinacao !== "fixo" || !Number.isFinite(cents)) {
+          avisoEscalaAtivo = false;
+        } else if (avisoEscalaAtivo) {
+          if (Math.abs(cents) < 35 - 1e-6) avisoEscalaAtivo = false;
+        } else if (Math.abs(cents) > 40) {
+          avisoEscalaAtivo = true;
+        }
+        avisoDesvioForaEscala.hidden = !avisoEscalaAtivo;
+      }
       const avisoNotaAlvoForaFaixa = document.getElementById("avisoNotaAlvoForaFaixa");
       let modoAfinacao = "automatico"; // Padrão original, independente de Pico / Fundamental.
       let midiAlvoAfinacao = 60; // Dó central = C4.
@@ -1740,7 +1766,7 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
         notaEl.textContent = modoAfinacao === "fixo" ? descricaoNotaAlvo().nome : "--";
         notaEl.title = modoAfinacao === "fixo" ? "Nota-alvo selecionada; aguardando medição" : "Nota detectada automaticamente";
         centsEl.textContent = "Desvio: -- cents";
-        avisoDesvioForaEscala.hidden = true;
+        atualizarAvisoEscala(NaN);
         ponteiroCentsEl.style.left = "50%";
         escalaCentsEl.style.background = "#eee";
         rotuloEsquerdaEl.textContent = "-40";
@@ -1750,8 +1776,8 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
         rotuloMais5El.textContent = "+5";
         rotuloMais20El.textContent = "+20";
         rotuloDireitaEl.textContent = "+40";
-        if (confiancaEl) confiancaEl.textContent = "Confiança: --";
-        if (janelaEl) janelaEl.textContent = "Janela YIN: --";
+        if (confiancaEl) { confiancaEl.textContent = "--"; confiancaEl.title = "Sem leitura confiável"; }
+        if (janelaEl) { janelaEl.textContent = "--"; janelaEl.title = "Sem análise disponível"; }
       }
 
       function calcularIntervaloEntrePc(pcBase, pcAlvo) {
@@ -2645,7 +2671,7 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
         }
         centsEl.textContent = "Desvio: " + (cents >= 0 ? "+" : "") + cents.toFixed(1) + " c";
         atualizarMedidorCents(cents);
-        avisoDesvioForaEscala.hidden = modoAfinacao !== "fixo" || Math.abs(cents) <= 40;
+        atualizarAvisoEscala(cents);
       }
 
       function redesenharGraficoAfinacao() {
@@ -3103,8 +3129,14 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
         ultimoSinalConfiavel = detectado.frequency;
         frequenciaEl.textContent = (modoDeteccao === "fundamental" ? "Fundamental estimada: " : "Pico dominante: ") + freqSuavizada.toFixed(2) + " Hz";
         atualizarExibicaoAfinacao(freqSuavizada);
-        confiancaEl.textContent = "Confiança: " + detectado.confianca + (detectado.harmonicos ? ` · ${detectado.harmonicos} componente(s) compatíveis` : "");
-        janelaEl.textContent = modoDeteccao === "fundamental" ? `Janela YIN: ${Math.round(detectado.janelaMs)} ms (adaptativa)` : "FFT: 8192 pontos";
+        confiancaEl.textContent = modoDeteccao === "fundamental" ? detectado.confianca : "Não avaliada";
+        confiancaEl.title = modoDeteccao === "fundamental"
+          ? `Confiança: ${detectado.confianca}${detectado.harmonicos ? `; ${detectado.harmonicos} componente(s) harmônico(s) compatíveis` : ""}`
+          : "O modo Pico não avalia a confiança da fundamental";
+        janelaEl.textContent = modoDeteccao === "fundamental" ? `${Math.round(detectado.janelaMs)} ms · YIN` : "8192 pts · FFT";
+        janelaEl.title = modoDeteccao === "fundamental"
+          ? `YIN: janela adaptativa de ${Math.round(detectado.janelaMs)} milissegundos`
+          : "Análise espectral por FFT de 8192 pontos";
         desenharGraficoLimitado(suavizado, audioContext.sampleRate, analyser.fftSize, freqSuavizada);
       }
       let microfoneAtivo = false;
