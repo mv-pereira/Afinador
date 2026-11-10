@@ -928,7 +928,7 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
 .campo label {font-size:12px; font-weight:750; color:var(--ui-label); letter-spacing:.01em;}
 .campo small {font-size:11px; line-height:1.35;}
 .painel:first-of-type > .linha-config {
-  display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:12px;
+  display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px;
   margin:24px 0 18px; text-align:left;
 }
 .painel:first-of-type > .linha-config > .campo {
@@ -967,17 +967,10 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
 #ponteiroCents {top:-5px; height:26px; width:3px;}
 #rotulosCents {color:var(--ui-muted); font-size:10px; margin:5px 0 0;}
 .grade {display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); gap:14px; margin-top:17px; align-items:stretch;}
-.grade > .subpainel:nth-child(1) {grid-column:span 7;}
-.grade > .subpainel:nth-child(2) {grid-column:span 3;}
-.grade > .campo:nth-child(3) {grid-column:span 2;}
-.grade > .subpainel:nth-child(4) {grid-column:1/-1;}
+.grade > .subpainel:nth-child(1) {grid-column:1/-1;}
+.grade > .subpainel:nth-child(2) {grid-column:1/-1;}
 .subpainel {background:var(--ui-surface); border:1px solid var(--ui-border);
   border-radius:var(--ui-radius-md); padding:23px 23px 20px; box-shadow:var(--ui-card-shadow);}
-.grade > .campo:nth-child(3) {border:1px solid var(--ui-border); border-radius:var(--ui-radius-md);
-  background:var(--ui-surface); padding:22px 14px 18px; text-align:left;
-  align-self:stretch; justify-content:flex-start;}
-.grade > .subpainel:nth-child(2) .linha-config {margin:0;}
-.grade > .subpainel:nth-child(2) .campo {width:100%;}
 .grade > .subpainel:nth-child(1) {text-align:left;}
 .grade > .subpainel:nth-child(1) h2 {margin-bottom:9px;}
 .controle-modo-deteccao {justify-content:flex-start; color:var(--ui-muted);}
@@ -987,8 +980,8 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
 #grafico {height:234px; max-width:none; margin-top:13px; border-radius:var(--ui-radius-sm);
   background:var(--ui-canvas); border:1px solid var(--ui-border);}
 .observacao {font-size:11px; line-height:1.6; color:var(--ui-muted);}
-.grade > .subpainel:nth-child(4) {text-align:center; padding:28px 20px 24px;}
-.grade > .subpainel:nth-child(4) > h2 {font-size:24px; letter-spacing:-.03em; margin-bottom:14px;}
+.grade > .subpainel:nth-child(2) {text-align:center; padding:28px 20px 24px;}
+.grade > .subpainel:nth-child(2) > h2 {font-size:24px; letter-spacing:-.03em; margin-bottom:14px;}
 .circulo-quintas-dom {background:var(--ui-wheel); box-shadow:var(--ui-wheel-shadow);
   border:1px solid var(--ui-border);}
 .anel-externo {border-color:var(--ui-ring-outer);}
@@ -1026,10 +1019,7 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
 #geradorStatus {color:var(--ui-success);}
 .gerador-aviso {color:var(--ui-warning);}
 @media (max-width:1050px) {
-  .painel:first-of-type > .linha-config {grid-template-columns:repeat(3,minmax(0,1fr));}
-  .grade > .subpainel:nth-child(1) {grid-column:1/-1;}
-  .grade > .subpainel:nth-child(2) {grid-column:span 8;}
-  .grade > .campo:nth-child(3) {grid-column:span 4;}
+  .painel:first-of-type > .linha-config {grid-template-columns:repeat(2,minmax(0,1fr));}
 }
 @media (max-width:650px) {
   body {padding:10px 8px 32px;}
@@ -1040,19 +1030,14 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
   .painel:first-of-type > p {font-size:12px;}
   .painel:first-of-type > .linha-config {grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px;}
   .painel:first-of-type > .linha-config > .campo {padding:11px 9px;}
-  .painel:first-of-type > .linha-config > .campo:nth-child(5) {grid-column:1/-1;}
   #frequenciaDetectada, #notaDetectada, #desvioCents {margin:3px 2px; min-height:74px; padding:9px 7px;}
   #frequenciaDetectada {width:calc(50% - 8px); font-size:11px;}
   #notaDetectada {width:calc(50% - 8px); font-size:31px;}
   #desvioCents {width:calc(100% - 8px); min-height:44px; font-size:12px;}
   #medidorCents {padding:13px 17px 4px;}
   .grade {gap:10px;}
-  .grade > .subpainel:nth-child(1) {grid-column:1/-1;}
-  .grade > .subpainel:nth-child(2) {grid-column:1/-1;}
-  .grade > .campo:nth-child(3) {grid-column:1/-1;}
-  .grade > .subpainel:nth-child(4) {grid-column:1/-1;}
   .subpainel {padding:18px 13px;}
-  .grade > .subpainel:nth-child(4) {padding:20px 4px;}
+  .grade > .subpainel:nth-child(2) {padding:20px 4px;}
   #grafico {height:190px;}
   .secao-cabecalho {padding:16px 15px !important;}
   .secao-titulo {font-size:13px;}
@@ -1160,6 +1145,64 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
         .btn-passo-alvo {width:43px; height:47px; flex-basis:43px;}
       }
 
+
+      /* Barra permanente, compacta e utilizável inclusive em telas estreitas. */
+      body { padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px)); }
+      .barra-ajustes {
+        position: fixed; left: 0; right: 0; bottom: 0; z-index: 1000;
+        padding: 6px max(12px, env(safe-area-inset-right, 0px))
+                 calc(6px + env(safe-area-inset-bottom, 0px))
+                 max(12px, env(safe-area-inset-left, 0px));
+        background: var(--ui-panel); border-top: 1px solid var(--ui-border);
+        box-shadow: 0 -5px 18px rgba(19, 64, 93, .09);
+      }
+      .barra-ajustes-conteudo {
+        display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.65fr);
+        gap: 14px; max-width: 800px; margin: 0 auto; align-items: center;
+      }
+      .barra-ajustes .campo {
+        display: flex; flex-direction: row; align-items: center;
+        gap: 8px; min-width: 0; margin: 0;
+      }
+      .barra-ajustes .campo label {
+        flex: 0 0 auto; white-space: nowrap; font-size: 11px;
+        color: var(--ui-label); font-weight: 750; line-height: 1.1;
+      }
+      .barra-ajustes input[type="number"], .barra-ajustes select {
+        width: 100%; min-width: 0; height: 34px; min-height: 34px;
+        padding: 4px 8px; border-radius: 8px; font-size: 13px;
+      }
+      .barra-ajustes input[type="number"] { max-width: 110px; }
+      .fft-controles-superiores {
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 12px; flex-wrap: wrap;
+      }
+      .fft-controles-superiores .controle-modo-deteccao { width: auto; flex: 1 1 210px; }
+      .fft-controles-superiores .campo-enarmonia {
+        flex: 0 1 220px; min-width: 150px; gap: 4px;
+      }
+      .fft-controles-superiores .campo-enarmonia label { font-size: 11px; }
+      .fft-controles-superiores .campo-enarmonia select { min-height: 34px; padding: 5px 9px; }
+      #grafico { max-width: 950px; }
+      @media (max-width: 650px) {
+        body { padding-bottom: calc(86px + env(safe-area-inset-bottom, 0px)); }
+        .barra-ajustes {
+          padding: 5px max(8px, env(safe-area-inset-right, 0px))
+                   calc(5px + env(safe-area-inset-bottom, 0px))
+                   max(8px, env(safe-area-inset-left, 0px));
+        }
+        .barra-ajustes-conteudo {
+          grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.6fr); gap: 8px;
+        }
+        .barra-ajustes .campo { flex-direction: column; align-items: stretch; gap: 3px; }
+        .barra-ajustes .campo label { font-size: 10px; }
+        .barra-ajustes input[type="number"], .barra-ajustes select {
+          height: 32px; min-height: 32px; padding: 4px 6px; font-size: 12px;
+        }
+        .barra-ajustes input[type="number"] { max-width: none; }
+        .fft-controles-superiores { align-items: flex-start; }
+        .fft-controles-superiores .campo-enarmonia { flex: 1 1 150px; }
+      }
 </style>
   </head>
   <body>
@@ -1223,10 +1266,6 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
         </div>
       </div>
       <div class="linha-config">
-        <div class="campo">
-          <label for="a4Ref">Lá de referência (A4)</label>
-          <input type="number" id="a4Ref" value="440" step="0.1" min="300" max="500">
-        </div>
         <div class="campo">
           <label for="freqMaxGrafico">Máx. gráfico (Hz)</label>
           <input type="number" id="freqMaxGrafico" value="2000" step="50" min="200" max="10000">
@@ -1324,12 +1363,21 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
       <div class="grade">
         <div class="subpainel">
           <h2>Espectro FFT</h2>
-          <div class="controle-modo-deteccao">
-            <span>Pico</span>
-            <button id="seletorModoDeteccao" class="seletor-modo" type="button" role="switch" aria-checked="true" title="Alternar método de detecção">
-              <span class="seletor-bolinha"></span>
-            </button>
-            <span>Fundamental</span>
+          <div class="fft-controles-superiores">
+            <div class="controle-modo-deteccao">
+              <span>Pico</span>
+              <button id="seletorModoDeteccao" class="seletor-modo" type="button" role="switch" aria-checked="true" title="Alternar método de detecção">
+                <span class="seletor-bolinha"></span>
+              </button>
+              <span>Fundamental</span>
+            </div>
+            <div class="campo campo-enarmonia">
+              <label for="enarmoniaCorte">Nome da enarmonia</label>
+              <select id="enarmoniaCorte">
+                <option value="solsustenido" selected>Sol#</option>
+                <option value="lab">Lab</option>
+              </select>
+            </div>
           </div>
           <canvas id="grafico" width="700" height="280" aria-label="Espectro de frequências e marcadores de afinação"></canvas>
           <div id="legendaFFTAlvo" hidden>
@@ -1337,36 +1385,6 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
             <span><i class="legenda-cor" style="background:#d32f2f"></i>Vermelho: frequência detectada</span>
           </div>
           <div class="observacao"> No modo <strong>Fundamental</strong>, a periodicidade do som é estimada por YIN e confirmada pelos componentes da FFT. No modo <strong>Pico</strong>, é exibido o componente espectral mais intenso, que pode ser um harmônico. A FFT visual permanece em 8192 pontos. Use uma única nota por vez e evite ruídos. </div>
-        </div>
-        <div class="subpainel">
-          <h2>Preset de temperamento</h2>
-          <div class="linha-config">
-            <div class="campo">
-              <label for="presetTemperamento">Preset</label>
-              <select id="presetTemperamento">
-                <option value="pythagorean" selected>Sistema Pitagórico</option>
-                <option value="equal">Igual (-1/12 c.p.)</option>
-                <option value="quarter-comma-meantone">Mesotônico 1/4 c.s.</option>
-                <option value="sixth-comma-meantone">Mesotônico 1/6 c.s.</option>
-                <option value="kirnberger3">Kirnberger III (1779)</option>
-                <option value="werckmeister2">Werckmeister II</option>
-                <option value="werckmeister3">Werckmeister III (4× 1/4 c.s.) (1691)</option>
-                <option value="vallotti">Vallotti (1754)</option>
-                <option value="young2">Young II (1800)</option>
-                <option value="neidhardt-kleine-stadt">Neidhardt – Kleine Stadt (1732)</option>
-                <option value="neidhardt-grosse-stadt">Neidhardt – Große Stadt (1724)</option>
-                <option value="bach-barnes">Bach / Barnes (1979)</option>
-                <option value="bach-lehman">Bach / Lehman (2005)</option>
-              </select>
-            </div>
-          </div>
-        </div>
-        <div class="campo">
-          <label for="enarmoniaCorte">Nome da enarmonia</label>
-          <select id="enarmoniaCorte">
-            <option value="solsustenido" selected>Sol#</option>
-            <option value="lab">Lab</option>
-          </select>
         </div>
         <div class="subpainel">
           <h2>Círculo de quintas</h2>
@@ -1483,6 +1501,34 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
         a frequência acompanha o ajuste. Se usar o microfone ao mesmo tempo, prefira fones de ouvido para evitar realimentação.</p>
       </div>
     </details>
+    <!-- Controles acessíveis em toda a página; os IDs e os eventos originais são preservados. -->
+    <footer class="barra-ajustes" id="barraAjustes" aria-label="Configurações de afinação">
+      <div class="barra-ajustes-conteudo">
+        <div class="campo">
+          <label for="a4Ref">Lá de referência (A4)</label>
+          <input type="number" id="a4Ref" value="440" step="0.1" min="300" max="500"
+                 inputmode="decimal" aria-label="Lá de referência em hertz">
+        </div>
+        <div class="campo">
+          <label for="presetTemperamento">Temperamento</label>
+          <select id="presetTemperamento">
+          <option value="pythagorean" selected>Sistema Pitagórico</option>
+          <option value="equal">Igual (-1/12 c.p.)</option>
+          <option value="quarter-comma-meantone">Mesotônico 1/4 c.s.</option>
+          <option value="sixth-comma-meantone">Mesotônico 1/6 c.s.</option>
+          <option value="kirnberger3">Kirnberger III (1779)</option>
+          <option value="werckmeister2">Werckmeister II</option>
+          <option value="werckmeister3">Werckmeister III (4× 1/4 c.s.) (1691)</option>
+          <option value="vallotti">Vallotti (1754)</option>
+          <option value="young2">Young II (1800)</option>
+          <option value="neidhardt-kleine-stadt">Neidhardt – Kleine Stadt (1732)</option>
+          <option value="neidhardt-grosse-stadt">Neidhardt – Große Stadt (1724)</option>
+          <option value="bach-barnes">Bach / Barnes (1979)</option>
+          <option value="bach-lehman">Bach / Lehman (2005)</option>
+          </select>
+        </div>
+      </div>
+    </footer>
     <script>
       // =========================================================
       // ÁUDIO / FFT
@@ -1544,6 +1590,23 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
       const confiancaEl = document.getElementById("confiancaDeteccao");
       const janelaEl = document.getElementById("janelaDeteccao");
       const a4RefInput = document.getElementById("a4Ref");
+      // Mantém o campo A4 visível acima do teclado virtual quando necessário.
+      const barraAjustes = document.getElementById("barraAjustes");
+      function ajustarBarraAoTeclado() {
+        const vv = window.visualViewport;
+        if (!vv || document.activeElement !== a4RefInput) {
+          barraAjustes.style.bottom = "";
+          return;
+        }
+        const areaOculta = Math.max(0, window.innerHeight - vv.offsetTop - vv.height);
+        barraAjustes.style.bottom = areaOculta > 120 ? `${areaOculta}px` : "";
+      }
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener("resize", ajustarBarraAoTeclado);
+        window.visualViewport.addEventListener("scroll", ajustarBarraAoTeclado);
+      }
+      a4RefInput.addEventListener("focus", ajustarBarraAoTeclado);
+      a4RefInput.addEventListener("blur", ajustarBarraAoTeclado);
       const freqMaxGraficoInput = document.getElementById("freqMaxGrafico");
       const suavizacaoInput = document.getElementById("suavizacao");
       const valorSuavizacaoEl = document.getElementById("valorSuavizacao");
