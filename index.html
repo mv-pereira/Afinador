@@ -306,9 +306,31 @@
         position: relative;
         height: 24px;
         border-radius: 999px;
-        border: 1px solid #bbb;
-        background: #eee;
+        border: 1px solid var(--ui-border);
+        background: var(--ui-badge);
         overflow: hidden;
+      }
+
+      /* Mesmas cores para os dois modos; apenas a escala horizontal muda. */
+      #faixaAfinadaCents {
+        position: absolute;
+        inset: 0 auto 0 43.75%;
+        width: 12.5%;
+        background: rgba(18, 136, 102, 0.20);
+        z-index: 0;
+        pointer-events: none;
+      }
+      #faixaAfinadaCents[hidden] { display: none !important; }
+      #preenchimentoCents {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 50%;
+        width: 0;
+        background: var(--red);
+        z-index: 1;
+        pointer-events: none;
+        transition: left 80ms linear, width 80ms linear, background-color 80ms linear;
       }
 
       .marca-centro {
@@ -320,6 +342,7 @@
         background: #222;
         transform: translateX(-50%);
         opacity: 0.85;
+        z-index: 3;
       }
 
       .marca-guia {
@@ -329,6 +352,7 @@
         height: 18px;
         background: rgba(0, 0, 0, 0.28);
         transform: translateX(-50%);
+        z-index: 2;
       }
 
       .guia-menos-20 {
@@ -357,6 +381,8 @@
         transform: translateX(-50%);
         border-radius: 2px;
         box-shadow: 0 0 2px rgba(0, 0, 0, 0.35);
+        z-index: 4;
+        transition: left 80ms linear, background-color 80ms linear;
       }
 
       #rotulosCents {
@@ -402,6 +428,8 @@
         left: 100%;
         transform: translateX(-100%);
       }
+      #rotulosCents #rotuloEsquerda { transform: translateX(0); }
+      #rotulosCents #rotuloDireita { transform: translateX(-100%); }
 
       .circulo-quintas-dom {
         position: relative;
@@ -1106,11 +1134,6 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
         font-size:11px; font-weight:750; color:var(--ui-warning);
         line-height:1.4; overflow:hidden;}
       #avisoNotaAlvoForaFaixa[hidden] {display:flex !important; visibility:hidden;}
-      #avisoDesvioForaEscala {display:flex; align-items:center; justify-content:center;
-        box-sizing:border-box; height:40px; max-width:740px; padding:4px 10px;
-        overflow:hidden; margin:2px auto 8px; color:var(--ui-warning);
-        font-size:12px; font-weight:750; line-height:1.35;}
-      #avisoDesvioForaEscala[hidden] {display:flex !important; visibility:hidden;}
       #medidorCents {margin-bottom:4px;}
       /* O texto do status e os três mostradores não alteram mais a altura da página. */
       #status {height:44px; min-height:44px; margin:10px 0 15px;
@@ -1123,7 +1146,6 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
         #desvioCents {height:55px;}
       }
       @media(max-width:360px) {
-        #avisoDesvioForaEscala {font-size:11px;}
         .diagnostico-cartao {padding:6px 5px;}
       }
       #legendaFFTAlvo {margin:8px 0 0; display:flex; justify-content:center;
@@ -1158,7 +1180,8 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
             <li><strong>Nota fixa:</strong> inicia em <strong>Dó4 (C4)</strong>. Use <strong>&lt;</strong> para descer ou <strong>&gt;</strong> para subir um semitom, de <strong>C0 a C8</strong>. O som é comparado somente à nota escolhida, mesmo que esteja mais próximo de outra nota.</li>
             <li><strong>Referência do alvo:</strong> a frequência da nota fixa acompanha o valor de <strong>A4</strong>, o preset, a grafia enarmônica e os ajustes individuais das quintas. O alvo continua visível mesmo sem som.</li>
             <li><strong>Como ler os cents:</strong> um resultado negativo indica som mais grave que a referência; positivo, mais agudo; <strong>0 cent</strong> significa frequências iguais. O número é calculado por <code>1200 × log2(frequência medida / frequência de referência)</code>.</li>
-            <li><strong>Escala do ponteiro:</strong> o medidor vai de <strong>−40 a +40 cents</strong>. No modo fixo, o valor numérico pode ultrapassar <strong>±40 cents</strong>; o ponteiro fica no extremo e surge um aviso. Pequenas oscilações perto do limite não devem fazer o aviso piscar.</li>
+            <li><strong>Escala do ponteiro:</strong> no modo <strong>Automático</strong>, a escala é <strong>linear de −40 a +40 cents</strong>, como antes. No modo <strong>Nota fixa</strong>, é linear entre <strong>−20 e +20 cents</strong> e se comprime progressivamente além dessa faixa, aproximando o ponteiro das extremidades sem limite externo. Em ambos os modos, o valor numérico exibe o desvio completo.</li>
+            <li><strong>Cores do medidor:</strong> a faixa fica <strong>vermelha entre o centro e o ponteiro</strong> quando o som está fora da tolerância de ±5 cents; vermelho à esquerda significa <strong>grave (aumente a frequência)</strong>, e à direita significa <strong>agudo (diminua a frequência)</strong>. Em ±5 cents ou menos, o indicador fica <strong>verde</strong>. Sem leitura, o medidor fica neutro.</li>
           </ul>
 
           <h3>2. Espectro e método de detecção</h3>
@@ -1268,7 +1291,9 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
       <div id="notaDetectada">--</div>
       <div id="desvioCents">Desvio: -- cents</div>
       <div id="medidorCents">
-        <div id="escalaCents">
+        <div id="escalaCents" role="img" aria-label="Medidor de cents sem leitura">
+          <div id="faixaAfinadaCents" hidden></div>
+          <div id="preenchimentoCents"></div>
           <div class="marca-guia guia-menos-20"></div>
           <div class="marca-guia guia-menos-5"></div>
           <div class="marca-centro"></div>
@@ -1286,7 +1311,6 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
           <span id="rotuloDireita">+40</span>
         </div>
       </div>
-      <p id="avisoDesvioForaEscala" role="note" hidden>⚠ Fora da escala visual (±40 cents). Confira o desvio numérico acima.</p>
       <div id="diagnosticoDeteccao" aria-live="off" aria-label="Diagnósticos da detecção">
         <div class="diagnostico-cartao">
           <span class="diagnostico-rotulo">Confiança</span>
@@ -1527,6 +1551,8 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
       const valorSensibilidadeSomEl = document.getElementById("valorSensibilidadeSom");
       const escalaCentsEl = document.getElementById("escalaCents");
       const ponteiroCentsEl = document.getElementById("ponteiroCents");
+      const preenchimentoCentsEl = document.getElementById("preenchimentoCents");
+      const faixaAfinadaCentsEl = document.getElementById("faixaAfinadaCents");
       const rotuloEsquerdaEl = document.getElementById("rotuloEsquerda");
       const rotuloMenos20El = document.getElementById("rotuloMenos20");
       const rotuloMenos5El = document.getElementById("rotuloMenos5");
@@ -1544,18 +1570,6 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
       const notaAlvoFrequencia = document.getElementById("notaAlvoFrequencia");
       const zoomNotaAlvo = document.getElementById("zoomNotaAlvo");
       const legendaFFTAlvo = document.getElementById("legendaFFTAlvo");
-      const avisoDesvioForaEscala = document.getElementById("avisoDesvioForaEscala");
-      let avisoEscalaAtivo = false;
-      function atualizarAvisoEscala(cents) {
-        if (modoAfinacao !== "fixo" || !Number.isFinite(cents)) {
-          avisoEscalaAtivo = false;
-        } else if (avisoEscalaAtivo) {
-          if (Math.abs(cents) < 35 - 1e-6) avisoEscalaAtivo = false;
-        } else if (Math.abs(cents) > 40) {
-          avisoEscalaAtivo = true;
-        }
-        avisoDesvioForaEscala.hidden = !avisoEscalaAtivo;
-      }
       const avisoNotaAlvoForaFaixa = document.getElementById("avisoNotaAlvoForaFaixa");
       let modoAfinacao = "automatico"; // Padrão original, independente de Pico / Fundamental.
       let midiAlvoAfinacao = 60; // Dó central = C4.
@@ -1766,16 +1780,7 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
         notaEl.textContent = modoAfinacao === "fixo" ? descricaoNotaAlvo().nome : "--";
         notaEl.title = modoAfinacao === "fixo" ? "Nota-alvo selecionada; aguardando medição" : "Nota detectada automaticamente";
         centsEl.textContent = "Desvio: -- cents";
-        atualizarAvisoEscala(NaN);
-        ponteiroCentsEl.style.left = "50%";
-        escalaCentsEl.style.background = "#eee";
-        rotuloEsquerdaEl.textContent = "-40";
-        rotuloMenos20El.textContent = "-20";
-        rotuloMenos5El.textContent = "-5";
-        rotuloZeroEl.textContent = "0";
-        rotuloMais5El.textContent = "+5";
-        rotuloMais20El.textContent = "+20";
-        rotuloDireitaEl.textContent = "+40";
+        limparMedidorCents();
         if (confiancaEl) { confiancaEl.textContent = "--"; confiancaEl.title = "Sem leitura confiável"; }
         if (janelaEl) { janelaEl.textContent = "--"; janelaEl.title = "Sem análise disponível"; }
       }
@@ -1949,33 +1954,57 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
         return `hsl(${hue}, 85%, 45%)`;
       }
 
-      function corMedidorCents(cents) {
-        const limite = 40;
-        const erro = Math.abs(cents);
-        if (erro >= limite) {
-          return "rgb(211, 47, 47)";
+      // Apenas apresentação visual: o cálculo musical de cents permanece linear/logarítmico.
+      function posicaoMedidorCents(cents, modo = modoAfinacao) {
+        if (!Number.isFinite(cents)) return 50;
+        if (modo !== "fixo") {
+          // Mantém rigorosamente a escala anterior do modo Automático: -40 a +40.
+          return 50 + clamp(cents, -40, 40) * 1.25;
         }
-        if (erro <= 2) {
-          return "rgb(27, 94, 32)";
-        }
-        const t = (erro - 2) / (limite - 2);
-        const hue = 120 * (1 - t);
-        return `hsl(${hue}, 85%, 45%)`;
+        // Nota fixa: conserva a escala central entre +/-20 e comprime as caudas.
+        // |20| -> 25% da meia-barra; |60| -> 35%; |200| -> 43,75%;
+        // nenhum valor finito atinge a borda, evitando saturação do ponteiro.
+        const magnitude = Math.abs(cents);
+        const deslocamento = magnitude <= 20 ? magnitude * 1.25
+          : 25 + 25 * (magnitude - 20) / (magnitude - 20 + 60);
+        return 50 + Math.sign(cents) * deslocamento;
       }
 
-      function atualizarMedidorCents(cents) {
-        const limite = 40;
-        const centsLimitado = Math.max(-limite, Math.min(limite, cents));
-        const percentual = ((centsLimitado + limite) / (2 * limite)) * 100;
-        ponteiroCentsEl.style.left = percentual + "%";
-        escalaCentsEl.style.background = corMedidorCents(cents);
-        rotuloEsquerdaEl.textContent = "-40";
+      function atualizarRotulosMedidorCents() {
+        const fixo = modoAfinacao === "fixo";
+        rotuloEsquerdaEl.textContent = fixo ? "← Grave" : "-40";
         rotuloMenos20El.textContent = "-20";
         rotuloMenos5El.textContent = "-5";
         rotuloZeroEl.textContent = "0";
         rotuloMais5El.textContent = "+5";
         rotuloMais20El.textContent = "+20";
-        rotuloDireitaEl.textContent = "+40";
+        rotuloDireitaEl.textContent = fixo ? "Agudo →" : "+40";
+      }
+
+      function limparMedidorCents() {
+        atualizarRotulosMedidorCents();
+        ponteiroCentsEl.style.left = "50%";
+        ponteiroCentsEl.style.backgroundColor = "var(--ui-heading-text)";
+        preenchimentoCentsEl.style.left = "50%";
+        preenchimentoCentsEl.style.width = "0%";
+        faixaAfinadaCentsEl.hidden = true;
+        escalaCentsEl.setAttribute("aria-label", "Medidor de cents sem leitura");
+      }
+
+      function atualizarMedidorCents(cents) {
+        if (!Number.isFinite(cents)) { limparMedidorCents(); return; }
+        atualizarRotulosMedidorCents();
+        const percentual = posicaoMedidorCents(cents);
+        const afinado = Math.abs(cents) <= 5 + 1e-7; // tolerância numérica nos limites
+        const cor = afinado ? "var(--ui-success)" : "var(--red)";
+        ponteiroCentsEl.style.left = percentual + "%";
+        ponteiroCentsEl.style.backgroundColor = cor;
+        preenchimentoCentsEl.style.left = Math.min(50, percentual) + "%";
+        preenchimentoCentsEl.style.width = Math.abs(percentual - 50) + "%";
+        preenchimentoCentsEl.style.backgroundColor = cor;
+        faixaAfinadaCentsEl.hidden = !afinado;
+        const direcao = cents > 0 ? "agudo" : cents < 0 ? "grave" : "afinada";
+        escalaCentsEl.setAttribute("aria-label", `Desvio: ${cents.toFixed(1)} cents. Nota ${direcao}.`);
       }
       // =========================================================
       // PRESETS
@@ -2671,7 +2700,6 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
         }
         centsEl.textContent = "Desvio: " + (cents >= 0 ? "+" : "") + cents.toFixed(1) + " c";
         atualizarMedidorCents(cents);
-        atualizarAvisoEscala(cents);
       }
 
       function redesenharGraficoAfinacao() {
