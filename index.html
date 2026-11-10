@@ -928,7 +928,7 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
 .campo label {font-size:12px; font-weight:750; color:var(--ui-label); letter-spacing:.01em;}
 .campo small {font-size:11px; line-height:1.35;}
 .painel:first-of-type > .linha-config {
-  display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px;
+  display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px;
   margin:24px 0 18px; text-align:left;
 }
 .painel:first-of-type > .linha-config > .campo {
@@ -1020,6 +1020,7 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
 .gerador-aviso {color:var(--ui-warning);}
 @media (max-width:1050px) {
   .painel:first-of-type > .linha-config {grid-template-columns:repeat(2,minmax(0,1fr));}
+  .painel:first-of-type > .linha-config > .campo:last-child {grid-column:1/-1;}
 }
 @media (max-width:650px) {
   body {padding:10px 8px 32px;}
@@ -1210,18 +1211,156 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
       .ajuste-filtro-linha { display: flex; gap: 9px; align-items: center; }
       .ajuste-filtro-linha input[type=range] { flex: 1; min-width: 0; }
       .ajuste-filtro-linha output { flex: 0 0 36px; font-size: 11px; font-weight: 700; text-align: right; }
-      /* Etapa 5: diagnóstico recolhido por padrão, sem ocupar o rodapé. */
-      .diagnostico-desempenho {max-width:740px; margin:8px auto 18px; text-align:left;
-        border:1px solid var(--ui-border); border-radius:12px; background:var(--ui-surface);}
-      .diagnostico-desempenho summary {padding:10px 14px; cursor:pointer;
-        font-size:12px; font-weight:750; color:var(--ui-label);}
-      .diagnostico-desempenho .diagnostico-interior {padding:0 14px 14px;}
-      .diagnostico-desempenho p {font-size:11px; color:var(--ui-muted); margin:4px 0 10px;}
-      #resultadoDesempenho {display:block; white-space:pre-wrap; overflow-wrap:anywhere;
-        font:11px/1.55 var(--ui-mono); padding:10px; border:1px solid var(--ui-border);
-        border-radius:8px; background:var(--ui-panel); min-height:75px;}
-      .acoes-diagnostico {display:flex; flex-wrap:wrap; gap:8px; margin:10px 0 0;}
-      .acoes-diagnostico button {padding:8px 11px; font-size:12px;}
+      /* Layout compacto de afinação — apenas apresentação; FFT mantém 234/190px. */
+      .painel:first-of-type { padding-top:20px; }
+      .painel:first-of-type > h1 { font-size:clamp(20px,2.5vw,30px); margin-bottom:7px; }
+      .painel:first-of-type > p { margin-bottom:7px; }
+      .acoes-captura {
+        position:relative; display:flex; flex-wrap:nowrap; justify-content:center;
+        align-items:center; gap:9px; margin:12px auto 0; max-width:950px;
+      }
+      .acoes-captura .botoneria { margin:0; flex:0 0 auto; }
+      .acoes-captura #btnIniciar {
+        min-height:38px; padding:8px 14px; font-size:12px;
+        white-space:nowrap; box-shadow:none;
+      }
+      .acoes-captura .ajuda-container { margin:0; text-align:center; max-width:none; }
+      .acoes-captura .btn-ajuda { padding:8px 10px; min-height:38px; font-size:12px; }
+      .acoes-captura .conteudo-ajuda {
+        position:absolute; z-index:45; left:0; right:0; top:calc(100% + 6px);
+        margin:0; max-height:min(72vh,560px); overflow:auto;
+        text-align:left; box-shadow:var(--ui-shadow);
+      }
+      .configuracoes-recolhiveis { flex:0 0 auto; }
+      .configuracoes-recolhiveis > summary {
+        display:flex; align-items:center; justify-content:center; gap:5px;
+        cursor:pointer; border:1px solid var(--ui-border); border-radius:10px;
+        padding:8px 11px; min-height:38px; background:var(--ui-control);
+        color:var(--ui-accent); font-size:12px; font-weight:750; list-style:none;
+      }
+      .configuracoes-recolhiveis > summary::-webkit-details-marker { display:none; }
+      .configuracoes-recolhiveis[open] > summary { background:var(--ui-badge); }
+      .configuracoes-conteudo {
+        position:absolute; z-index:44; right:0; top:calc(100% + 6px);
+        width:min(540px,100%); max-height:min(74vh,600px); overflow:auto;
+        padding:14px; text-align:left; border:1px solid var(--ui-border);
+        border-radius:14px; background:var(--ui-panel); box-shadow:var(--ui-shadow);
+      }
+      .configuracoes-conteudo .linha-config {
+        display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin:0;
+      }
+      .configuracoes-conteudo .campo {
+        min-width:0; border:1px solid var(--ui-border); border-radius:10px;
+        background:var(--ui-surface); padding:10px; text-align:left;
+      }
+      .configuracoes-conteudo .campo label { font-size:11px; }
+      .configuracoes-conteudo .campo small { font-size:10px; }
+      .configuracoes-conteudo .campo-enarmonia { grid-column:1/-1; }
+      .configuracoes-conteudo input:not([type=range]),
+      .configuracoes-conteudo select { min-height:36px; padding:6px; }
+      #status { height:auto; min-height:17px; margin:4px auto 7px;
+        padding:0 4px; line-height:1.3; font-size:11px; overflow:visible; }
+      .controle-afinacao {
+        max-width:740px; margin:6px auto 7px; padding:9px 10px 8px;
+      }
+      .controle-afinacao-titulo { display:none; }
+      .controle-afinacao-modos { gap:8px; font-size:12px; }
+      .controle-afinacao-modos button { flex-basis:44px; width:44px; height:25px; }
+      .controle-afinacao-modos .seletor-bolinha { height:19px; width:19px; }
+      .controle-afinacao-modos .seletor-modo.ativo .seletor-bolinha { transform:translateX(19px); }
+      .painel-nota-alvo { margin:8px auto 0; padding-top:8px; }
+      .controle-passo-alvo { gap:8px; }
+      .btn-passo-alvo { width:39px; height:39px; flex-basis:39px; font-size:22px; }
+      .valor-nota-alvo { min-width:0; max-width:250px; flex:1 1 170px; padding:6px 9px; }
+      .valor-nota-alvo small { font-size:9px; }
+      #notaAlvoNome { font-size:clamp(17px,3vw,22px); margin:1px 0; }
+      #notaAlvoFrequencia { font-size:11px; }
+      /* O aviso aparece somente quando é necessário, sem espaço reservado. */
+      #avisoNotaAlvoForaFaixa { display:block; height:auto; max-width:530px;
+        margin:7px auto 0; padding:5px 8px; border-radius:8px;
+        background:var(--ui-badge); font-size:11px; }
+      #avisoNotaAlvoForaFaixa[hidden] { display:none !important; }
+      .leitura-detectada { display:flex; justify-content:center; gap:8px;
+        align-items:stretch; max-width:740px; margin:5px auto; }
+      .leitura-detectada #notaDetectada,
+      .leitura-detectada #frequenciaDetectada {
+        display:flex; min-height:46px; height:46px; margin:0; padding:7px 12px;
+        box-sizing:border-box; overflow:hidden; align-items:center;
+      }
+      .leitura-detectada #notaDetectada { width:auto; flex:0 0 100px; font-size:27px; }
+      .leitura-detectada #frequenciaDetectada { width:auto; flex:1 1 250px; font-size:12px; }
+      body.modo-nota-fixa .leitura-detectada #notaDetectada { display:none; }
+      #medidorCents { max-width:740px; margin:6px auto 4px; padding:10px 13px 4px; }
+      #medidorCents::before { display:none; content:none; }
+      .medidor-cabecalho { display:flex; justify-content:space-between; align-items:center;
+        gap:10px; margin-bottom:8px; }
+      .medidor-cabecalho > span { color:var(--ui-muted); font-size:10px;
+        letter-spacing:.1em; font-weight:800; }
+      .medidor-cabecalho #desvioCents {
+        display:inline; width:auto; height:auto; min-height:0; margin:0; padding:0;
+        border:0; background:transparent; box-shadow:none; font-size:13px;
+        font-weight:800; line-height:1.2; white-space:nowrap; color:var(--ui-accent);
+      }
+      .grade { margin-top:7px; gap:10px; }
+      .grade > .subpainel:nth-child(1) { padding:12px 14px 10px; }
+      .fft-cabecalho-linha { display:flex; justify-content:space-between;
+        align-items:center; gap:6px 12px; flex-wrap:wrap; }
+      .fft-cabecalho-linha h2 { flex:0 0 auto; font-size:17px; margin:0; }
+      .fft-cabecalho-linha .fft-controles-superiores { flex:0 1 auto;
+        display:flex; justify-content:flex-end; align-items:center; gap:6px; }
+      .fft-cabecalho-linha .controle-modo-deteccao {
+        width:auto; flex:0 0 auto; gap:6px; font-size:11px;
+      }
+      .fft-cabecalho-linha .seletor-modo { flex:0 0 52px; }
+      .fft-cabecalho-linha .opcao-zoom-alvo {
+        display:none; flex:1 1 100%; justify-content:flex-start;
+        margin:0; gap:6px; font-size:11px;
+      }
+      body.modo-nota-fixa .fft-cabecalho-linha .opcao-zoom-alvo { display:inline-flex; }
+      #grafico { margin-top:9px; } /* Altura original: 234px no desktop, 190px no celular. */
+      #legendaFFTAlvo { margin:5px 0 0; }
+      body.microfone-em-uso .painel:first-of-type { padding-top:12px; }
+      body.microfone-em-uso .painel:first-of-type > .app-eyebrow,
+      body.microfone-em-uso .painel:first-of-type > p { display:none; }
+      body.microfone-em-uso .painel:first-of-type > h1 {
+        font-size:17px; margin:0 auto 5px; line-height:1.2;
+      }
+      body.microfone-em-uso .acoes-captura { margin-top:7px; }
+      @media(max-width:650px) {
+        .painel:first-of-type { padding:12px 10px 14px; }
+        .painel:first-of-type > h1 { font-size:21px; }
+        .acoes-captura { gap:6px; margin-top:8px; }
+        .acoes-captura #btnIniciar { min-height:36px; padding:7px 8px; font-size:11px; }
+        .acoes-captura .btn-ajuda { min-height:36px; padding:7px 7px; font-size:11px; }
+        .acoes-captura .icone-ajuda { width:16px; height:16px; font-size:11px; }
+        .configuracoes-recolhiveis > summary { min-height:36px; padding:7px 8px; font-size:11px; }
+        .configuracoes-conteudo { padding:9px; }
+        .configuracoes-conteudo .linha-config { grid-template-columns:1fr; gap:7px; }
+        .configuracoes-conteudo .campo-enarmonia { grid-column:auto; }
+        .controle-afinacao { margin:5px auto 5px; padding:7px; }
+        .controle-afinacao-modos { font-size:11px; }
+        .painel-nota-alvo { margin:7px auto 0; padding-top:6px; }
+        .btn-passo-alvo { width:36px; height:37px; flex-basis:36px; }
+        .valor-nota-alvo { padding:5px 7px; }
+        .leitura-detectada #notaDetectada,
+        .leitura-detectada #frequenciaDetectada { min-height:43px; height:43px; }
+        .leitura-detectada #notaDetectada { flex:0 0 87px; font-size:24px; }
+        .leitura-detectada #frequenciaDetectada { font-size:11px; padding:6px; }
+        #medidorCents { padding:9px 10px 3px; }
+        .grade > .subpainel:nth-child(1) { padding:10px 10px 9px; }
+        .fft-cabecalho-linha h2 { font-size:16px; }
+        .fft-cabecalho-linha .controle-modo-deteccao { font-size:10px; gap:4px; }
+        #grafico { height:190px; } /* Mantido sem redução. */
+        body.microfone-em-uso .painel:first-of-type > h1 { font-size:15px; }
+      }
+      @media(max-width:350px) {
+        .acoes-captura { gap:4px; }
+        .acoes-captura #btnIniciar { padding:7px 6px; font-size:10px; }
+        .acoes-captura .btn-ajuda { padding:7px 5px; font-size:10px; }
+        .configuracoes-recolhiveis > summary { padding:7px 6px; font-size:10px; }
+        .fft-cabecalho-linha { gap:6px; }
+        .fft-cabecalho-linha h2 { font-size:15px; }
+      }
       </style>
   </head>
   <body>
@@ -1229,6 +1368,51 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
       <div class="app-eyebrow" aria-hidden="true"><span class="app-mark">◈ OFICINA PERNAMBUCO</span><span class="app-category">MEDIÇÃO • FREQUÊNCIA • TEMPERAMENTO</span></div>
       <h1>Afinador FFT com círculo de quintas editável</h1>
       <p> Círculo de quintas editável por frações de coma sintônico ou pitagórico. </p>
+      <div class="acoes-captura">
+        <div class="botoneria">
+          <button id="btnIniciar" type="button" aria-pressed="false">Ativar microfone</button>
+        </div>
+        <details id="configuracoesAfinador" class="configuracoes-recolhiveis">
+          <summary>⚙ Configurações</summary>
+          <div class="configuracoes-conteudo">
+      <div class="linha-config">
+        <div class="campo">
+          <label for="freqMaxGrafico">Máx. gráfico (Hz)</label>
+          <input type="number" id="freqMaxGrafico" value="2000" step="50" min="200" max="10000">
+        </div>
+        <div class="campo campo-modo-leitura">
+          <label for="modoLeitura">Leitura acústica</label>
+          <select id="modoLeitura" aria-label="Escolher medição bruta ou filtragem temporal">
+            <option value="bruta" selected>Bruta · sem filtro</option>
+            <option value="filtrada">Filtrada · temporal</option>
+          </select>
+          <div id="ajusteFiltroTemporal" class="ajuste-filtro-temporal" hidden>
+            <label for="suavizacao">Intensidade do filtro</label>
+            <div class="ajuste-filtro-linha">
+              <input type="range" id="suavizacao" min="0" max="95" value="70">
+              <output id="valorSuavizacao" for="suavizacao">70%</output>
+            </div>
+          </div>
+          <small id="descricaoModoLeitura">Quadros reais, sem suavização adicional.</small>
+        </div>
+        <div class="campo">
+          <label for="modoDesempenho">Desempenho</label>
+          <select id="modoDesempenho" aria-label="Escolher desempenho automático ou econômico">
+            <option value="automatico" selected>Automático</option>
+            <option value="economico">Econômico</option>
+          </select>
+          <small>Automático ajusta o processamento ao aparelho; Econômico reduz o consumo.</small>
+        </div>
+          <div class="campo campo-enarmonia">
+            <label for="enarmoniaCorte">Nome da enarmonia</label>
+            <select id="enarmoniaCorte">
+              <option value="solsustenido" selected>Sol#</option>
+              <option value="lab">Lab</option>
+            </select>
+          </div>
+      </div>
+          </div>
+        </details>
       <div class="ajuda-container">
         <button id="btnAjuda" class="btn-ajuda" type="button" aria-expanded="false" aria-controls="conteudoAjuda">
           <span class="icone-ajuda">?</span> Ajuda </button>
@@ -1252,8 +1436,8 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
             <li><strong>Pico:</strong> acompanha o componente mais intenso do espectro FFT, que pode ser um harmônico acima da nota realmente tocada. O seletor <strong>Pico / Fundamental</strong> é independente de <strong>Automático / Nota fixa</strong>.</li>
             <li><strong>Linhas no FFT em Nota fixa:</strong> a linha <strong>verde tracejada</strong> mostra o alvo e a <strong>vermelha</strong> mostra a frequência medida. A escala inclui automaticamente alvos mais agudos que o máximo configurado.</li>
             <li><strong>Zoom ±100 cents:</strong> amplia apenas a <em>visualização</em> da região do alvo; não melhora a resolução da FFT nem modifica a frequência detectada.</li>
-            <li><strong>Confiança:</strong> resume a coerência da estimativa; <strong>--</strong> indica ausência de leitura confiável. No modo Pico, a confiança não é avaliada como no YIN. A quantidade de componentes compatíveis aparece na dica do indicador.</li>
-            <li><strong>Janela / análise:</strong> indica a duração da janela adaptativa utilizada pelo YIN em milissegundos, ou <strong>FFT 8192 pontos</strong> no modo Pico. Os dois cartões permanecem no lugar mesmo quando os valores mudam.</li>
+            <li><strong>Confiança:</strong> resume a coerência da estimativa; <strong>--</strong> indica ausência de leitura confiável. No modo Pico, a confiança não é avaliada como no YIN. Essa informação continua sendo usada internamente na validação, mas não é exibida na tela.</li>
+            <li><strong>Janela / análise:</strong> indica a duração da janela adaptativa utilizada pelo YIN em milissegundos, ou <strong>FFT 8192 pontos</strong> no modo Pico. A janela de análise permanece em uso internamente e não ocupa espaço na interface.</li>
             <li><strong>Limites:</strong> a faixa nominal do detector YIN é de <strong>16 a 4600 Hz</strong>. A qualidade real da captação depende do microfone e do instrumento. Sons sem periodicidade confiável, ruído ou acordes podem produzir leitura inconclusiva.</li>
           </ul>
 
@@ -1263,7 +1447,7 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
             <li><strong>Lá de referência (A4):</strong> define a frequência de referência, inicialmente <strong>440 Hz</strong>. <strong>Máx. gráfico</strong> controla somente a extensão horizontal da visualização FFT, e não toda a faixa de detecção.</li>
             <li><strong>Leitura acústica — Bruta (padrão):</strong> exibe a frequência medida em cada quadro concluído e o respectivo espectro FFT, sem filtragem temporal adicional. A interpolação parabólica interna do YIN/FFT continua fazendo parte da medição.</li>
             <li><strong>Leitura acústica — Filtrada (opcional):</strong> aplica filtro temporal explícito tanto à frequência apresentada quanto ao espectro. A intensidade define o peso da leitura anterior; saltos superiores a 60 cents mantêm o tratamento original. Não são gerados quadros artificiais ou posições intermediárias entre medições.</li>
-            <li><strong>Sensibilidade:</strong> aumenta a capacidade de captar sons fracos ao subir; diminuir ajuda a evitar ruído ambiente. <strong>Desempenho:</strong> Automático (padrão) adapta o ritmo das análises à capacidade do aparelho; Econômico limita a até 18 análises por segundo. Ambos exibem apenas medições realmente concluídas.</li>
+            <li><strong>Sensibilidade automática:</strong> o limiar de intensidade acompanha gradualmente o ruído ambiente e não interpreta automaticamente harmônicos como excesso de sensibilidade. Notas sustentadas não são usadas para treinar o ruído. <strong>Desempenho:</strong> Automático (padrão) adapta o ritmo das análises à capacidade do aparelho; Econômico limita a até 18 análises por segundo. Ambos exibem apenas medições realmente concluídas.</li>
             <li><strong>Preset de temperamento:</strong> inclui Pitagórico, Igual, Mesotônicos, Kirnberger, Werckmeister, Vallotti, Young, Neidhardt e reconstruções Bach/Barnes e Bach/Lehman.</li>
             <li><strong>Círculo de quintas:</strong> a tabela permite acrescentar ou subtrair frações de <strong>coma pitagórico (c.p.)</strong> ou <strong>coma sintônico (c.s.)</strong> em cada quinta; uma quinta residual fecha o ciclo. <strong>Zerar ajustes</strong> restaura o preset selecionado.</li>
             <li><strong>Enarmonia:</strong> altera a nomenclatura de Sol♯ / Lá♭ no ponto de corte. A tabela de intervalos apresenta desvios em relação a razões musicais puras.</li>
@@ -1285,45 +1469,8 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
           </ul>
         </div>
       </div>
-      <div class="linha-config">
-        <div class="campo">
-          <label for="freqMaxGrafico">Máx. gráfico (Hz)</label>
-          <input type="number" id="freqMaxGrafico" value="2000" step="50" min="200" max="10000">
-        </div>
-        <div class="campo campo-modo-leitura">
-          <label for="modoLeitura">Leitura acústica</label>
-          <select id="modoLeitura" aria-label="Escolher medição bruta ou filtragem temporal">
-            <option value="bruta" selected>Bruta · sem filtro</option>
-            <option value="filtrada">Filtrada · temporal</option>
-          </select>
-          <div id="ajusteFiltroTemporal" class="ajuste-filtro-temporal" hidden>
-            <label for="suavizacao">Intensidade do filtro</label>
-            <div class="ajuste-filtro-linha">
-              <input type="range" id="suavizacao" min="0" max="95" value="70">
-              <output id="valorSuavizacao" for="suavizacao">70%</output>
-            </div>
-          </div>
-          <small id="descricaoModoLeitura">Quadros reais, sem suavização adicional.</small>
-        </div>
-        <div class="campo">
-          <label for="sensibilidadeSom">Sensibilidade</label>
-          <input type="range" id="sensibilidadeSom" min="0" max="100" value="50">
-          <div id="valorSensibilidadeSom">50%</div>
-          <small>100% detecta sons mais fracos; 0% exige som mais forte.</small>
-        </div>
-        <div class="campo">
-          <label for="modoDesempenho">Desempenho</label>
-          <select id="modoDesempenho" aria-label="Escolher desempenho automático ou econômico">
-            <option value="automatico" selected>Automático</option>
-            <option value="economico">Econômico</option>
-          </select>
-          <small>Automático ajusta o processamento ao aparelho; Econômico reduz o consumo.</small>
-        </div>
       </div>
-      <div class="botoneria">
-        <button id="btnIniciar" type="button" aria-pressed="false">Ativar microfone</button>
-      </div>
-      <div id="status">Microfone desligado.</div>
+      <div id="status" role="status" aria-live="polite">Microfone desligado.</div>
       <div class="controle-afinacao" aria-label="Controle de modo de afinação">
         <div class="controle-afinacao-titulo">Modo de afinação</div>
         <div class="controle-afinacao-modos">
@@ -1347,18 +1494,15 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
             <button id="notaAlvoProxima" class="btn-passo-alvo" type="button"
                     aria-label="Subir um semitom" title="Subir um semitom">&gt;</button>
           </div>
-          <label class="opcao-zoom-alvo" for="zoomNotaAlvo">
-            <input id="zoomNotaAlvo" type="checkbox"> Ampliar região da nota no FFT (±100 cents)
-          </label>
-          <small class="nota-alvo-ajuda">O desvio será medido sempre em relação à nota escolhida,
-            com a frequência calculada pelo temperamento atual. A escala do FFT se adapta para mostrar o alvo.</small>
           <small id="avisoNotaAlvoForaFaixa" role="note" hidden>Nota-alvo fora da faixa nominal de 16–4600 Hz do detector: a medição pode ser inconclusiva.</small>
         </div>
       </div>
-      <div id="frequenciaDetectada">Frequência dominante: -- Hz</div>
-      <div id="notaDetectada">--</div>
-      <div id="desvioCents">Desvio: -- cents</div>
+      <div class="leitura-detectada" aria-label="Nota e frequência medidas">
+        <div id="notaDetectada">--</div>
+        <div id="frequenciaDetectada">Frequência: -- Hz</div>
+      </div>
       <div id="medidorCents">
+        <div class="medidor-cabecalho"><span>DESVIO EM CENTS</span><output id="desvioCents" aria-live="off">-- c</output></div>
         <div id="escalaCents" role="img" aria-label="Medidor de cents sem leitura">
           <div id="faixaAfinadaCents" hidden></div>
           <div id="preenchimentoCents"></div>
@@ -1379,31 +1523,11 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
           <span id="rotuloDireita">+40</span>
         </div>
       </div>
-      <div id="diagnosticoDeteccao" aria-live="off" aria-label="Diagnósticos da detecção">
-        <div class="diagnostico-cartao">
-          <span class="diagnostico-rotulo">Confiança</span>
-          <span id="confiancaDeteccao" class="diagnostico-valor" title="Aguardando som">--</span>
-        </div>
-        <div class="diagnostico-cartao">
-          <span class="diagnostico-rotulo">Janela / análise</span>
-          <span id="janelaDeteccao" class="diagnostico-valor" title="Aguardando som">--</span>
-        </div>
-      </div>
-      <details class="diagnostico-desempenho" id="diagnosticoDesempenho">
-        <summary>Diagnóstico de desempenho · Etapa 5 (opcional)</summary>
-        <div class="diagnostico-interior">
-          <p>Mede somente o processamento de software nesta sessão. Não mede atraso acústico do microfone, nem FPS de precisão. Nenhuma amostra de áudio é salva ou exportada.</p>
-          <output id="resultadoDesempenho" aria-live="off">Ative o microfone, toque uma nota e selecione “Atualizar métricas”.</output>
-          <div class="acoes-diagnostico">
-            <button id="atualizarDesempenho" type="button">Atualizar métricas</button>
-            <button id="exportarDesempenho" type="button">Exportar relatório JSON</button>
-          </div>
-        </div>
-      </details>
       <div class="grade">
         <div class="subpainel">
-          <h2>Espectro FFT</h2>
-          <div class="fft-controles-superiores">
+          <div class="fft-cabecalho-linha">
+            <h2>Espectro FFT</h2>
+            <div class="fft-controles-superiores">
             <div class="controle-modo-deteccao">
               <span>Pico</span>
               <button id="seletorModoDeteccao" class="seletor-modo" type="button" role="switch" aria-checked="true" title="Alternar método de detecção">
@@ -1411,20 +1535,16 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
               </button>
               <span>Fundamental</span>
             </div>
-            <div class="campo campo-enarmonia">
-              <label for="enarmoniaCorte">Nome da enarmonia</label>
-              <select id="enarmoniaCorte">
-                <option value="solsustenido" selected>Sol#</option>
-                <option value="lab">Lab</option>
-              </select>
-            </div>
+          </div>
+          <label class="opcao-zoom-alvo" for="zoomNotaAlvo">
+            <input id="zoomNotaAlvo" type="checkbox"> Zoom na nota-alvo (±100 cents)
+          </label>
           </div>
           <canvas id="grafico" width="700" height="280" aria-label="Espectro de frequências e marcadores de afinação"></canvas>
           <div id="legendaFFTAlvo" hidden>
             <span><i class="legenda-cor" style="background:#128866"></i>Verde tracejado: nota-alvo</span>
             <span><i class="legenda-cor" style="background:#d32f2f"></i>Vermelho: frequência detectada</span>
           </div>
-          <div class="observacao"> No modo <strong>Fundamental</strong>, a periodicidade do som é estimada por YIN e confirmada pelos componentes da FFT. No modo <strong>Pico</strong>, é exibido o componente espectral mais intenso, que pode ser um harmônico. A FFT visual permanece em 8192 pontos. Use uma única nota por vez e evite ruídos. </div>
         </div>
         <div class="subpainel">
           <h2>Círculo de quintas</h2>
@@ -2015,29 +2135,6 @@ self.postMessage({tipo:'pronto'});
       }
       // API de leitura para os testes automatizados, sem exportar buffers de áudio.
       window.obterRelatorioDesempenhoAfinador=obterRelatorioDesempenhoAfinador;
-      function atualizarPainelDesempenho() {
-        const d=obterRelatorioDesempenhoAfinador();
-        const ms=v=>v===null?'—':v.toFixed(2)+' ms';
-        document.getElementById('resultadoDesempenho').textContent=
-          `Sessão: ${d.duracaoSegundos.toFixed(1)} s | Amostragem: ${d.sampleRate||'—'} Hz\n`+
-          `Resultados: ${d.contadores.recebidos}`+
-          ` | Descartados: ${d.contadores.descartados} | Ocupado: ${d.contadores.ocupados}\n`+
-          `DSP Worker p95: ${ms(d.tempoWorker.p95Ms)} | Fluxo software p95: ${ms(d.fluxoSoftwareCapturaAteApresentacao.p95Ms)}\n`+
-          `UI p95: ${ms(d.custoApresentacaoDOMCanvas.p95Ms)} | RAF >50 ms: ${d.intervalosRAFMaioresQue50ms}\n`+
-          `Amostras de áudio exportadas: nenhuma.`;
-      }
-      document.getElementById('atualizarDesempenho').addEventListener('click', atualizarPainelDesempenho);
-      document.getElementById('diagnosticoDesempenho').addEventListener('toggle', event => {
-        if (event.target.open) atualizarPainelDesempenho();
-      });
-      document.getElementById('exportarDesempenho').addEventListener('click', () => {
-        const conteudo=JSON.stringify(obterRelatorioDesempenhoAfinador(),null,2);
-        const url=URL.createObjectURL(new Blob([conteudo],{type:'application/json'}));
-        const a=document.createElement('a');
-        a.href=url; a.download='afinador-diagnostico-desempenho.json';
-        document.body.appendChild(a); a.click(); a.remove();
-        setTimeout(()=>URL.revokeObjectURL(url),1000);
-      });
       function invalidarConfiguracaoDSP() {
         generationIdDSP++;
         // A resposta em andamento será descartada por generationId.
@@ -2100,6 +2197,8 @@ self.postMessage({tipo:'pronto'});
             return;
           }
           ultimoFrameAceitoDSP = mensagem.frameId;
+          sensibilidadeAutomatica.observar(mensagem.rms, mensagem.estado,
+            pendente.relevoTonalDb, performance.now());
           estatisticasDSP.recebidos++;
           adicionarMetrica(desempenhoDSP.temposWorker,mensagem.duracaoMs);
           if (Object.hasOwn(desempenhoDSP.quantidadeEstados,mensagem.estado))
@@ -2196,8 +2295,17 @@ self.postMessage({tipo:'pronto'});
       let ultimoDesenhoGrafico = 0;
       const btnAjuda = document.getElementById("btnAjuda");
       const conteudoAjuda = document.getElementById("conteudoAjuda");
+      const configuracoesAfinador = document.getElementById("configuracoesAfinador");
+      configuracoesAfinador.addEventListener("toggle", () => {
+        if (configuracoesAfinador.open) {
+          conteudoAjuda.hidden = true;
+          btnAjuda.setAttribute("aria-expanded", "false");
+          btnAjuda.lastChild.textContent = " Ajuda";
+        }
+      });
       btnAjuda.addEventListener("click", () => {
         const ajudaAberta = !conteudoAjuda.hidden;
+        if (ajudaAberta) configuracoesAfinador.open = false;
         conteudoAjuda.hidden = ajudaAberta;
         btnAjuda.setAttribute("aria-expanded", String(!ajudaAberta));
         btnAjuda.lastChild.textContent = ajudaAberta ? " Ajuda" : " Fechar ajuda";
@@ -2230,8 +2338,6 @@ self.postMessage({tipo:'pronto'});
       const frequenciaEl = document.getElementById("frequenciaDetectada");
       const notaEl = document.getElementById("notaDetectada");
       const centsEl = document.getElementById("desvioCents");
-      const confiancaEl = document.getElementById("confiancaDeteccao");
-      const janelaEl = document.getElementById("janelaDeteccao");
       const a4RefInput = document.getElementById("a4Ref");
       // Mantém o campo A4 visível acima do teclado virtual quando necessário.
       const barraAjustes = document.getElementById("barraAjustes");
@@ -2256,8 +2362,6 @@ self.postMessage({tipo:'pronto'});
       const descricaoModoLeitura = document.getElementById("descricaoModoLeitura");
       const suavizacaoInput = document.getElementById("suavizacao");
       const valorSuavizacaoEl = document.getElementById("valorSuavizacao");
-      const sensibilidadeSomInput = document.getElementById("sensibilidadeSom");
-      const valorSensibilidadeSomEl = document.getElementById("valorSensibilidadeSom");
       const escalaCentsEl = document.getElementById("escalaCents");
       const ponteiroCentsEl = document.getElementById("ponteiroCents");
       const preenchimentoCentsEl = document.getElementById("preenchimentoCents");
@@ -2495,28 +2599,75 @@ self.postMessage({tipo:'pronto'});
           + frequenciaApresentada.toFixed(2) + ' Hz';
       }
 
-      function obterLimiarSom() {
-        const sensibilidade = parseFloat(sensibilidadeSomInput.value) || 0;
-        const limiarMin = 0.0005; // 100%: pega sons bem fracos
-        const limiarMax = 0.0200; // 0%: exige som forte
-        const t = sensibilidade / 100;
-        return limiarMax - t * (limiarMax - limiarMin);
+      // SENSIBILIDADE AUTOMÁTICA — independente da matemática original do DSP.
+      // Não altera ganho do microfone, YIN, FFT ou confiança: regula apenas
+      // o limiar RMS que decide se um quadro merece processamento.
+      function calcularRelevoTonalEspectro(espectroDb, sampleRate, fftSize) {
+        if (!espectroDb || !sampleRate || !fftSize) return 0;
+        const hzPorBin = sampleRate / fftSize;
+        const primeiro = Math.max(1, Math.ceil(40 / hzPorBin));
+        const ultimo = Math.min(espectroDb.length - 1, Math.floor(4000 / hzPorBin));
+        if (ultimo <= primeiro) return 0;
+        let pico = -120, soma = 0, quantidade = 0;
+        for (let i = primeiro; i <= ultimo; i++) {
+          const valor = Number.isFinite(espectroDb[i]) ? Math.max(-120, espectroDb[i]) : -120;
+          pico = Math.max(pico, valor);
+          soma += valor;
+          quantidade++;
+        }
+        return pico - soma / quantidade; // dB entre pico e fundo espectral médio
       }
 
-      function atualizarValorSensibilidadeSom() {
-        valorSensibilidadeSomEl.textContent = `${sensibilidadeSomInput.value}%`;
+      function criarControladorSensibilidadeAutomatica() {
+        const LIMIAR_MIN = 0.0005;
+        const LIMIAR_MAX = 0.0200;
+        const RELEVO_TONAL_DB = 25;
+        let ruidoRms, limiar, ultimaObservacaoMs, ultimaNotaMs;
+        function reiniciar() {
+          ruidoRms = 0.0004;
+          limiar = 0.0012; // partida sensível; converge para o ambiente
+          ultimaObservacaoMs = null;
+          ultimaNotaMs = -Infinity;
+        }
+        reiniciar();
+        return {
+          reiniciar,
+          // Uma estrutura tonal marcante permite testar notas fracas mesmo
+          // abaixo do patamar estimado do ruído; o YIN/FFT ainda decide validade.
+          obterLimiar(relevoDb = 0) {
+            return relevoDb >= RELEVO_TONAL_DB ? LIMIAR_MIN : limiar;
+          },
+          observar(rms, estado, relevoDb, instanteMs) {
+            if (!Number.isFinite(rms) || rms < 0 || !Number.isFinite(instanteMs)) return;
+            const dt = ultimaObservacaoMs === null ? 40 :
+              Math.max(1, Math.min(250, instanteMs - ultimaObservacaoMs));
+            ultimaObservacaoMs = instanteMs;
+            if (estado === 'valido') { ultimaNotaMs = instanteMs; return; }
+            // Histerese: não confundir cauda da nota nem tonalidade aparente
+            // com um piso de ruído que deveria elevar o limiar de detecção.
+            if (instanteMs - ultimaNotaMs < 650 || relevoDb >= RELEVO_TONAL_DB) return;
+            const candidato = Math.min(LIMIAR_MAX, rms);
+            // Ruído decrescente é aprendido rapidamente; aumento, lentamente.
+            const tempoRuido = candidato < ruidoRms ? 650 : 3500;
+            const ganhoRuido = 1 - Math.exp(-dt / tempoRuido);
+            ruidoRms += ganhoRuido * (candidato - ruidoRms);
+            const alvo = Math.max(LIMIAR_MIN, Math.min(LIMIAR_MAX, 2.4 * ruidoRms + 0.00015));
+            const tempoLimiar = alvo > limiar ? 1400 : 350;
+            limiar += (1 - Math.exp(-dt / tempoLimiar)) * (alvo - limiar);
+            limiar = Math.max(LIMIAR_MIN, Math.min(LIMIAR_MAX, limiar));
+          },
+          // Somente para testes automatizados, sem indicador na interface.
+          estado() { return {ruidoRms, limiar, ultimaNotaMs}; }
+        };
       }
-
-      
+      const sensibilidadeAutomatica = criarControladorSensibilidadeAutomatica();
 
       function limparNota() {
-        frequenciaEl.textContent = "Frequência dominante: -- Hz";
+        frequenciaEl.textContent = "Frequência: -- Hz";
         notaEl.textContent = modoAfinacao === "fixo" ? descricaoNotaAlvo().nome : "--";
         notaEl.title = modoAfinacao === "fixo" ? "Nota-alvo selecionada; aguardando medição" : "Nota detectada automaticamente";
-        centsEl.textContent = "Desvio: -- cents";
+        centsEl.textContent = "-- c";
         limparMedidorCents();
-        if (confiancaEl) { confiancaEl.textContent = "--"; confiancaEl.title = "Sem leitura confiável"; }
-        if (janelaEl) { janelaEl.textContent = "--"; janelaEl.title = "Sem análise disponível"; }
       }
 
       function calcularIntervaloEntrePc(pcBase, pcAlvo) {
@@ -3434,7 +3585,7 @@ self.postMessage({tipo:'pronto'});
           notaEl.textContent = resultado.notaCompletaLatina;
           notaEl.title = "Nota detectada automaticamente";
         }
-        centsEl.textContent = "Desvio: " + (cents >= 0 ? "+" : "") + cents.toFixed(1) + " c";
+        centsEl.textContent = (cents >= 0 ? "+" : "") + cents.toFixed(1) + " c";
         atualizarMedidorCents(cents);
       }
 
@@ -3636,17 +3787,21 @@ self.postMessage({tipo:'pronto'});
         analyserTempo.getFloatTimeDomainData(timeDataArray);
         analyser.getByteFrequencyData(freqDataArray);
         analyser.getFloatFrequencyData(floatFreqDataArray);
+        const relevoTonalDb = calcularRelevoTonalEspectro(
+          floatFreqDataArray, audioContext.sampleRate, analyser.fftSize);
         const frameId = ++proximoFrameIdDSP;
         const pedido = {
           tipo:'analisar', sessionId:sessionIdDSP, generationId:generationIdDSP, frameId,
           sampleRate:audioContext.sampleRate, fftSize:analyser.fftSize,
-          modoDeteccao, limiarSom:obterLimiarSom(), frequenciaAnterior:ultimoSinalConfiavel,
+          modoDeteccao, limiarSom:sensibilidadeAutomatica.obterLimiar(relevoTonalDb),
+          frequenciaAnterior:ultimoSinalConfiavel,
           // Arrays novos transferíveis: os buffers de captura permanecem reutilizáveis
           // na thread principal e não são destacados pelo postMessage.
           tempo:timeDataArray.slice(), fftBytes:freqDataArray.slice(), fftDb:floatFreqDataArray.slice()
         };
         const pendente = {sessionId:pedido.sessionId, generationId:pedido.generationId,
-          frameId, sampleRate:pedido.sampleRate, fftSize:pedido.fftSize, capturadoEmMs:agora};
+          frameId, sampleRate:pedido.sampleRate, fftSize:pedido.fftSize,
+          relevoTonalDb, capturadoEmMs:agora};
         quadroEmProcessamento = pendente;
         estatisticasDSP.enviados++;
         try {
@@ -3712,14 +3867,6 @@ self.postMessage({tipo:'pronto'});
         ultimoSinalConfiavel = detectado.frequency;
         exibirFrequenciaApresentada();
         atualizarExibicaoAfinacao(frequenciaApresentada);
-        confiancaEl.textContent = modoDeteccao === 'fundamental' ? detectado.confianca : 'Não avaliada';
-        confiancaEl.title = modoDeteccao === 'fundamental'
-          ? `Confiança: ${detectado.confianca}${detectado.harmonicos ? `; ${detectado.harmonicos} componente(s) harmônico(s) compatíveis` : ''}`
-          : 'O modo Pico não avalia a confiança da fundamental';
-        janelaEl.textContent = modoDeteccao === 'fundamental' ? `${Math.round(detectado.janelaMs)} ms · YIN` : '8192 pts · FFT';
-        janelaEl.title = modoDeteccao === 'fundamental'
-          ? `YIN: janela adaptativa de ${Math.round(detectado.janelaMs)} milissegundos`
-          : 'Análise espectral por FFT de 8192 pontos';
         desenharGraficoLimitado(espectroApresentado, quadro.sampleRate, quadro.fftSize, frequenciaApresentada);
       }
       let microfoneAtivo = false;
@@ -3765,9 +3912,11 @@ self.postMessage({tipo:'pronto'});
         espectroApresentado = null;
         ultimoEspectroBruto = null;
         espectroFiltrado = null;
+        sensibilidadeAutomatica.reiniciar();
         ultimaAnalise = 0;
         ultimoDesenhoGrafico = 0;
         microfoneAtivo = false;
+        document.body.classList.remove("microfone-em-uso");
         btnIniciar.textContent = "Ativar microfone";
         btnIniciar.setAttribute("aria-pressed", "false");
         statusEl.textContent = "Microfone desligado.";
@@ -3816,8 +3965,13 @@ self.postMessage({tipo:'pronto'});
           reiniciarMetricasDesempenho();
           iniciarWorkerDSP();
           microfoneAtivo = true;
+          document.body.classList.add("microfone-em-uso");
+          document.getElementById("configuracoesAfinador").open = false;
+          document.getElementById("conteudoAjuda").hidden = true;
+          btnAjuda.setAttribute("aria-expanded", "false");
+          btnAjuda.lastChild.textContent = " Ajuda";
           statusEl.textContent = "Preparando análise DSP...";
-          btnIniciar.textContent = "Desativar microfone ativo";
+          btnIniciar.textContent = "Parar microfone";
           btnIniciar.setAttribute("aria-pressed", "true");
           // O loop de captura é iniciado pelo Worker quando responde "pronto".
         } catch (erro) {
@@ -4043,6 +4197,7 @@ self.postMessage({tipo:'pronto'});
         seletorModoAfinacao.setAttribute("aria-checked", String(fixo));
         seletorModoAfinacao.title = fixo ? "Modo atual: nota fixa" : "Modo atual: identificação automática";
         painelNotaAlvo.hidden = !fixo;
+        document.body.classList.toggle("modo-nota-fixa", fixo);
         legendaFFTAlvo.hidden = !fixo;
         atualizarNotaAlvo();
         invalidarConfiguracaoDSP();
@@ -4072,11 +4227,6 @@ self.postMessage({tipo:'pronto'});
           reiniciarFiltragemTemporal();
         }
       });
-      sensibilidadeSomInput.addEventListener("input", () => {
-        atualizarValorSensibilidadeSom();
-        invalidarConfiguracaoDSP();
-      });
-      atualizarValorSensibilidadeSom();
       btnIniciar.addEventListener("click", () => {
         if (microfoneAtivo) desativarMicrofone();
         else iniciarMicrofone();
