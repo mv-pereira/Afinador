@@ -1,96 +1,108 @@
-# Afinador FFT + YIN com Círculo de Quintas Editável
+# Afinador FFT + YIN/pYIN com Círculo de Quintas Editável
 
 **[Acessar o afinador online](https://mv-pereira.github.io/Afinador/)**
 
 ## Como usar em poucos passos
 
-1. **Abra o afinador** pelo link acima e clique em **Ativar microfone**. Autorize o uso do microfone quando o navegador solicitar.
-2. **Escolha o temperamento** no campo **Preset** e, se desejar, altere o **Lá de referência (A4)**. A configuração inicial é **Pitagórico**, com **A4 = 440 Hz**.
-3. **Escolha como afinar:**
-   - **Automático (padrão):** toque uma nota isolada. O programa identifica a nota mais próxima e exibe o desvio em cents.
-   - **Nota fixa:** ative o seletor à direita de “Automático”, escolha a nota-alvo com **<** e **>** (começa em **Dó4 / C4**) e toque o instrumento. O desvio será calculado **sempre em relação à nota escolhida**.
-4. **Acompanhe o medidor:** valor **negativo** indica som mais grave que a referência; valor **positivo**, mais agudo; valor próximo de **0 cent**, afinação próxima da nota-alvo.
-5. **Para ouvir uma referência**, abra **Emissor de notas — temperamento atual**, selecione uma nota e clique em **Emitir nota**. Use fones de ouvido se o microfone estiver ligado.
+1. **Ative o microfone** e permita o acesso quando solicitado pelo navegador. Toque preferencialmente **uma nota por vez**.
+2. **Escolha o temperamento** no rodapé. O padrão é **Sistema Pitagórico**, com **Lá de referência (A4) = 415,3 Hz**, ajustável entre 300 e 500 Hz.
+3. **Escolha o modo de afinação:**
+   - **Automático (padrão):** identifica a nota mais próxima no temperamento selecionado e mostra seu desvio.
+   - **Nota fixa:** escolha a nota-alvo pelos botões **<** e **>**. O desvio será calculado em relação a essa nota, mesmo que o som esteja mais próximo de outra.
+4. **Escolha a detecção:** mantenha **Fundamental + YIN** para a afinação usual. O **pYIN Experimental** permite comparar outra abordagem de detecção; **Pico** acompanha o componente mais intenso do espectro, que pode ser um harmônico.
+5. **Para ouvir uma referência**, use o **Emissor de notas — temperamento atual**. Se estiver captando áudio simultaneamente, prefira fones de ouvido.
 
-> **Dica:** para a maioria dos instrumentos tocando **uma nota por vez**, mantenha a detecção em **Fundamental (YIN + FFT)**. O modo **Pico** é útil para observar o componente mais intenso, mas ele pode ser um harmônico.
+> **Dica:** leitura instável pode resultar de ruído, ataque muito curto, harmônicos predominantes ou sinal fraco. Sustente a nota e afaste outras fontes sonoras antes de alterar o algoritmo.
 
 ---
 
 ## Visão geral
 
-**Afinador de instrumentos no navegador, com afinação automática ou por nota fixa, temperamentos históricos e edição de quintas por frações de coma.**
+**Afinador de instrumentos no navegador, com modos Automático e Nota fixa, temperamentos históricos, detecção YIN/pYIN e edição de quintas por frações de coma.**
 
-Este projeto é uma aplicação **HTML, CSS e JavaScript**, executada diretamente no navegador. A captação usa a **Web Audio API** e combina análise espectral por **FFT** com estimação da frequência fundamental por **YIN**.
+O projeto utiliza **HTML, CSS e JavaScript**, com captação pela **Web Audio API**. A análise do sinal é executada em um **Dedicated Web Worker**. A FFT é usada para exibir o espectro e, no caminho YIN, verificar a coerência espectral da frequência estimada.
 
-Além de afinar instrumentos, o programa permite **experimentar e comparar temperamentos**, modificar as quintas do círculo por frações de coma e gerar sons nas frequências calculadas pelo sistema selecionado.
+Além da afinação, permite estudar a distribuição dos temperamentos, modificar quintas do círculo e emitir notas de referência nas frequências correspondentes.
 
 **Recursos principais:**
 
-- Afinação **automática** ou por **nota fixa** (C0 a C8).
-- Detecção por **Fundamental (YIN + FFT)** ou **Pico dominante** — seletor independente do modo de afinação.
-- Frequência medida, nota de referência, desvio em **cents** e indicador de **confiança** da detecção.
-- **Espectro FFT**, medidor de cents e marcadores de frequência medida e de frequência-alvo.
-- **13 presets** de temperamento, com ajustes individuais das quintas.
-- Círculo de quintas editável e tabelas de **comas** e **desvios de intervalos**.
-- Emissor de notas com escolha de nota, oitava, volume e forma de onda.
-- Controles de sensibilidade, estabilidade, desempenho e frequência máxima do gráfico.
+- Afinação **Automática** ou por **Nota fixa** (C0 a C8).
+- Modo **Fundamental** com escolha entre **YIN (padrão)** e **pYIN Experimental**; modo **Pico** independente.
+- Frequência medida, identificação da nota, desvio em **cents** e diagnóstico da detecção.
+- Espectro **FFT de 8192 pontos**, medidor de cents e marcadores de frequência medida e nota-alvo.
+- **13 presets** de temperamento com ajustes individuais das quintas.
+- Círculo de quintas editável e tabelas de comas e desvios de intervalos.
+- Emissor de notas com notação científica e de Helmholtz, volume, oitava e forma de onda.
+- **Leitura Bruta (padrão)** ou **Filtrada**, além de desempenho **Automático (padrão)** ou **Econômico**.
+- Arquivo HTML único e autocontido, sem dependências externas de execução.
 
 ## Modos de afinação
 
 ### Automático — padrão
 
-O afinador mede a frequência do som, busca a nota mais próxima na **tabela do temperamento atual** e calcula a distância em cents até ela. A referência muda automaticamente quando a nota detectada muda.
+O afinador procura a nota mais próxima da frequência captada na tabela do **temperamento atual**. A referência acompanha a nota identificada, e o desvio é mostrado em cents.
 
 ### Nota fixa
 
-Ao ativar **Nota fixa**, aparece um seletor que começa em **Dó4 (C4)**:
+O seletor começa em **Dó4 (C4)** e permite navegar de **C0 a C8** por semitons:
 
 - **<** desce um semitom; **>** sobe um semitom.
-- A seleção vai de **C0 a C8**; os botões são desativados nos limites.
-- A frequência-alvo acompanha alterações no **A4**, no **preset** e nos **ajustes manuais do círculo de quintas**.
-- O desvio é calculado exclusivamente contra a **nota-alvo**, mesmo quando o som está mais próximo de outra nota.
-- A nota-alvo e sua frequência continuam visíveis durante o silêncio; a medição e o desvio ficam em branco quando não há leitura confiável.
+- A frequência-alvo acompanha o **A4**, o preset e os ajustes manuais das quintas.
+- O desvio é calculado **sempre em relação à nota-alvo**, mesmo quando a nota captada é outra.
+- Durante o silêncio, a nota-alvo continua indicada, mas não é inventada uma medição.
 
 **No gráfico FFT:**
 
-- **Linha verde tracejada:** frequência da nota-alvo.
-- **Linha vermelha:** frequência estimada do som captado.
-- **Ampliar região da nota no FFT (±100 cents):** zoom **visual** em torno do alvo. Ele não aumenta a resolução real da FFT.
-- Se a nota-alvo estiver acima do máximo configurado do gráfico, a escala é ampliada visualmente para incluí-la.
+- **Verde tracejado:** frequência da nota-alvo.
+- **Vermelho:** frequência estimada do áudio.
+- **Zoom na nota-alvo (±100 cents):** amplia apenas a **visualização**, sem acrescentar resolução à FFT.
 
-O medidor mostra uma escala de **−40 a +40 cents**, mas **o valor numérico não é limitado** a essa faixa no modo fixo. Em desvios maiores, o ponteiro permanece na extremidade e o número continua mostrando o erro real.
+O medidor usa uma escala visual de **−40 a +40 cents**. Se o desvio exceder essa faixa, o valor numérico continua representando o desvio calculado, mesmo quando o ponteiro chega à extremidade.
 
-## Detecção de frequência: FFT e YIN
+## Detecção de frequência: YIN, pYIN e Pico
 
-O seletor **Pico / Fundamental**, situado no painel do espectro, determina **como a frequência é estimada**. Ele funciona nos dois modos de afinação.
+O controle **Pico / Fundamental** define a família de detecção. Em **Fundamental**, o músico pode escolher **YIN** ou **pYIN**; em **Pico**, essa escolha fica inativa, sem apagar a seleção anterior.
 
-| Detecção | Como funciona | Quando usar |
+| Detecção | Como funciona | Uso recomendado |
 |---|---|---|
-| **Fundamental (padrão)** | Usa **YIN** para estimar a periodicidade do sinal e a **FFT** para verificar a coerência dos harmônicos. | Afinação de notas isoladas, especialmente quando um harmônico é mais forte que a fundamental. |
-| **Pico** | Seleciona o componente de maior intensidade do espectro, com refinamento do pico. | Inspeção espectral e situações em que interessa acompanhar o componente dominante. |
+| **Fundamental + YIN (padrão)** | Estima a periodicidade do sinal e verifica a coerência dos harmônicos por FFT. | Afinação monofônica geral, inclusive graves e mudanças rápidas de nota. |
+| **Fundamental + pYIN Experimental** | Obtém candidatas de frequência com probabilidades e aplica acompanhamento temporal por **Viterbi causal**. | Comparação experimental em notas sustentadas; não há vantagem global comprovada sobre o YIN deste projeto. |
+| **Pico** | Seleciona o componente espectral de maior intensidade. | Investigar o pico dominante; ele nem sempre corresponde à fundamental musical. |
 
-O detector de fundamental usa **janelas temporais adaptativas**, com análises mais longas para frequências graves e mais curtas para frequências agudas. A FFT usada na **visualização permanece com 8192 pontos**. A análise inclui verificação de consistência entre harmônicos, avaliação de confiança e descarte de leituras inconclusivas.
+O **YIN** utiliza janelas adaptativas para equilibrar estabilidade nos graves e resposta nos agudos:
 
-> O sistema foi desenvolvido para **sons monofônicos** (uma nota por vez). Nem YIN nem FFT garantem a recuperação da fundamental em todos os timbres, ambientes ou combinações de notas.
+| Frequência de referência para a janela | Duração |
+|---|---:|
+| ≥ 220 Hz | 65 ms |
+| 110 a menos de 220 Hz | 90 ms |
+| 55 a menos de 110 Hz | 135 ms |
+| Abaixo de 55 Hz | 185 ms |
+| Sem frequência anterior disponível | 135 ms |
+
+Uma memória de até **300 ms** pode conservar temporariamente a última frequência válida **somente para selecionar a janela YIN** durante perdas breves de confiança. Essa memória **não é apresentada como medição** e é limpa no silêncio, ao desligar o microfone ou ao trocar de método.
+
+O **pYIN** implementado é uma adaptação probabilística **causal, para tempo real**. Ele combina candidatas acústicas com estados vozeados/não vozeados e decodificação Viterbi. Não deve ser interpretado como uma reprodução bit a bit de um pYIN offline. Mesmo na **Leitura Bruta**, o pYIN conserva sua inferência temporal interna.
+
+> **Limitação importante:** em comparações laboratoriais com sinais sintéticos, o pYIN experimental apresentou erros de oitava e latência maiores em alguns cenários. Em especial, **não foi comprovada melhoria na identificação do FF do cravo**. Por isso, o YIN permanece como padrão.
 
 ## Como interpretar a afinação
 
-O desvio é medido em **cents**, unidade logarítmica. O cálculo é:
+O desvio utiliza **cents**, uma unidade logarítmica:
 
 ```text
 cents = 1200 × log2(frequência_medida / frequência_de_referência)
 ```
 
 - **0 cent:** frequência medida igual à referência.
-- **Cents negativos:** som abaixo da referência (mais grave).
-- **Cents positivos:** som acima da referência (mais agudo).
+- **Negativo:** som mais grave que a referência.
+- **Positivo:** som mais agudo que a referência.
 - **100 cents:** um semitom no temperamento igual; **1200 cents:** uma oitava.
 
-A frequência de referência vem do **temperamento selecionado**, e não obrigatoriamente do temperamento igual. Assim, uma mesma frequência captada pode apresentar desvios diferentes em presets diferentes.
+A frequência de referência depende do **temperamento escolhido**. Duas configurações diferentes podem atribuir desvios distintos à mesma frequência captada.
 
 ## Temperamentos e círculo de quintas
 
-O projeto inclui os seguintes **13 presets**:
+O projeto inclui **13 presets**:
 
 1. Sistema Pitagórico.
 2. Temperamento Igual (−1/12 do coma pitagórico por quinta).
@@ -106,89 +118,102 @@ O projeto inclui os seguintes **13 presets**:
 12. Bach / Barnes.
 13. Bach / Lehman.
 
-O **círculo de quintas** exibe a distribuição resultante. Para personalizá-la, abra **Tabela de ajuste de comas** e altere cada quinta por frações de:
+O **círculo de quintas** mostra a distribuição do temperamento. Na **Tabela de ajuste de comas**, é possível alterar cada quinta por frações de:
 
 - **Coma pitagórico (c.p.):** aproximadamente **23,460 cents**.
 - **Coma sintônico (c.s.):** aproximadamente **21,506 cents**.
 
-Os ajustes são acumulados; a **quinta residual** resulta do fechamento do círculo. O botão **Zerar ajustes** restaura a configuração base do preset selecionado. A opção de enarmonia permite escolher a nomenclatura **Sol# / Lab** no ponto de corte.
+Os ajustes são acumulados; a quinta residual reflete o fechamento do círculo. **Zerar ajustes** restaura a configuração do preset. A opção de enarmonia permite escolher a grafia **Sol# / Lab** no ponto de corte.
 
-A **Tabela de intervalos — Desvios** apresenta as diferenças em relação a intervalos puros de referência: quinta justa (**3:2**), terça maior (**5:4**), terça menor (**6:5**), sexta maior (**5:3**) e sexta menor (**8:5**).
+A **Tabela de intervalos — Desvios** apresenta diferenças em relação a intervalos puros de referência: quinta justa (3:2), terça maior (5:4), terça menor (6:5), sexta maior (5:3) e sexta menor (8:5).
 
 ## Emissor de notas
 
-Abra o painel **Emissor de notas — temperamento atual** para gerar uma nota de referência, independentemente de o microfone estar ligado.
+O **Emissor de notas — temperamento atual** produz uma referência sonora independente da captação do microfone.
 
-- Selecione uma nota na lista, com **notação científica** e **notação de Helmholtz**.
-- Use **◀ Semitom** e **Semitom ▶** para navegar, **Emitir nota** para reproduzir e **Parar som** para interromper.
-- A extensão padrão vai de **F1 a F7**; a opção **Ampliar extensão** permite **C0 a B9**.
-- Ajuste o volume e escolha onda **senoidal**, **triangular**, **quadrada** ou **dente de serra**.
-- Alterações no **A4**, no temperamento, nos ajustes das quintas ou na nota escolhida atualizam a frequência emitida.
+- Escolha a nota por **notação científica** e **notação de Helmholtz**, ou navegue por semitons.
+- A extensão padrão é de **F1 (FF) a F7**; **Ampliar extensão** libera **C0 a B9**.
+- Selecione a forma de onda: **senoidal**, **triangular**, **quadrada** ou **dente de serra**.
+- Ajuste o volume; o valor emitido acompanha mudanças de **A4**, temperamento e quintas.
 
-**Atenção:** se usar emissão e captação simultaneamente, prefira **fones de ouvido** para evitar que o próprio som gerado seja identificado pelo microfone. O emissor não modela a **inarmonicidade** de cordas reais.
+**Atenção:** use fones ao emitir e captar som simultaneamente, para evitar que o microfone identifique o próprio emissor. O sintetizador não reproduz a inarmonicidade de cordas reais.
 
 ## Configurações
 
 | Controle | Função |
 |---|---|
-| **Lá de referência (A4)** | Define o Lá4 usado na construção das frequências. Padrão: **440 Hz**; campo de **300 a 500 Hz**. |
-| **Máx. gráfico (Hz)** | Ajusta o limite superior da visualização FFT. Padrão: **2000 Hz**. Não é o limite geral do detector. |
-| **Estabilidade** | Suaviza a leitura em cents dentro da mesma nota. **0%** desativa a suavização; valores maiores estabilizam mais, com resposta menos imediata. |
-| **Sensibilidade** | Define o limiar mínimo de intensidade: valores maiores detectam sons mais fracos; valores menores exigem som mais forte. |
-| **Desempenho** | **Econômico**, **Normal** ou **Completo**, com frequências crescentes de análise e atualização visual. |
-| **Pico / Fundamental** | Alterna o algoritmo de detecção, independentemente de **Automático / Nota fixa**. |
-| **Enarmonia** | Alterna a grafia **Sol#** / **Lab** conforme o ponto de corte escolhido. |
+| **Lá de referência (A4)** | Base da afinação; padrão **415,3 Hz**, ajustável de **300 a 500 Hz**. |
+| **Temperamento** | Seleciona um dos 13 presets. |
+| **Pico / Fundamental** | Escolhe entre pico dominante e identificação de frequência fundamental. |
+| **Algoritmo: YIN / pYIN** | Seleciona o detector em Fundamental; pYIN é **Experimental**. |
+| **Leitura acústica: Bruta** | Apresenta as estimativas sem filtragem visual temporal adicional. |
+| **Leitura acústica: Filtrada** | Aplica suavização opcional, com intensidade ajustável e possível atraso de resposta. |
+| **Desempenho: Automático** | Adapta o intervalo entre análises à capacidade de processamento. |
+| **Desempenho: Econômico** | Limita o agendamento a até **18 solicitações de análise por segundo**. |
+| **Máx. gráfico (Hz)** | Define o limite superior da visualização FFT; padrão **2000 Hz**. |
+| **Enarmonia** | Alterna a grafia Sol# / Lab. |
+| **Zoom na nota-alvo** | Amplia visualmente a região de ±100 cents em torno da nota escolhida. |
 
 ## Funcionamento técnico
 
 **Caminho básico do áudio:**
 
 ```text
-Microfone → MediaStream → Web Audio API
-                         ├── AnalyserNode (FFT, 8192 pontos)
-                         │     ├── Exibição do espectro
-                         │     └── Verificação espectral de harmônicos
-                         └── AnalyserNode (amostras no tempo)
-                               └── YIN com janela adaptativa
-                                       ↓
-                              Frequência estimada + confiança
-                                       ↓
-               Modo Automático: nota mais próxima no temperamento
-               Modo Nota fixa:  nota-alvo escolhida pelo usuário
-                                       ↓
-                              Desvio em cents + medidor
+Microfone → Web Audio API
+            ├── AnalyserNode (FFT, 8192 pontos)
+            │     └── Espectro e dados para validação
+            └── AnalyserNode (amostras no tempo)
+                         ↓
+                 Dedicated Web Worker
+                   ├── Pico dominante
+                   ├── YIN + verificação FFT
+                   └── pYIN + Viterbi causal
+                         ↓
+              Frequência / estado / quadro
+                         ↓
+              Nota, cents e marcador FFT
 ```
 
-A análise considera o nível do sinal para evitar leituras no silêncio. A suavização da frequência é feita em **escala logarítmica**, evitando médias artificiais entre notas muito diferentes; mudanças grandes ou a perda do sinal reiniciam a leitura. No modo Fundamental, uma detecção sem confiança suficiente pode ser apresentada como **inconclusiva**, sem atribuir uma nota.
+Um único caminho de detecção é executado por análise; o Worker controla a identificação de sessão e quadro para descartar respostas obsoletas. Leituras inconclusivas ou silenciosas **não são promovidas a medições confiáveis**.
 
-A faixa nominal de busca do detector YIN é **16 a 4600 Hz**. O programa sinaliza quando a nota fixa selecionada fica fora dessa faixa, algo possível nos extremos de oitava com valores de A4 diferentes de 440 Hz.
+A matemática musical, o desenho do espectro e a seleção de temperamento são independentes das otimizações internas de desempenho. A FFT exibida mantém **8192 pontos**, fornecidos pelo `AnalyserNode` do navegador.
+
+A faixa nominal de busca do **YIN** é de **16 a 4600 Hz**; a detecção efetiva também depende da amostragem, da janela e da qualidade do sinal. O programa pode informar quando a nota-alvo está fora da faixa nominal.
+
+O núcleo DSP, o pYIN e o Worker são implementados em **JavaScript puro**. A versão autocontida incorpora seu código ao próprio HTML; não requer bibliotecas acústicas externas nem WASM.
 
 ## Requisitos e execução
 
-- Navegador moderno com suporte a **Web Audio API** e acesso ao microfone.
-- Permissão de microfone concedida pelo usuário.
-- Para uso online, conexão **HTTPS** (o link do projeto utiliza GitHub Pages).
+- Navegador moderno com **Web Audio API**, **Web Workers** e acesso ao microfone.
+- Permissão do usuário para a captura.
+- Para a publicação online, **HTTPS**; o projeto utiliza **GitHub Pages**.
 
-O afinador é um **único arquivo HTML**, com CSS e JavaScript incorporados, **sem bibliotecas externas**. Para executar localmente, abra o arquivo no navegador; a permissão de microfone pode variar conforme o navegador e o contexto de segurança. Em hospedagem web, use HTTPS.
+O aplicativo pode ser distribuído como **um único HTML autocontido**, sem CDN ou carregamento remoto de bibliotecas. Seu código pode funcionar sem internet, mas a disponibilidade do **microfone e de Workers ao abrir via `file://` varia entre navegadores**. Para testar a captura de maneira mais previsível, use um contexto seguro (`https://` ou `localhost`, conforme o navegador).
 
-## Limitações conhecidas
+A versão modular, usada também para desenvolvimento e testes, mantém os módulos de DSP e Worker em arquivos separados.
 
-- **Uma nota por vez:** acordes e sons complexos sobrepostos podem causar ambiguidade.
-- **Harmônicos e ruídos:** o detector híbrido reduz erros de oitava, mas não os elimina em todos os casos; interferências podem resultar em leitura inconclusiva.
-- **Região muito grave ou muito aguda:** a captação depende da resposta do microfone e do dispositivo; a faixa nominal do algoritmo não garante a precisão física em toda a extensão.
-- **Inarmonicidade:** cordas reais, especialmente cordas rígidas de piano, podem ter parciais não exatamente harmônicos; o programa não compensa esse fenômeno.
-- **Zoom do FFT:** apenas amplia a exibição; não acrescenta resolução espectral.
-- **Latência e desempenho:** dependem do navegador, do hardware, da taxa de amostragem e do modo selecionado.
+## Testes e limitações conhecidas
 
-O sistema passou por testes automatizados de cálculos e interface com **sinais sintéticos**, mas esses testes **não substituem uma calibração ou validação com instrumentos e microfones físicos**.
+- **Uma nota por vez:** acordes e instrumentos sobrepostos podem produzir ambiguidades.
+- **Ruído, harmônicos e fundamental fraca:** podem causar rejeição da leitura ou erro de oitava.
+- **pYIN Experimental:** pode ter maior latência e erros de oitava; não foi demonstrada superioridade global em relação ao YIN otimizado.
+- **Graves e agudos extremos:** a precisão depende do microfone, da taxa de amostragem, do instrumento e do ambiente.
+- **Inarmonicidade:** o sistema não compensa desvios dos parciais de cordas reais.
+- **Zoom FFT:** altera a visualização, não a resolução espectral.
+- **Tempo real:** latência e consumo dependem do navegador e do dispositivo; o modo Econômico reduz a cadência de solicitações.
+
+Foram realizados **testes automatizados com sinais sintéticos**, comparações quadro a quadro e ensaios em navegador/Worker. As otimizações de JavaScript preservaram as saídas acústicas nos conjuntos avaliados, mas **não garantem melhora de desempenho em todos os aparelhos**.
+
+**Permanecem pendentes a validação com instrumentos e microfones físicos, testes prolongados em Android e a verificação completa da distribuição modular no navegador.** Resultados laboratoriais não substituem essas verificações.
 
 ## Possíveis desenvolvimentos
 
+- Calibração e avaliação independente do pYIN em gravações reais de cravo.
+- Redução dos erros de oitava do pYIN e estudo de suas transições temporais.
 - Exportação e importação de temperamentos personalizados.
 - Perfis de afinação por instrumento.
-- Registro de medições e análise de estabilidade ao longo do tempo.
-- Tratamento específico de inarmonicidade para instrumentos que necessitem disso.
-- Estudos de detecção polifônica como recurso separado do afinador monofônico.
+- Registro de medições e análise de estabilidade.
+- Tratamento opcional de inarmonicidade para instrumentos que necessitem disso.
 
 ## Licença
 
