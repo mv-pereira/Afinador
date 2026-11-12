@@ -311,16 +311,6 @@
         overflow: hidden;
       }
 
-      /* Mesmas cores para os dois modos; apenas a escala horizontal muda. */
-      #faixaAfinadaCents {
-        position: absolute;
-        inset: 0 auto 0 43.75%;
-        width: 12.5%;
-        background: rgba(18, 136, 102, 0.20);
-        z-index: 0;
-        pointer-events: none;
-      }
-      #faixaAfinadaCents[hidden] { display: none !important; }
       #preenchimentoCents {
         position: absolute;
         top: 0;
@@ -330,7 +320,7 @@
         background: var(--red);
         z-index: 1;
         pointer-events: none;
-        transition: left 80ms linear, width 80ms linear, background-color 80ms linear;
+        transition: none; /* Evita mistura de posições em leituras sucessivas. */
       }
 
       .marca-centro {
@@ -382,7 +372,7 @@
         border-radius: 2px;
         box-shadow: 0 0 2px rgba(0, 0, 0, 0.35);
         z-index: 4;
-        transition: left 80ms linear, background-color 80ms linear;
+        transition: none; /* O ponteiro acompanha o mesmo quadro do preenchimento. */
       }
 
       #rotulosCents {
@@ -1287,7 +1277,10 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
         display:flex; min-height:46px; height:46px; margin:0; padding:7px 12px;
         box-sizing:border-box; overflow:hidden; align-items:center;
       }
-      .leitura-detectada #notaDetectada { width:auto; flex:0 0 100px; font-size:27px; }
+      .leitura-detectada #notaDetectada {
+        width:auto; flex:0 0 112px; font-size:25px;
+        white-space:nowrap; overflow-wrap:normal; padding-inline:5px;
+      }
       .leitura-detectada #frequenciaDetectada { width:auto; flex:1 1 250px; font-size:12px; }
       body.modo-nota-fixa .leitura-detectada #notaDetectada { display:none; }
       #medidorCents { max-width:740px; margin:6px auto 4px; padding:10px 13px 4px; }
@@ -1344,7 +1337,7 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
         .valor-nota-alvo { padding:5px 7px; }
         .leitura-detectada #notaDetectada,
         .leitura-detectada #frequenciaDetectada { min-height:43px; height:43px; }
-        .leitura-detectada #notaDetectada { flex:0 0 87px; font-size:24px; }
+        .leitura-detectada #notaDetectada { flex:0 0 106px; font-size:22px; }
         .leitura-detectada #frequenciaDetectada { font-size:11px; padding:6px; }
         #medidorCents { padding:9px 10px 3px; }
         .grade > .subpainel:nth-child(1) { padding:10px 10px 9px; }
@@ -1495,7 +1488,6 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
       <div id="medidorCents">
         <div class="medidor-cabecalho"><span>DESVIO EM CENTS</span><output id="desvioCents" aria-live="off">-- c</output></div>
         <div id="escalaCents" role="img" aria-label="Medidor de cents sem leitura">
-          <div id="faixaAfinadaCents" hidden></div>
           <div id="preenchimentoCents"></div>
           <div class="marca-guia guia-menos-20"></div>
           <div class="marca-guia guia-menos-5"></div>
@@ -4187,7 +4179,6 @@ self.postMessage({tipo:'pronto'});
       const escalaCentsEl = document.getElementById("escalaCents");
       const ponteiroCentsEl = document.getElementById("ponteiroCents");
       const preenchimentoCentsEl = document.getElementById("preenchimentoCents");
-      const faixaAfinadaCentsEl = document.getElementById("faixaAfinadaCents");
       const rotuloEsquerdaEl = document.getElementById("rotuloEsquerda");
       const rotuloMenos20El = document.getElementById("rotuloMenos20");
       const rotuloMenos5El = document.getElementById("rotuloMenos5");
@@ -4696,7 +4687,6 @@ self.postMessage({tipo:'pronto'});
         ponteiroCentsEl.style.backgroundColor = "var(--ui-heading-text)";
         preenchimentoCentsEl.style.left = "50%";
         preenchimentoCentsEl.style.width = "0%";
-        faixaAfinadaCentsEl.hidden = true;
         escalaCentsEl.setAttribute("aria-label", "Medidor de cents sem leitura");
       }
 
@@ -4711,7 +4701,6 @@ self.postMessage({tipo:'pronto'});
         preenchimentoCentsEl.style.left = Math.min(50, percentual) + "%";
         preenchimentoCentsEl.style.width = Math.abs(percentual - 50) + "%";
         preenchimentoCentsEl.style.backgroundColor = cor;
-        faixaAfinadaCentsEl.hidden = !afinado;
         const direcao = cents > 0 ? "agudo" : cents < 0 ? "grave" : "afinada";
         escalaCentsEl.setAttribute("aria-label", `Desvio: ${cents.toFixed(1)} cents. Nota ${direcao}.`);
       }
