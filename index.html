@@ -1813,6 +1813,23 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
     let reduzido = new Float32Array(0);
     let cmndf = new Float64Array(0);
     const razao = Math.exp(-cfg.boltzmann);
+    let potenciasBoltzmann = new Float64Array(0);
+    let potenciasCalculadas = 0;
+
+    // Prior imutável por instância; cada índice mantém o Math.pow original.
+    // A capacidade acompanha todos os mínimos, não apenas os candidatos finais.
+    function garantirPotenciasBoltzmann(quantidade) {
+      if (cfg.boltzmann === 0 || quantidade <= potenciasCalculadas) return;
+      if (potenciasBoltzmann.length < quantidade) {
+        const novo = new Float64Array(Math.max(quantidade, potenciasBoltzmann.length * 2, 16));
+        novo.set(potenciasBoltzmann);
+        potenciasBoltzmann = novo;
+      }
+      for (let k = potenciasCalculadas; k < quantidade; k++) {
+        potenciasBoltzmann[k] = Math.pow(razao, k);
+      }
+      potenciasCalculadas = quantidade;
+    }
 
     function resultadoVazio(estado, motivo, meta = {}) {
       return {etapa: 2, tipo: 'candidatas-pyin-parcial', estado, motivo,
@@ -1859,10 +1876,14 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
       if (cmndf.length < tauMax + 1) cmndf = new Float64Array(tauMax + 1);
       cmndf[0] = 1;
       let acumulado = 0;
+      // Percorre o mesmo conjunto de amostras na mesma ordem, usando índices
+      // absolutos para evitar refazer o deslocamento da janela a cada termo.
+      const passo = cfg.passoAmostras;
+      const fim = inicio + janela;
       for (let tau = 1; tau <= tauMax; tau++) {
         let soma = 0;
-        for (let j = 0; j < janela; j += cfg.passoAmostras) {
-          const d = reduzido[inicio + j] - reduzido[inicio + j + tau];
+        for (let pos = inicio; pos < fim; pos += passo) {
+          const d = reduzido[pos] - reduzido[pos + tau];
           soma += d * d;
         }
         acumulado += soma;
@@ -1886,6 +1907,7 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
         quantidadeMinimos:minimos.length, fMin:cfg.fMin, fMaxEfetiva,
         numeroLimiares:cfg.numeroLimiares};
       if (!minimos.length) return resultadoVazio('sem_candidatos', 'sem_minimos_locais', meta);
+      garantirPotenciasBoltzmann(minimos.length);
 
       let naoVozeado = 0;
       for (let t = 0; t < pesos.length; t++) {
@@ -1905,7 +1927,7 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
         let ordem = 0;
         for (let k = 0; k < minimos.length; k++) {
           if (minimos[k].altura >= limiar) continue;
-          minimos[k].massa += massaLimiar * (cfg.boltzmann === 0 ? 1 : Math.pow(razao, ordem)) / denom;
+          minimos[k].massa += massaLimiar * (cfg.boltzmann === 0 ? 1 : potenciasBoltzmann[ordem]) / denom;
           ordem++;
         }
       }
@@ -2019,13 +2041,13 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
     const cfg = configurar(configuracao);
     const processador = root.AfinadorPYIN && root.AfinadorPYIN.criarProcessador(configuracaoCandidatas);
     let identidade = null, ultimoMs = null, ultimoFrame = null;
-    let estados = [], scores = [0]; // índice 0 sempre não vozeado
+    let estados = [], quantidadeEstados = 0, scores = [0], reservaScores = [], pesosLinha = []; // índice 0 é não vozeado
     let resets = 0, processados = 0;
     function limpar() {
-      identidade=null; ultimoMs=null; ultimoFrame=null; estados=[]; scores=[0]; resets++;
+      identidade=null; ultimoMs=null; ultimoFrame=null; quantidadeEstados=0; scores.length=1; scores[0]=0; reservaScores.length=0; resets++;
     }
     function estadoAtual() {
-      return {quantidadeEstados:estados.length+1, quantidadeQuadros:processados,
+      return {quantidadeEstados:quantidadeEstados+1, quantidadeQuadros:processados,
         reinicializacoes:resets, ultimoFrame, ultimoMs, identidade};
     }
     function processarObservacao(obs, contexto) {
@@ -2053,45 +2075,49 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
       ultimoMs=c.capturadoEmMs; ultimoFrame=c.frameId; processados++;
       const candidatos = obs.candidatos;
       const forcarNaoVoz = candidatos.length===0 || obs.estado==='silencio';
-      let novosScores = [NEG_INF], indiceEscolhido=0;
+      let novosScores = reservaScores, indiceEscolhido=0;
+      novosScores.length = forcarNaoVoz ? 1 : candidatos.length+1;
+      novosScores[0] = NEG_INF;
       if (forcarNaoVoz) {
         // Silêncio acústico e ausência de candidatas não podem produzir nota residual.
-        novosScores=[0]; estados=[]; scores=novosScores;
+        novosScores[0]=0; quantidadeEstados=0;
       } else if (deltaMs === null) {
         novosScores[0]=Math.log(1-cfg.probabilidadeInicialVoz)+Math.log(Math.max(cfg.minProbabilidade,obs.probabilidadeNaoVozeado));
-        for (const cand of candidatos)
-          novosScores.push(Math.log(cfg.probabilidadeInicialVoz)+Math.log(Math.max(cfg.minProbabilidade,cand.probability)));
+        for (let i=0;i<candidatos.length;i++)
+          novosScores[i+1]=Math.log(cfg.probabilidadeInicialVoz)+Math.log(Math.max(cfg.minProbabilidade,candidatos[i].probability));
       } else {
         const pEntrar=-Math.expm1(-cfg.taxaInicioVozPorSegundo*dt);
         const pSair=-Math.expm1(-cfg.taxaFimVozPorSegundo*dt);
         const pSaltar=-Math.expm1(-cfg.taxaSaltoNotaPorSegundo*dt);
         // Não há supressão de quadros por hop presumido: dt é medido do timestamp real.
         const pU=Math.max(cfg.minProbabilidade,obs.probabilidadeNaoVozeado);
-        novosScores[0]=Math.log(pU)+Math.max(
-          scores[0]+Math.log(Math.max(cfg.minProbabilidade,1-pEntrar)),
-          ...scores.slice(1).map(s=>s+Math.log(Math.max(cfg.minProbabilidade,pSair)))
-        );
+        // Mesmo máximo da transição para não vozeado, sem arrays intermediários.
+        const logSair = Math.log(Math.max(cfg.minProbabilidade,pSair));
+        let maiorNaoVoz = scores[0]+Math.log(Math.max(cfg.minProbabilidade,1-pEntrar));
+        for (let j=0;j<quantidadeEstados;j++)
+          maiorNaoVoz = Math.max(maiorNaoVoz,scores[j+1]+logSair);
+        novosScores[0] = Math.log(pU)+maiorNaoVoz;
         const desv = cfg.desvioCentsBase+cfg.velocidadeCentsPorSegundo*dt;
-        const diffs=[];
-        for (const anterior of estados) {
-          const linha=[]; let soma=0;
-          for (const atual of candidatos) {
-            const cents=Math.abs(1200*Math.log2(atual.frequencyHz/anterior.frequencyHz));
+        for (let i=0;i<candidatos.length;i++)
+          novosScores[i+1] = scores[0]+Math.log(Math.max(cfg.minProbabilidade,pEntrar/candidatos.length));
+        // Processar uma linha por origem: mesma normalização por estado anterior,
+        // mesma ordem dos máximos, mas sem matriz [origem][destino] a cada quadro.
+        for (let j=0;j<quantidadeEstados;j++) {
+          let soma=0;
+          const hzAnterior=estados[j];
+          for (let i=0;i<candidatos.length;i++) {
+            const cents=Math.abs(1200*Math.log2(candidatos[i].frequencyHz/hzAnterior));
             const d=cents/desv;
-            // Pequena probabilidade explícita de salto real de nota/oitava.
             const valor=(1-pSaltar)*Math.exp(-0.5*d*d)+pSaltar/candidatos.length;
-            linha.push(valor); soma+=valor;
+            pesosLinha[i]=valor; soma+=valor;
           }
-          diffs.push(linha.map(v=>v/soma));
-        }
-        for (let i=0;i<candidatos.length;i++) {
-          let maior=scores[0]+Math.log(Math.max(cfg.minProbabilidade,pEntrar/candidatos.length));
-          for (let j=0;j<estados.length;j++) {
-            const trans=Math.max(cfg.minProbabilidade,(1-pSair)*diffs[j][i]);
-            maior=Math.max(maior,scores[j+1]+Math.log(trans));
+          for (let i=0;i<candidatos.length;i++) {
+            const trans=Math.max(cfg.minProbabilidade,(1-pSair)*(pesosLinha[i]/soma));
+            novosScores[i+1]=Math.max(novosScores[i+1],scores[j+1]+Math.log(trans));
           }
-          novosScores.push(maior+Math.log(Math.max(cfg.minProbabilidade,candidatos[i].probability)));
         }
+        for (let i=0;i<candidatos.length;i++)
+          novosScores[i+1] += Math.log(Math.max(cfg.minProbabilidade,candidatos[i].probability));
       }
       if (!forcarNaoVoz) {
         let maximo=Math.max(...novosScores);
@@ -2100,8 +2126,11 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
           novosScores[i]-=maximo; // normaliza o log-score, evitando underflow acumulado
           if (novosScores[i]>novosScores[indiceEscolhido]) indiceEscolhido=i;
         }
-        scores=novosScores; estados=candidatos.map(c=>({frequencyHz:c.frequencyHz}));
+        for (let i=0;i<candidatos.length;i++) estados[i]=candidatos[i].frequencyHz;
+        quantidadeEstados=candidatos.length;
       }
+      if (forcarNaoVoz) { scores.length=1; scores[0]=0; reservaScores=novosScores; }
+      else { const anteriorScores=scores; scores=novosScores; reservaScores=anteriorScores; }
       const escolhido=indiceEscolhido > 0 ? candidatos[indiceEscolhido-1] : null;
       // estado inconclusivo não equivale a silêncio acústico confirmado.
       const status = obs.estado==='silencio' ? 'silencio' : escolhido ? 'valido' : 'inconclusivo';
@@ -2152,6 +2181,10 @@ const FREQ_MIN_YIN = 16;
 const FREQ_MAX_YIN = 4600;
 
 const TAXA_YIN_ALVO = 24000;
+
+// Buffer privado da instância DSP. O Dedicated Worker processa um quadro por vez.
+// A faixa 0..tauMax é sobrescrita antes de qualquer leitura em cada análise.
+let cmndfYinReutilizavel = new Float64Array(0);
 
 function clamp(v, min, max) {
         return Math.max(min, Math.min(max, v));
@@ -2222,7 +2255,10 @@ function estimarFundamentalYIN(buffer, sampleRate, freqAnterior = null, frequenc
         // A porção comparada se mantém igual para cada atraso (YIN clássico).
         const inicio = buffer.length - janela - tauMax;
         const passo = freqAnterior && freqAnterior > 700 ? 2 : 4;
-        const cmndf = new Float64Array(tauMax + 1);
+        if (cmndfYinReutilizavel.length < tauMax + 1) {
+          cmndfYinReutilizavel = new Float64Array(tauMax + 1);
+        }
+        const cmndf = cmndfYinReutilizavel;
         let acumulado = 0;
         cmndf[0] = 1;
         for (let tau = 1; tau <= tauMax; tau++) {
@@ -2291,12 +2327,19 @@ function calcularPisoEspectralDb(array) {
         return amostras.length ? amostras[Math.floor(amostras.length / 2)] : -100;
       }
 
-function avaliarSuporteFFT(freq, espectroDb, sampleRate, fftSize) {
-        // Usar decibéis para diferença de nível, nunca razões entre bytes de dB.
-        const larguraBin = sampleRate / fftSize;
+// Estatísticas compartilhadas exclusivamente entre as verificações de um quadro.
+// A mediana e a varredura do máximo mantêm exatamente a aritmética original.
+function calcularEstatisticasFFT(espectroDb) {
         const pisoDb = calcularPisoEspectralDb(espectroDb);
         let maxDb = -Infinity;
         for (let i = 3; i < espectroDb.length; i++) maxDb = Math.max(maxDb, espectroDb[i]);
+        return {pisoDb, maxDb};
+      }
+
+function avaliarSuporteFFT(freq, espectroDb, sampleRate, fftSize, estatisticasFFT = null) {
+        // Usar decibéis para diferença de nível, nunca razões entre bytes de dB.
+        const larguraBin = sampleRate / fftSize;
+        const {pisoDb, maxDb} = estatisticasFFT || calcularEstatisticasFFT(espectroDb);
         let harmonicos = 0;
         let impares = 0;
         for (let ordem = 1; ordem <= 7; ordem++) {
@@ -2312,12 +2355,12 @@ function avaliarSuporteFFT(freq, espectroDb, sampleRate, fftSize) {
         return {harmonicos, impares, pisoDb};
       }
 
-function temHarmonicoImparIndependente(fundamental, espectroDb, sampleRate, fftSize) {
+function temHarmonicoImparIndependente(fundamental, espectroDb, sampleRate, fftSize, estatisticasFFT = null) {
         // Não confundir a saia (leakage) de um pico vizinho com um novo harmônico.
         const binHz = sampleRate / fftSize;
-        const piso = calcularPisoEspectralDb(espectroDb);
-        let maiorDb = -Infinity;
-        for (let i = 3; i < espectroDb.length; i++) maiorDb = Math.max(maiorDb, espectroDb[i]);
+        const estatisticas = estatisticasFFT || calcularEstatisticasFFT(espectroDb);
+        const piso = estatisticas.pisoDb;
+        const maiorDb = estatisticas.maxDb;
         for (const ordem of [3, 5, 7]) {
           const esperada = fundamental * ordem / binHz;
           const centro = Math.round(esperada);
@@ -2333,13 +2376,13 @@ function temHarmonicoImparIndependente(fundamental, espectroDb, sampleRate, fftS
         return false;
       }
 
-function conferirCoerenciaPicos(freq, espectroDb, sampleRate, fftSize) {
+function conferirCoerenciaPicos(freq, espectroDb, sampleRate, fftSize, estatisticasFFT = null) {
         // Checagem extra contra falsa subfundamental por batimentos, p.ex.
         // instrumento de 110 Hz + interferência elétrica de 60 Hz.
         const binHz = sampleRate / fftSize;
-        const piso = calcularPisoEspectralDb(espectroDb);
-        let maiorDb = -Infinity;
-        for (let i = 3; i < espectroDb.length; i++) maiorDb = Math.max(maiorDb, espectroDb[i]);
+        const estatisticas = estatisticasFFT || calcularEstatisticasFFT(espectroDb);
+        const piso = estatisticas.pisoDb;
+        const maiorDb = estatisticas.maxDb;
         const fim = Math.min(espectroDb.length - 4,
           Math.floor(Math.min(FREQ_MAX_YIN, Math.max(500, 7 * freq)) / binHz));
         let picos = 0, compativeis = 0, incompativeis = 0;
@@ -2364,7 +2407,8 @@ function conferirCoerenciaPicos(freq, espectroDb, sampleRate, fftSize) {
 function encontrarFundamentalProvavel(formaOnda, sampleRateYin, espectroDb, sampleRateFFT, fftSize, frequenciaAnterior = null, frequenciaJanelaYin = frequenciaAnterior) {
         const yin = estimarFundamentalYIN(formaOnda, sampleRateYin, frequenciaAnterior, frequenciaJanelaYin);
         if (!yin) return null;
-        let suporte = avaliarSuporteFFT(yin.frequency, espectroDb, sampleRateFFT, fftSize);
+        const estatisticasFFT = calcularEstatisticasFFT(espectroDb);
+        let suporte = avaliarSuporteFFT(yin.frequency, espectroDb, sampleRateFFT, fftSize, estatisticasFFT);
         // Verificação de erro de oitava: se o segundo harmônico domina, o YIN
         // pode parar no primeiro mínimo (2*f0). Um componente ímpar de f0
         // (3*f0 ou 5*f0) e um mínimo temporal mais forte em f0 permitem
@@ -2374,10 +2418,10 @@ function encontrarFundamentalProvavel(formaOnda, sampleRateYin, espectroDb, samp
             yin.erroOitavaInferior !== null &&
             yin.erroOitavaInferior < 0.23 &&
             yin.erroOitavaInferior < yin.erroYin * 0.70) {
-          const suporteMetade = avaliarSuporteFFT(metade, espectroDb, sampleRateFFT, fftSize);
+          const suporteMetade = avaliarSuporteFFT(metade, espectroDb, sampleRateFFT, fftSize, estatisticasFFT);
           if (suporteMetade.impares >= 1 &&
               suporteMetade.harmonicos >= suporte.harmonicos + 1 &&
-              temHarmonicoImparIndependente(metade, espectroDb, sampleRateFFT, fftSize)) {
+              temHarmonicoImparIndependente(metade, espectroDb, sampleRateFFT, fftSize, estatisticasFFT)) {
             yin.frequency = metade;
             yin.erroYin = yin.erroOitavaInferior;
             suporte = suporteMetade;
@@ -2393,9 +2437,8 @@ function encontrarFundamentalProvavel(formaOnda, sampleRateYin, espectroDb, samp
             for (let i = Math.max(2, indice - 2); i <= Math.min(espectroDb.length - 2, indice + 2); i++) {
               if (espectroDb[i] > espectroDb[pico]) pico = i;
             }
-            const piso = calcularPisoEspectralDb(espectroDb);
-            let maiorDb = -Infinity;
-            for (let i = 3; i < espectroDb.length; i++) maiorDb = Math.max(maiorDb, espectroDb[i]);
+            const piso = estatisticasFFT.pisoDb;
+            const maiorDb = estatisticasFFT.maxDb;
             const frequenciaFft = refinarIndicePico(espectroDb, pico) * largura;
             if (espectroDb[pico] > piso + 16 &&
                 espectroDb[pico] > maiorDb - 11 &&
@@ -2415,7 +2458,7 @@ function encontrarFundamentalProvavel(formaOnda, sampleRateYin, espectroDb, samp
         else if (moderado && suporte.harmonicos >= 2) confianca = "média";
         else if (yin.erroYin <= 0.10) confianca = "média"; // FFT insuficiente para nota grave.
         if (!confianca) return null;
-        const coerencia = conferirCoerenciaPicos(yin.frequency, espectroDb, sampleRateFFT, fftSize);
+        const coerencia = conferirCoerenciaPicos(yin.frequency, espectroDb, sampleRateFFT, fftSize, estatisticasFFT);
         if (!coerencia.coerente) return null;
         return {...yin, ...suporte, ...coerencia, confianca};
       }
@@ -2566,6 +2609,23 @@ function encontrarFundamentalProvavel(formaOnda, sampleRateYin, espectroDb, samp
     let reduzido = new Float32Array(0);
     let cmndf = new Float64Array(0);
     const razao = Math.exp(-cfg.boltzmann);
+    let potenciasBoltzmann = new Float64Array(0);
+    let potenciasCalculadas = 0;
+
+    // Prior imutável por instância; cada índice mantém o Math.pow original.
+    // A capacidade acompanha todos os mínimos, não apenas os candidatos finais.
+    function garantirPotenciasBoltzmann(quantidade) {
+      if (cfg.boltzmann === 0 || quantidade <= potenciasCalculadas) return;
+      if (potenciasBoltzmann.length < quantidade) {
+        const novo = new Float64Array(Math.max(quantidade, potenciasBoltzmann.length * 2, 16));
+        novo.set(potenciasBoltzmann);
+        potenciasBoltzmann = novo;
+      }
+      for (let k = potenciasCalculadas; k < quantidade; k++) {
+        potenciasBoltzmann[k] = Math.pow(razao, k);
+      }
+      potenciasCalculadas = quantidade;
+    }
 
     function resultadoVazio(estado, motivo, meta = {}) {
       return {etapa: 2, tipo: 'candidatas-pyin-parcial', estado, motivo,
@@ -2612,10 +2672,14 @@ function encontrarFundamentalProvavel(formaOnda, sampleRateYin, espectroDb, samp
       if (cmndf.length < tauMax + 1) cmndf = new Float64Array(tauMax + 1);
       cmndf[0] = 1;
       let acumulado = 0;
+      // Percorre o mesmo conjunto de amostras na mesma ordem, usando índices
+      // absolutos para evitar refazer o deslocamento da janela a cada termo.
+      const passo = cfg.passoAmostras;
+      const fim = inicio + janela;
       for (let tau = 1; tau <= tauMax; tau++) {
         let soma = 0;
-        for (let j = 0; j < janela; j += cfg.passoAmostras) {
-          const d = reduzido[inicio + j] - reduzido[inicio + j + tau];
+        for (let pos = inicio; pos < fim; pos += passo) {
+          const d = reduzido[pos] - reduzido[pos + tau];
           soma += d * d;
         }
         acumulado += soma;
@@ -2639,6 +2703,7 @@ function encontrarFundamentalProvavel(formaOnda, sampleRateYin, espectroDb, samp
         quantidadeMinimos:minimos.length, fMin:cfg.fMin, fMaxEfetiva,
         numeroLimiares:cfg.numeroLimiares};
       if (!minimos.length) return resultadoVazio('sem_candidatos', 'sem_minimos_locais', meta);
+      garantirPotenciasBoltzmann(minimos.length);
 
       let naoVozeado = 0;
       for (let t = 0; t < pesos.length; t++) {
@@ -2658,7 +2723,7 @@ function encontrarFundamentalProvavel(formaOnda, sampleRateYin, espectroDb, samp
         let ordem = 0;
         for (let k = 0; k < minimos.length; k++) {
           if (minimos[k].altura >= limiar) continue;
-          minimos[k].massa += massaLimiar * (cfg.boltzmann === 0 ? 1 : Math.pow(razao, ordem)) / denom;
+          minimos[k].massa += massaLimiar * (cfg.boltzmann === 0 ? 1 : potenciasBoltzmann[ordem]) / denom;
           ordem++;
         }
       }
@@ -2770,13 +2835,13 @@ function encontrarFundamentalProvavel(formaOnda, sampleRateYin, espectroDb, samp
     const cfg = configurar(configuracao);
     const processador = root.AfinadorPYIN && root.AfinadorPYIN.criarProcessador(configuracaoCandidatas);
     let identidade = null, ultimoMs = null, ultimoFrame = null;
-    let estados = [], scores = [0]; // índice 0 sempre não vozeado
+    let estados = [], quantidadeEstados = 0, scores = [0], reservaScores = [], pesosLinha = []; // índice 0 é não vozeado
     let resets = 0, processados = 0;
     function limpar() {
-      identidade=null; ultimoMs=null; ultimoFrame=null; estados=[]; scores=[0]; resets++;
+      identidade=null; ultimoMs=null; ultimoFrame=null; quantidadeEstados=0; scores.length=1; scores[0]=0; reservaScores.length=0; resets++;
     }
     function estadoAtual() {
-      return {quantidadeEstados:estados.length+1, quantidadeQuadros:processados,
+      return {quantidadeEstados:quantidadeEstados+1, quantidadeQuadros:processados,
         reinicializacoes:resets, ultimoFrame, ultimoMs, identidade};
     }
     function processarObservacao(obs, contexto) {
@@ -2804,45 +2869,49 @@ function encontrarFundamentalProvavel(formaOnda, sampleRateYin, espectroDb, samp
       ultimoMs=c.capturadoEmMs; ultimoFrame=c.frameId; processados++;
       const candidatos = obs.candidatos;
       const forcarNaoVoz = candidatos.length===0 || obs.estado==='silencio';
-      let novosScores = [NEG_INF], indiceEscolhido=0;
+      let novosScores = reservaScores, indiceEscolhido=0;
+      novosScores.length = forcarNaoVoz ? 1 : candidatos.length+1;
+      novosScores[0] = NEG_INF;
       if (forcarNaoVoz) {
         // Silêncio acústico e ausência de candidatas não podem produzir nota residual.
-        novosScores=[0]; estados=[]; scores=novosScores;
+        novosScores[0]=0; quantidadeEstados=0;
       } else if (deltaMs === null) {
         novosScores[0]=Math.log(1-cfg.probabilidadeInicialVoz)+Math.log(Math.max(cfg.minProbabilidade,obs.probabilidadeNaoVozeado));
-        for (const cand of candidatos)
-          novosScores.push(Math.log(cfg.probabilidadeInicialVoz)+Math.log(Math.max(cfg.minProbabilidade,cand.probability)));
+        for (let i=0;i<candidatos.length;i++)
+          novosScores[i+1]=Math.log(cfg.probabilidadeInicialVoz)+Math.log(Math.max(cfg.minProbabilidade,candidatos[i].probability));
       } else {
         const pEntrar=-Math.expm1(-cfg.taxaInicioVozPorSegundo*dt);
         const pSair=-Math.expm1(-cfg.taxaFimVozPorSegundo*dt);
         const pSaltar=-Math.expm1(-cfg.taxaSaltoNotaPorSegundo*dt);
         // Não há supressão de quadros por hop presumido: dt é medido do timestamp real.
         const pU=Math.max(cfg.minProbabilidade,obs.probabilidadeNaoVozeado);
-        novosScores[0]=Math.log(pU)+Math.max(
-          scores[0]+Math.log(Math.max(cfg.minProbabilidade,1-pEntrar)),
-          ...scores.slice(1).map(s=>s+Math.log(Math.max(cfg.minProbabilidade,pSair)))
-        );
+        // Mesmo máximo da transição para não vozeado, sem arrays intermediários.
+        const logSair = Math.log(Math.max(cfg.minProbabilidade,pSair));
+        let maiorNaoVoz = scores[0]+Math.log(Math.max(cfg.minProbabilidade,1-pEntrar));
+        for (let j=0;j<quantidadeEstados;j++)
+          maiorNaoVoz = Math.max(maiorNaoVoz,scores[j+1]+logSair);
+        novosScores[0] = Math.log(pU)+maiorNaoVoz;
         const desv = cfg.desvioCentsBase+cfg.velocidadeCentsPorSegundo*dt;
-        const diffs=[];
-        for (const anterior of estados) {
-          const linha=[]; let soma=0;
-          for (const atual of candidatos) {
-            const cents=Math.abs(1200*Math.log2(atual.frequencyHz/anterior.frequencyHz));
+        for (let i=0;i<candidatos.length;i++)
+          novosScores[i+1] = scores[0]+Math.log(Math.max(cfg.minProbabilidade,pEntrar/candidatos.length));
+        // Processar uma linha por origem: mesma normalização por estado anterior,
+        // mesma ordem dos máximos, mas sem matriz [origem][destino] a cada quadro.
+        for (let j=0;j<quantidadeEstados;j++) {
+          let soma=0;
+          const hzAnterior=estados[j];
+          for (let i=0;i<candidatos.length;i++) {
+            const cents=Math.abs(1200*Math.log2(candidatos[i].frequencyHz/hzAnterior));
             const d=cents/desv;
-            // Pequena probabilidade explícita de salto real de nota/oitava.
             const valor=(1-pSaltar)*Math.exp(-0.5*d*d)+pSaltar/candidatos.length;
-            linha.push(valor); soma+=valor;
+            pesosLinha[i]=valor; soma+=valor;
           }
-          diffs.push(linha.map(v=>v/soma));
-        }
-        for (let i=0;i<candidatos.length;i++) {
-          let maior=scores[0]+Math.log(Math.max(cfg.minProbabilidade,pEntrar/candidatos.length));
-          for (let j=0;j<estados.length;j++) {
-            const trans=Math.max(cfg.minProbabilidade,(1-pSair)*diffs[j][i]);
-            maior=Math.max(maior,scores[j+1]+Math.log(trans));
+          for (let i=0;i<candidatos.length;i++) {
+            const trans=Math.max(cfg.minProbabilidade,(1-pSair)*(pesosLinha[i]/soma));
+            novosScores[i+1]=Math.max(novosScores[i+1],scores[j+1]+Math.log(trans));
           }
-          novosScores.push(maior+Math.log(Math.max(cfg.minProbabilidade,candidatos[i].probability)));
         }
+        for (let i=0;i<candidatos.length;i++)
+          novosScores[i+1] += Math.log(Math.max(cfg.minProbabilidade,candidatos[i].probability));
       }
       if (!forcarNaoVoz) {
         let maximo=Math.max(...novosScores);
@@ -2851,8 +2920,11 @@ function encontrarFundamentalProvavel(formaOnda, sampleRateYin, espectroDb, samp
           novosScores[i]-=maximo; // normaliza o log-score, evitando underflow acumulado
           if (novosScores[i]>novosScores[indiceEscolhido]) indiceEscolhido=i;
         }
-        scores=novosScores; estados=candidatos.map(c=>({frequencyHz:c.frequencyHz}));
+        for (let i=0;i<candidatos.length;i++) estados[i]=candidatos[i].frequencyHz;
+        quantidadeEstados=candidatos.length;
       }
+      if (forcarNaoVoz) { scores.length=1; scores[0]=0; reservaScores=novosScores; }
+      else { const anteriorScores=scores; scores=novosScores; reservaScores=anteriorScores; }
       const escolhido=indiceEscolhido > 0 ? candidatos[indiceEscolhido-1] : null;
       // estado inconclusivo não equivale a silêncio acústico confirmado.
       const status = obs.estado==='silencio' ? 'silencio' : escolhido ? 'valido' : 'inconclusivo';
@@ -2963,6 +3035,10 @@ const FREQ_MAX_YIN = 4600;
 
 const TAXA_YIN_ALVO = 24000;
 
+// Buffer privado da instância DSP. O Dedicated Worker processa um quadro por vez.
+// A faixa 0..tauMax é sobrescrita antes de qualquer leitura em cada análise.
+let cmndfYinReutilizavel = new Float64Array(0);
+
 function clamp(v, min, max) {
         return Math.max(min, Math.min(max, v));
       }
@@ -3032,7 +3108,10 @@ function estimarFundamentalYIN(buffer, sampleRate, freqAnterior = null, frequenc
         // A porção comparada se mantém igual para cada atraso (YIN clássico).
         const inicio = buffer.length - janela - tauMax;
         const passo = freqAnterior && freqAnterior > 700 ? 2 : 4;
-        const cmndf = new Float64Array(tauMax + 1);
+        if (cmndfYinReutilizavel.length < tauMax + 1) {
+          cmndfYinReutilizavel = new Float64Array(tauMax + 1);
+        }
+        const cmndf = cmndfYinReutilizavel;
         let acumulado = 0;
         cmndf[0] = 1;
         for (let tau = 1; tau <= tauMax; tau++) {
@@ -3101,12 +3180,19 @@ function calcularPisoEspectralDb(array) {
         return amostras.length ? amostras[Math.floor(amostras.length / 2)] : -100;
       }
 
-function avaliarSuporteFFT(freq, espectroDb, sampleRate, fftSize) {
-        // Usar decibéis para diferença de nível, nunca razões entre bytes de dB.
-        const larguraBin = sampleRate / fftSize;
+// Estatísticas compartilhadas exclusivamente entre as verificações de um quadro.
+// A mediana e a varredura do máximo mantêm exatamente a aritmética original.
+function calcularEstatisticasFFT(espectroDb) {
         const pisoDb = calcularPisoEspectralDb(espectroDb);
         let maxDb = -Infinity;
         for (let i = 3; i < espectroDb.length; i++) maxDb = Math.max(maxDb, espectroDb[i]);
+        return {pisoDb, maxDb};
+      }
+
+function avaliarSuporteFFT(freq, espectroDb, sampleRate, fftSize, estatisticasFFT = null) {
+        // Usar decibéis para diferença de nível, nunca razões entre bytes de dB.
+        const larguraBin = sampleRate / fftSize;
+        const {pisoDb, maxDb} = estatisticasFFT || calcularEstatisticasFFT(espectroDb);
         let harmonicos = 0;
         let impares = 0;
         for (let ordem = 1; ordem <= 7; ordem++) {
@@ -3122,12 +3208,12 @@ function avaliarSuporteFFT(freq, espectroDb, sampleRate, fftSize) {
         return {harmonicos, impares, pisoDb};
       }
 
-function temHarmonicoImparIndependente(fundamental, espectroDb, sampleRate, fftSize) {
+function temHarmonicoImparIndependente(fundamental, espectroDb, sampleRate, fftSize, estatisticasFFT = null) {
         // Não confundir a saia (leakage) de um pico vizinho com um novo harmônico.
         const binHz = sampleRate / fftSize;
-        const piso = calcularPisoEspectralDb(espectroDb);
-        let maiorDb = -Infinity;
-        for (let i = 3; i < espectroDb.length; i++) maiorDb = Math.max(maiorDb, espectroDb[i]);
+        const estatisticas = estatisticasFFT || calcularEstatisticasFFT(espectroDb);
+        const piso = estatisticas.pisoDb;
+        const maiorDb = estatisticas.maxDb;
         for (const ordem of [3, 5, 7]) {
           const esperada = fundamental * ordem / binHz;
           const centro = Math.round(esperada);
@@ -3143,13 +3229,13 @@ function temHarmonicoImparIndependente(fundamental, espectroDb, sampleRate, fftS
         return false;
       }
 
-function conferirCoerenciaPicos(freq, espectroDb, sampleRate, fftSize) {
+function conferirCoerenciaPicos(freq, espectroDb, sampleRate, fftSize, estatisticasFFT = null) {
         // Checagem extra contra falsa subfundamental por batimentos, p.ex.
         // instrumento de 110 Hz + interferência elétrica de 60 Hz.
         const binHz = sampleRate / fftSize;
-        const piso = calcularPisoEspectralDb(espectroDb);
-        let maiorDb = -Infinity;
-        for (let i = 3; i < espectroDb.length; i++) maiorDb = Math.max(maiorDb, espectroDb[i]);
+        const estatisticas = estatisticasFFT || calcularEstatisticasFFT(espectroDb);
+        const piso = estatisticas.pisoDb;
+        const maiorDb = estatisticas.maxDb;
         const fim = Math.min(espectroDb.length - 4,
           Math.floor(Math.min(FREQ_MAX_YIN, Math.max(500, 7 * freq)) / binHz));
         let picos = 0, compativeis = 0, incompativeis = 0;
@@ -3174,7 +3260,8 @@ function conferirCoerenciaPicos(freq, espectroDb, sampleRate, fftSize) {
 function encontrarFundamentalProvavel(formaOnda, sampleRateYin, espectroDb, sampleRateFFT, fftSize, frequenciaAnterior = null, frequenciaJanelaYin = frequenciaAnterior) {
         const yin = estimarFundamentalYIN(formaOnda, sampleRateYin, frequenciaAnterior, frequenciaJanelaYin);
         if (!yin) return null;
-        let suporte = avaliarSuporteFFT(yin.frequency, espectroDb, sampleRateFFT, fftSize);
+        const estatisticasFFT = calcularEstatisticasFFT(espectroDb);
+        let suporte = avaliarSuporteFFT(yin.frequency, espectroDb, sampleRateFFT, fftSize, estatisticasFFT);
         // Verificação de erro de oitava: se o segundo harmônico domina, o YIN
         // pode parar no primeiro mínimo (2*f0). Um componente ímpar de f0
         // (3*f0 ou 5*f0) e um mínimo temporal mais forte em f0 permitem
@@ -3184,10 +3271,10 @@ function encontrarFundamentalProvavel(formaOnda, sampleRateYin, espectroDb, samp
             yin.erroOitavaInferior !== null &&
             yin.erroOitavaInferior < 0.23 &&
             yin.erroOitavaInferior < yin.erroYin * 0.70) {
-          const suporteMetade = avaliarSuporteFFT(metade, espectroDb, sampleRateFFT, fftSize);
+          const suporteMetade = avaliarSuporteFFT(metade, espectroDb, sampleRateFFT, fftSize, estatisticasFFT);
           if (suporteMetade.impares >= 1 &&
               suporteMetade.harmonicos >= suporte.harmonicos + 1 &&
-              temHarmonicoImparIndependente(metade, espectroDb, sampleRateFFT, fftSize)) {
+              temHarmonicoImparIndependente(metade, espectroDb, sampleRateFFT, fftSize, estatisticasFFT)) {
             yin.frequency = metade;
             yin.erroYin = yin.erroOitavaInferior;
             suporte = suporteMetade;
@@ -3203,9 +3290,8 @@ function encontrarFundamentalProvavel(formaOnda, sampleRateYin, espectroDb, samp
             for (let i = Math.max(2, indice - 2); i <= Math.min(espectroDb.length - 2, indice + 2); i++) {
               if (espectroDb[i] > espectroDb[pico]) pico = i;
             }
-            const piso = calcularPisoEspectralDb(espectroDb);
-            let maiorDb = -Infinity;
-            for (let i = 3; i < espectroDb.length; i++) maiorDb = Math.max(maiorDb, espectroDb[i]);
+            const piso = estatisticasFFT.pisoDb;
+            const maiorDb = estatisticasFFT.maxDb;
             const frequenciaFft = refinarIndicePico(espectroDb, pico) * largura;
             if (espectroDb[pico] > piso + 16 &&
                 espectroDb[pico] > maiorDb - 11 &&
@@ -3225,7 +3311,7 @@ function encontrarFundamentalProvavel(formaOnda, sampleRateYin, espectroDb, samp
         else if (moderado && suporte.harmonicos >= 2) confianca = "média";
         else if (yin.erroYin <= 0.10) confianca = "média"; // FFT insuficiente para nota grave.
         if (!confianca) return null;
-        const coerencia = conferirCoerenciaPicos(yin.frequency, espectroDb, sampleRateFFT, fftSize);
+        const coerencia = conferirCoerenciaPicos(yin.frequency, espectroDb, sampleRateFFT, fftSize, estatisticasFFT);
         if (!coerencia.coerente) return null;
         return {...yin, ...suporte, ...coerencia, confianca};
       }
@@ -3376,6 +3462,23 @@ function encontrarFundamentalProvavel(formaOnda, sampleRateYin, espectroDb, samp
     let reduzido = new Float32Array(0);
     let cmndf = new Float64Array(0);
     const razao = Math.exp(-cfg.boltzmann);
+    let potenciasBoltzmann = new Float64Array(0);
+    let potenciasCalculadas = 0;
+
+    // Prior imutável por instância; cada índice mantém o Math.pow original.
+    // A capacidade acompanha todos os mínimos, não apenas os candidatos finais.
+    function garantirPotenciasBoltzmann(quantidade) {
+      if (cfg.boltzmann === 0 || quantidade <= potenciasCalculadas) return;
+      if (potenciasBoltzmann.length < quantidade) {
+        const novo = new Float64Array(Math.max(quantidade, potenciasBoltzmann.length * 2, 16));
+        novo.set(potenciasBoltzmann);
+        potenciasBoltzmann = novo;
+      }
+      for (let k = potenciasCalculadas; k < quantidade; k++) {
+        potenciasBoltzmann[k] = Math.pow(razao, k);
+      }
+      potenciasCalculadas = quantidade;
+    }
 
     function resultadoVazio(estado, motivo, meta = {}) {
       return {etapa: 2, tipo: 'candidatas-pyin-parcial', estado, motivo,
@@ -3422,10 +3525,14 @@ function encontrarFundamentalProvavel(formaOnda, sampleRateYin, espectroDb, samp
       if (cmndf.length < tauMax + 1) cmndf = new Float64Array(tauMax + 1);
       cmndf[0] = 1;
       let acumulado = 0;
+      // Percorre o mesmo conjunto de amostras na mesma ordem, usando índices
+      // absolutos para evitar refazer o deslocamento da janela a cada termo.
+      const passo = cfg.passoAmostras;
+      const fim = inicio + janela;
       for (let tau = 1; tau <= tauMax; tau++) {
         let soma = 0;
-        for (let j = 0; j < janela; j += cfg.passoAmostras) {
-          const d = reduzido[inicio + j] - reduzido[inicio + j + tau];
+        for (let pos = inicio; pos < fim; pos += passo) {
+          const d = reduzido[pos] - reduzido[pos + tau];
           soma += d * d;
         }
         acumulado += soma;
@@ -3449,6 +3556,7 @@ function encontrarFundamentalProvavel(formaOnda, sampleRateYin, espectroDb, samp
         quantidadeMinimos:minimos.length, fMin:cfg.fMin, fMaxEfetiva,
         numeroLimiares:cfg.numeroLimiares};
       if (!minimos.length) return resultadoVazio('sem_candidatos', 'sem_minimos_locais', meta);
+      garantirPotenciasBoltzmann(minimos.length);
 
       let naoVozeado = 0;
       for (let t = 0; t < pesos.length; t++) {
@@ -3468,7 +3576,7 @@ function encontrarFundamentalProvavel(formaOnda, sampleRateYin, espectroDb, samp
         let ordem = 0;
         for (let k = 0; k < minimos.length; k++) {
           if (minimos[k].altura >= limiar) continue;
-          minimos[k].massa += massaLimiar * (cfg.boltzmann === 0 ? 1 : Math.pow(razao, ordem)) / denom;
+          minimos[k].massa += massaLimiar * (cfg.boltzmann === 0 ? 1 : potenciasBoltzmann[ordem]) / denom;
           ordem++;
         }
       }
@@ -3580,13 +3688,13 @@ function encontrarFundamentalProvavel(formaOnda, sampleRateYin, espectroDb, samp
     const cfg = configurar(configuracao);
     const processador = root.AfinadorPYIN && root.AfinadorPYIN.criarProcessador(configuracaoCandidatas);
     let identidade = null, ultimoMs = null, ultimoFrame = null;
-    let estados = [], scores = [0]; // índice 0 sempre não vozeado
+    let estados = [], quantidadeEstados = 0, scores = [0], reservaScores = [], pesosLinha = []; // índice 0 é não vozeado
     let resets = 0, processados = 0;
     function limpar() {
-      identidade=null; ultimoMs=null; ultimoFrame=null; estados=[]; scores=[0]; resets++;
+      identidade=null; ultimoMs=null; ultimoFrame=null; quantidadeEstados=0; scores.length=1; scores[0]=0; reservaScores.length=0; resets++;
     }
     function estadoAtual() {
-      return {quantidadeEstados:estados.length+1, quantidadeQuadros:processados,
+      return {quantidadeEstados:quantidadeEstados+1, quantidadeQuadros:processados,
         reinicializacoes:resets, ultimoFrame, ultimoMs, identidade};
     }
     function processarObservacao(obs, contexto) {
@@ -3614,45 +3722,49 @@ function encontrarFundamentalProvavel(formaOnda, sampleRateYin, espectroDb, samp
       ultimoMs=c.capturadoEmMs; ultimoFrame=c.frameId; processados++;
       const candidatos = obs.candidatos;
       const forcarNaoVoz = candidatos.length===0 || obs.estado==='silencio';
-      let novosScores = [NEG_INF], indiceEscolhido=0;
+      let novosScores = reservaScores, indiceEscolhido=0;
+      novosScores.length = forcarNaoVoz ? 1 : candidatos.length+1;
+      novosScores[0] = NEG_INF;
       if (forcarNaoVoz) {
         // Silêncio acústico e ausência de candidatas não podem produzir nota residual.
-        novosScores=[0]; estados=[]; scores=novosScores;
+        novosScores[0]=0; quantidadeEstados=0;
       } else if (deltaMs === null) {
         novosScores[0]=Math.log(1-cfg.probabilidadeInicialVoz)+Math.log(Math.max(cfg.minProbabilidade,obs.probabilidadeNaoVozeado));
-        for (const cand of candidatos)
-          novosScores.push(Math.log(cfg.probabilidadeInicialVoz)+Math.log(Math.max(cfg.minProbabilidade,cand.probability)));
+        for (let i=0;i<candidatos.length;i++)
+          novosScores[i+1]=Math.log(cfg.probabilidadeInicialVoz)+Math.log(Math.max(cfg.minProbabilidade,candidatos[i].probability));
       } else {
         const pEntrar=-Math.expm1(-cfg.taxaInicioVozPorSegundo*dt);
         const pSair=-Math.expm1(-cfg.taxaFimVozPorSegundo*dt);
         const pSaltar=-Math.expm1(-cfg.taxaSaltoNotaPorSegundo*dt);
         // Não há supressão de quadros por hop presumido: dt é medido do timestamp real.
         const pU=Math.max(cfg.minProbabilidade,obs.probabilidadeNaoVozeado);
-        novosScores[0]=Math.log(pU)+Math.max(
-          scores[0]+Math.log(Math.max(cfg.minProbabilidade,1-pEntrar)),
-          ...scores.slice(1).map(s=>s+Math.log(Math.max(cfg.minProbabilidade,pSair)))
-        );
+        // Mesmo máximo da transição para não vozeado, sem arrays intermediários.
+        const logSair = Math.log(Math.max(cfg.minProbabilidade,pSair));
+        let maiorNaoVoz = scores[0]+Math.log(Math.max(cfg.minProbabilidade,1-pEntrar));
+        for (let j=0;j<quantidadeEstados;j++)
+          maiorNaoVoz = Math.max(maiorNaoVoz,scores[j+1]+logSair);
+        novosScores[0] = Math.log(pU)+maiorNaoVoz;
         const desv = cfg.desvioCentsBase+cfg.velocidadeCentsPorSegundo*dt;
-        const diffs=[];
-        for (const anterior of estados) {
-          const linha=[]; let soma=0;
-          for (const atual of candidatos) {
-            const cents=Math.abs(1200*Math.log2(atual.frequencyHz/anterior.frequencyHz));
+        for (let i=0;i<candidatos.length;i++)
+          novosScores[i+1] = scores[0]+Math.log(Math.max(cfg.minProbabilidade,pEntrar/candidatos.length));
+        // Processar uma linha por origem: mesma normalização por estado anterior,
+        // mesma ordem dos máximos, mas sem matriz [origem][destino] a cada quadro.
+        for (let j=0;j<quantidadeEstados;j++) {
+          let soma=0;
+          const hzAnterior=estados[j];
+          for (let i=0;i<candidatos.length;i++) {
+            const cents=Math.abs(1200*Math.log2(candidatos[i].frequencyHz/hzAnterior));
             const d=cents/desv;
-            // Pequena probabilidade explícita de salto real de nota/oitava.
             const valor=(1-pSaltar)*Math.exp(-0.5*d*d)+pSaltar/candidatos.length;
-            linha.push(valor); soma+=valor;
+            pesosLinha[i]=valor; soma+=valor;
           }
-          diffs.push(linha.map(v=>v/soma));
-        }
-        for (let i=0;i<candidatos.length;i++) {
-          let maior=scores[0]+Math.log(Math.max(cfg.minProbabilidade,pEntrar/candidatos.length));
-          for (let j=0;j<estados.length;j++) {
-            const trans=Math.max(cfg.minProbabilidade,(1-pSair)*diffs[j][i]);
-            maior=Math.max(maior,scores[j+1]+Math.log(trans));
+          for (let i=0;i<candidatos.length;i++) {
+            const trans=Math.max(cfg.minProbabilidade,(1-pSair)*(pesosLinha[i]/soma));
+            novosScores[i+1]=Math.max(novosScores[i+1],scores[j+1]+Math.log(trans));
           }
-          novosScores.push(maior+Math.log(Math.max(cfg.minProbabilidade,candidatos[i].probability)));
         }
+        for (let i=0;i<candidatos.length;i++)
+          novosScores[i+1] += Math.log(Math.max(cfg.minProbabilidade,candidatos[i].probability));
       }
       if (!forcarNaoVoz) {
         let maximo=Math.max(...novosScores);
@@ -3661,8 +3773,11 @@ function encontrarFundamentalProvavel(formaOnda, sampleRateYin, espectroDb, samp
           novosScores[i]-=maximo; // normaliza o log-score, evitando underflow acumulado
           if (novosScores[i]>novosScores[indiceEscolhido]) indiceEscolhido=i;
         }
-        scores=novosScores; estados=candidatos.map(c=>({frequencyHz:c.frequencyHz}));
+        for (let i=0;i<candidatos.length;i++) estados[i]=candidatos[i].frequencyHz;
+        quantidadeEstados=candidatos.length;
       }
+      if (forcarNaoVoz) { scores.length=1; scores[0]=0; reservaScores=novosScores; }
+      else { const anteriorScores=scores; scores=novosScores; reservaScores=anteriorScores; }
       const escolhido=indiceEscolhido > 0 ? candidatos[indiceEscolhido-1] : null;
       // estado inconclusivo não equivale a silêncio acústico confirmado.
       const status = obs.estado==='silencio' ? 'silencio' : escolhido ? 'valido' : 'inconclusivo';
