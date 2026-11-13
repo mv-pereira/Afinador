@@ -580,16 +580,6 @@
         text-align: center;
       }
 
-      .controle-modo-deteccao {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        width: 100%;
-        font-size: 13px;
-        color: var(--muted);
-      }
-
       .seletor-modo {
         position: relative;
         width: 52px;
@@ -963,7 +953,6 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
   border-radius:var(--ui-radius-md); padding:23px 23px 20px; box-shadow:var(--ui-card-shadow);}
 .grade > .subpainel:nth-child(1) {text-align:left;}
 .grade > .subpainel:nth-child(1) h2 {margin-bottom:9px;}
-.controle-modo-deteccao {justify-content:flex-start; color:var(--ui-muted);}
 .seletor-modo {background:var(--ui-toggle-off);}
 .seletor-modo.ativo {background:var(--ui-accent);}
 #panel-placeholder {display:none;}
@@ -1153,16 +1142,6 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
         padding: 4px 8px; border-radius: 8px; font-size: 13px;
       }
       .barra-ajustes input[type="number"] { max-width: 110px; }
-      .fft-controles-superiores {
-        display: flex; align-items: center; justify-content: space-between;
-        gap: 12px; flex-wrap: wrap;
-      }
-      .fft-controles-superiores .controle-modo-deteccao { width: auto; flex: 1 1 210px; }
-      .fft-controles-superiores .campo-enarmonia {
-        flex: 0 1 220px; min-width: 150px; gap: 4px;
-      }
-      .fft-controles-superiores .campo-enarmonia label { font-size: 11px; }
-      .fft-controles-superiores .campo-enarmonia select { min-height: 34px; padding: 5px 9px; }
       #grafico { max-width: 950px; }
       @media (max-width: 650px) {
         body { padding-bottom: calc(86px + env(safe-area-inset-bottom, 0px)); }
@@ -1180,8 +1159,6 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
           height: 32px; min-height: 32px; padding: 4px 6px; font-size: 12px;
         }
         .barra-ajustes input[type="number"] { max-width: none; }
-        .fft-controles-superiores { align-items: flex-start; }
-        .fft-controles-superiores .campo-enarmonia { flex: 1 1 150px; }
       }
 /* Interface da filtragem opcional, sem afetar o rodapé fixo. */
       .ajuste-filtro-temporal[hidden] { display: none !important; }
@@ -1288,12 +1265,6 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
       .fft-cabecalho-linha { display:flex; justify-content:space-between;
         align-items:center; gap:6px 12px; flex-wrap:wrap; }
       .fft-cabecalho-linha h2 { flex:0 0 auto; font-size:17px; margin:0; }
-      .fft-cabecalho-linha .fft-controles-superiores { flex:0 1 auto;
-        display:flex; justify-content:flex-end; align-items:center; gap:6px; }
-      .fft-cabecalho-linha .controle-modo-deteccao {
-        width:auto; flex:0 0 auto; gap:6px; font-size:11px;
-      }
-      .fft-cabecalho-linha .seletor-modo { flex:0 0 52px; }
       .fft-cabecalho-linha .opcao-zoom-alvo {
         display:none; flex:1 1 100%; justify-content:flex-start;
         margin:0; gap:6px; font-size:11px;
@@ -1331,7 +1302,6 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
         #medidorCents { padding:9px 10px 3px; }
         .grade > .subpainel:nth-child(1) { padding:10px 10px 9px; }
         .fft-cabecalho-linha h2 { font-size:16px; }
-        .fft-cabecalho-linha .controle-modo-deteccao { font-size:10px; gap:4px; }
         #grafico { height:190px; } /* Mantido sem redução. */
         body.microfone-em-uso .painel:first-of-type > h1 { font-size:15px; }
       }
@@ -1353,16 +1323,18 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
         border-color:var(--ui-accent); color:var(--ui-accent); }
       .controle-algoritmo .algoritmo-botao:disabled { cursor:not-allowed;
         opacity:.55; transform:none; }
-      .controle-algoritmo .algoritmo-estado { font-size:9px; line-height:1.2;
-        white-space:nowrap; color:var(--ui-muted); }
-      .controle-algoritmo.inativo-em-pico { opacity:.65; }
+      /* Quatro métodos equivalentes na interface. A arquitetura interna mantém
+         'dominante' para Pico, preservando o DSP original sem redesenhar o Worker. */
+      .controle-algoritmo .algoritmo-estado { flex:1 1 100%; text-align:right;
+        font-size:9px; line-height:1.3; white-space:normal; color:var(--ui-muted); }
+      .controle-algoritmo .algoritmo-estado.aviso-pico {
+        color:#a35e6b; /* vermelho dessaturado, em contraste com o cinza informativo */
+      }
       @media(max-width:650px) {
         .fft-cabecalho-linha { display:flex; align-items:center; flex-wrap:wrap; gap:4px 6px; }
         .fft-cabecalho-linha h2 { order:0; }
-        .fft-cabecalho-linha .fft-controles-superiores { order:1; margin-left:auto;
-          justify-content:flex-end; }
-        .fft-cabecalho-linha .controle-algoritmo { order:2; flex:1 1 100%; }
-        .controle-algoritmo { gap:4px; justify-content:flex-end; flex-wrap:nowrap; font-size:10px; }
+        .fft-cabecalho-linha .controle-algoritmo { flex:1 1 100%; }
+        .controle-algoritmo { gap:4px; justify-content:flex-end; flex-wrap:wrap; font-size:10px; }
         .controle-algoritmo .algoritmo-botao { padding:3px 7px; min-height:24px; font-size:10px; }
         .controle-algoritmo .algoritmo-estado { font-size:8px; white-space:nowrap; }
       }
@@ -1458,7 +1430,8 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
           </ul>
           <h3>Detecção</h3>
           <ul>
-            <li><strong>Fundamental</strong> procura a nota musical; <strong>Pico</strong> segue o componente mais forte da FFT, que pode ser um harmônico.</li>
+            <li><strong>Métodos:</strong> escolha YIN, pYIN, SWIPE' ou Pico na mesma barra de botões acima do gráfico FFT. Somente um método fica ativo de cada vez.</li>
+            <li><strong>Pico</strong> acompanha a frequência do componente mais forte do espectro, que pode ser um harmônico e <strong>não necessariamente a fundamental</strong>. É útil para inspecionar componentes espectrais dominantes, mas não é a melhor escolha para identificar a nota de timbres ricos em harmônicos. Ao selecioná-lo, um aviso vermelho claro aparece abaixo dos métodos.</li>
             <li><strong>YIN</strong> (padrão) identifica a periodicidade da onda: tende a responder rapidamente a notas isoladas, ataques e mudanças de altura, inclusive quando a fundamental é fraca.</li>
             <li><strong>pYIN</strong> avalia várias alturas prováveis e usa acompanhamento temporal (Viterbi): pode dar leituras mais estáveis em notas sustentadas ou com pequenas oscilações; em mudanças bruscas, pode demorar um pouco mais.</li>
             <li><strong>SWIPE'</strong> compara a estrutura dos harmônicos primos em várias janelas FFT: é interessante para timbres ricos em harmônicos e fundamentais pouco evidentes. Exige mais processamento e pode ter maior desvio de afinação nas notas muito graves ou agudas.</li>
@@ -1541,17 +1514,10 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
                       aria-pressed="false" title="pYIN — probabilístico com acompanhamento temporal (Viterbi)">pYIN</button>
               <button id="seletorAlgoritmoSwipe" class="algoritmo-botao" type="button"
                       aria-pressed="false" title="SWIPE' — harmônicos primos e FFT multijanela">SWIPE'</button>
-              <span id="estadoAlgoritmoFundamental" class="algoritmo-estado">YIN · periodicidade temporal</span>
+              <button id="seletorAlgoritmoPico" class="algoritmo-botao" type="button"
+                      aria-pressed="false" title="Pico — componente mais forte do espectro; pode não ser a fundamental">Pico</button>
+              <span id="estadoAlgoritmoFundamental" class="algoritmo-estado" aria-live="polite">YIN · periodicidade temporal</span>
             </div>
-            <div class="fft-controles-superiores">
-            <div class="controle-modo-deteccao">
-              <span>Pico</span>
-              <button id="seletorModoDeteccao" class="seletor-modo" type="button" role="switch" aria-checked="true" title="Alternar método de detecção">
-                <span class="seletor-bolinha"></span>
-              </button>
-              <span>Fundamental</span>
-            </div>
-          </div>
           <label class="opcao-zoom-alvo" for="zoomNotaAlvo">
             <input id="zoomNotaAlvo" type="checkbox"> Zoom na nota-alvo (±100 cents)
           </label>
@@ -4515,7 +4481,7 @@ self.onmessage = function (event) {
           const mensagem = event.data || {};
           if (mensagem.tipo === 'pronto') {
             fftMotorDSP=mensagem.fftMotor || 'native-fallback';
-            if (fftMotorDSP === 'native-fallback' && algoritmoFundamental === 'swipe')
+            if (fftMotorDSP === 'native-fallback' && modoDeteccao === 'fundamental' && algoritmoFundamental === 'swipe')
               selecionarAlgoritmoFundamental('yin');
             if (mensagem.avisoFFT) console.warn('FFT WASM indisponível, fallback nativo:',mensagem.avisoFFT);
             if (timeoutWorker !== null) { clearTimeout(timeoutWorker); timeoutWorker = null; }
@@ -4539,7 +4505,7 @@ self.onmessage = function (event) {
           quadroEmProcessamento = null;
           if (mensagem.tipo === 'fft-fallback') {
             fftMotorDSP='native-fallback';
-            if (algoritmoFundamental === 'swipe') selecionarAlgoritmoFundamental('yin');
+            if (modoDeteccao === 'fundamental' && algoritmoFundamental === 'swipe') selecionarAlgoritmoFundamental('yin');
             console.warn('FFT WASM falhou, voltando ao AnalyserNode:',mensagem.mensagem);
             return;
           }
@@ -4700,33 +4666,37 @@ self.onmessage = function (event) {
         btnAjuda.setAttribute("aria-expanded", String(!ajudaAberta));
         btnAjuda.lastChild.textContent = ajudaAberta ? " Ajuda" : " Fechar ajuda";
       });
-      // O algoritmo YIN é selecionado ao carregar a página.
+      // Apresentação: YIN, pYIN, SWIPE' e Pico são quatro métodos na mesma
+      // barra. O Worker mantém o contrato histórico modoDeteccao='dominante'
+      // para Pico, sem alterar sua FFT nem os algoritmos fundamentais.
       let algoritmoFundamental = 'yin';
+      let modoDeteccao = 'fundamental';
       const grupoAlgoritmoFundamental = document.getElementById('grupoAlgoritmoFundamental');
       const seletorAlgoritmoYin = document.getElementById('seletorAlgoritmoYin');
       const seletorAlgoritmoPyin = document.getElementById('seletorAlgoritmoPyin');
       const seletorAlgoritmoSwipe = document.getElementById('seletorAlgoritmoSwipe');
+      const seletorAlgoritmoPico = document.getElementById('seletorAlgoritmoPico');
       const estadoAlgoritmoFundamental = document.getElementById('estadoAlgoritmoFundamental');
       function atualizarControleAlgoritmoFundamental() {
         const picoAtivo = modoDeteccao === 'dominante';
-        grupoAlgoritmoFundamental.classList.toggle('inativo-em-pico', picoAtivo);
-        grupoAlgoritmoFundamental.setAttribute('aria-disabled', String(picoAtivo));
-        seletorAlgoritmoYin.disabled = picoAtivo;
-        seletorAlgoritmoPyin.disabled = picoAtivo;
-        seletorAlgoritmoSwipe.disabled = picoAtivo;
-        seletorAlgoritmoYin.classList.toggle('selecionado', algoritmoFundamental === 'yin');
-        seletorAlgoritmoPyin.classList.toggle('selecionado', algoritmoFundamental === 'pyin');
-        seletorAlgoritmoSwipe.classList.toggle('selecionado', algoritmoFundamental === 'swipe');
-        seletorAlgoritmoYin.setAttribute('aria-pressed', String(algoritmoFundamental === 'yin'));
-        seletorAlgoritmoPyin.setAttribute('aria-pressed', String(algoritmoFundamental === 'pyin'));
-        seletorAlgoritmoSwipe.setAttribute('aria-pressed', String(algoritmoFundamental === 'swipe'));
+        const botoes = [
+          [seletorAlgoritmoYin, !picoAtivo && algoritmoFundamental === 'yin'],
+          [seletorAlgoritmoPyin, !picoAtivo && algoritmoFundamental === 'pyin'],
+          [seletorAlgoritmoSwipe, !picoAtivo && algoritmoFundamental === 'swipe'],
+          [seletorAlgoritmoPico, picoAtivo]
+        ];
+        for (const [botao, selecionado] of botoes) {
+          botao.classList.toggle('selecionado', selecionado);
+          botao.setAttribute('aria-pressed', String(selecionado));
+        }
         const descricoes = {
           yin: 'YIN · periodicidade temporal',
           pyin: 'pYIN · probabilístico e temporal',
           swipe: "SWIPE' · FFT multijanela"
         };
+        estadoAlgoritmoFundamental.classList.toggle('aviso-pico', picoAtivo);
         estadoAlgoritmoFundamental.textContent = picoAtivo
-          ? 'Inativo em Pico' : descricoes[algoritmoFundamental];
+          ? 'Pico · pode não ser a fundamental' : descricoes[algoritmoFundamental];
       }
       function limparLeituraPorTrocaDetector() {
         // Evita exibir frequências de outro método/geração.
@@ -4741,13 +4711,21 @@ self.onmessage = function (event) {
         redesenharGraficoAfinacao();
       }
       function selecionarAlgoritmoFundamental(novo) {
-        if (modoDeteccao !== 'fundamental' || novo === algoritmoFundamental) return;
         if (novo !== 'yin' && novo !== 'pyin' && novo !== 'swipe') return;
+        if (modoDeteccao === 'fundamental' && novo === algoritmoFundamental) return;
         if (novo === 'swipe' && fftMotorDSP === 'native-fallback') {
           statusEl.textContent = "SWIPE' exige PFFFT WASM; utilize YIN ou pYIN neste dispositivo.";
           return;
         }
         algoritmoFundamental = novo;
+        modoDeteccao = 'fundamental';
+        atualizarControleAlgoritmoFundamental();
+        invalidarConfiguracaoDSP();
+        limparLeituraPorTrocaDetector();
+      }
+      function selecionarPicoDominante() {
+        if (modoDeteccao === 'dominante') return;
+        modoDeteccao = 'dominante';
         atualizarControleAlgoritmoFundamental();
         invalidarConfiguracaoDSP();
         limparLeituraPorTrocaDetector();
@@ -4755,22 +4733,8 @@ self.onmessage = function (event) {
       seletorAlgoritmoYin.addEventListener('click', () => selecionarAlgoritmoFundamental('yin'));
       seletorAlgoritmoPyin.addEventListener('click', () => selecionarAlgoritmoFundamental('pyin'));
       seletorAlgoritmoSwipe.addEventListener('click', () => selecionarAlgoritmoFundamental('swipe'));
-      let modoDeteccao = "fundamental";
-      const seletorModoDeteccao = document.getElementById("seletorModoDeteccao");
-      seletorModoDeteccao.classList.add("ativo");
-      seletorModoDeteccao.setAttribute("aria-checked", "true");
-      seletorModoDeteccao.title = "Modo atual: fundamental provável";
+      seletorAlgoritmoPico.addEventListener('click', selecionarPicoDominante);
       atualizarControleAlgoritmoFundamental();
-      seletorModoDeteccao.addEventListener("click", () => {
-        modoDeteccao = modoDeteccao === "dominante" ? "fundamental" : "dominante";
-        const fundamentalAtivo = modoDeteccao === "fundamental";
-        seletorModoDeteccao.classList.toggle("ativo", fundamentalAtivo);
-        seletorModoDeteccao.setAttribute("aria-checked", String(fundamentalAtivo));
-        seletorModoDeteccao.title = fundamentalAtivo ? "Modo atual: fundamental provável" : "Modo atual: pico dominante";
-        atualizarControleAlgoritmoFundamental();
-        invalidarConfiguracaoDSP();
-        limparLeituraPorTrocaDetector();
-      });
       const LIMIAR_PADRAO = 0.003;
       const btnIniciar = document.getElementById("btnIniciar");
       const statusEl = document.getElementById("status");
@@ -4861,7 +4825,7 @@ self.onmessage = function (event) {
       const zoomNotaAlvo = document.getElementById("zoomNotaAlvo");
       const legendaFFTAlvo = document.getElementById("legendaFFTAlvo");
       const avisoNotaAlvoForaFaixa = document.getElementById("avisoNotaAlvoForaFaixa");
-      let modoAfinacao = "automatico"; // Padrão original, independente de Pico / Fundamental.
+      let modoAfinacao = "automatico"; // Padrão original, independente do detector selecionado.
       let midiAlvoAfinacao = 60; // Dó central = C4.
       const MIDI_ALVO_MIN = 12;  // C0, dentro da faixa atual de análise temporal.
       const MIDI_ALVO_MAX = 108; // C8, dentro do limite de 4600 Hz do detector.
