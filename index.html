@@ -947,20 +947,20 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
 #ponteiroCents {top:-5px; height:26px; width:3px;}
 #rotulosCents {color:var(--ui-muted); font-size:10px; margin:5px 0 0;}
 .grade {display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); gap:14px; margin-top:17px; align-items:stretch;}
-.grade > .subpainel:nth-child(1) {grid-column:1/-1;}
-.grade > .subpainel:nth-child(2) {grid-column:1/-1;}
+.grade > .subpainel.painel-fft {grid-column:1/-1;}
+.grade > .subpainel.painel-quintas {grid-column:1/-1;}
 .subpainel {background:var(--ui-surface); border:1px solid var(--ui-border);
   border-radius:var(--ui-radius-md); padding:23px 23px 20px; box-shadow:var(--ui-card-shadow);}
-.grade > .subpainel:nth-child(1) {text-align:left;}
-.grade > .subpainel:nth-child(1) h2 {margin-bottom:9px;}
+.grade > .subpainel.painel-fft {text-align:left;}
+.grade > .subpainel.painel-fft h2 {margin-bottom:9px;}
 .seletor-modo {background:var(--ui-toggle-off);}
 .seletor-modo.ativo {background:var(--ui-accent);}
 #panel-placeholder {display:none;}
 #grafico {height:234px; max-width:none; margin-top:13px; border-radius:var(--ui-radius-sm);
   background:var(--ui-canvas); border:1px solid var(--ui-border);}
 .observacao {font-size:11px; line-height:1.6; color:var(--ui-muted);}
-.grade > .subpainel:nth-child(2) {text-align:center; padding:28px 20px 24px;}
-.grade > .subpainel:nth-child(2) > h2 {font-size:24px; letter-spacing:-.03em; margin-bottom:14px;}
+.grade > .subpainel.painel-quintas {text-align:center; padding:28px 20px 24px;}
+.grade > .subpainel.painel-quintas > h2 {font-size:24px; letter-spacing:-.03em; margin-bottom:14px;}
 .circulo-quintas-dom {background:var(--ui-wheel); box-shadow:var(--ui-wheel-shadow);
   border:1px solid var(--ui-border);}
 .anel-externo {border-color:var(--ui-ring-outer);}
@@ -1017,7 +1017,7 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
   #medidorCents {padding:13px 17px 4px;}
   .grade {gap:10px;}
   .subpainel {padding:18px 13px;}
-  .grade > .subpainel:nth-child(2) {padding:20px 4px;}
+  .grade > .subpainel.painel-quintas {padding:20px 4px;}
   #grafico {height:190px;}
   .secao-cabecalho {padding:16px 15px !important;}
   .secao-titulo {font-size:13px;}
@@ -1261,7 +1261,7 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
         font-weight:800; line-height:1.2; white-space:nowrap; color:var(--ui-accent);
       }
       .grade { margin-top:7px; gap:10px; }
-      .grade > .subpainel:nth-child(1) { padding:12px 14px 10px; }
+      .grade > .subpainel.painel-fft { padding:12px 14px 10px; }
       .fft-cabecalho-linha { display:flex; justify-content:space-between;
         align-items:center; gap:6px 12px; flex-wrap:wrap; }
       .fft-cabecalho-linha h2 { flex:0 0 auto; font-size:17px; margin:0; }
@@ -1300,7 +1300,7 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
         .leitura-detectada #notaDetectada { flex:0 0 106px; font-size:22px; }
         .leitura-detectada #frequenciaDetectada { font-size:11px; padding:6px; }
         #medidorCents { padding:9px 10px 3px; }
-        .grade > .subpainel:nth-child(1) { padding:10px 10px 9px; }
+        .grade > .subpainel.painel-fft { padding:10px 10px 9px; }
         .fft-cabecalho-linha h2 { font-size:16px; }
         #grafico { height:190px; } /* Mantido sem redução. */
         body.microfone-em-uso .painel:first-of-type > h1 { font-size:15px; }
@@ -1523,8 +1523,51 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
       html[data-theme] .diag-eventos {color:var(--ui-muted);}
       html[data-theme] input[type=number] {color-scheme:var(--ui-input-scheme);}
       html[data-theme] .grupo-tecnico summary {color:var(--ui-heading-text);}
-      html[data-theme] #configuracoesAparencia .campo {max-width:100%;}
       @media(max-width:650px){.oficina-logo{width:27px;height:27px;}}
+      /* Botão do tema de destino: círculo compacto com área de toque acessível.
+         Paletas: opção 01 grafite e opção 04 marfim, respectivamente. */
+      .acoes-captura .ajuda-container {
+        display:flex;align-items:center;justify-content:center;gap:5px;flex:0 0 auto;
+      }
+      #btnAlternarTema {
+        display:inline-flex;align-items:center;justify-content:center;
+        width:36px;height:38px;flex:0 0 36px;min-width:36px;
+        border:0;border-radius:999px;padding:0;background:transparent;
+        cursor:pointer;box-shadow:none;
+      }
+      #btnAlternarTema::before {
+        content:"";display:block;width:25px;height:25px;border-radius:50%;
+        border:1px solid var(--ui-border);box-shadow:0 1px 4px rgba(0,0,0,.13);
+        transition:transform .13s ease;
+      }
+      html[data-theme="light"] #btnAlternarTema::before {background:#101214;border-color:#3A4649;}
+      html[data-theme="dark"] #btnAlternarTema::before {background:#EEECE7;border-color:#EEECE7;}
+      #btnAlternarTema:hover::before {transform:scale(1.08);}
+      #btnAlternarTema:focus-visible {outline:2px solid var(--ui-focus);outline-offset:1px;}
+      #btnAlternarTema:active::before {transform:scale(.96);}
+      /* Nos celulares usuais, manter os quatro controles lado a lado.
+         Em 320px a barra pode quebrar em duas linhas sem sobreposição. */
+      @media(min-width:351px) and (max-width:480px) {
+        .acoes-captura {gap:4px;flex-wrap:nowrap;}
+        .acoes-captura #btnIniciar {padding:7px 6px;font-size:10px;}
+        .configuracoes-recolhiveis > summary {padding:7px 6px;font-size:10px;}
+        #btnAjuda {padding:7px 6px;font-size:10px;gap:4px;}
+        .acoes-captura .ajuda-container {gap:0;}
+        #btnAlternarTema {width:30px;min-width:30px;flex-basis:30px;}
+      }
+      @media(max-width:650px) {
+        .acoes-captura .ajuda-container {gap:2px;}
+        #btnAlternarTema {width:32px;height:36px;min-width:32px;flex-basis:32px;}
+        #btnAlternarTema::before {width:23px;height:23px;}
+      }
+      @media(max-width:350px) {
+        .acoes-captura .ajuda-container {gap:0;}
+        #btnAlternarTema {width:29px;min-width:29px;flex-basis:29px;}
+        #btnAlternarTema::before {width:22px;height:22px;}
+      }
+      @media(prefers-reduced-motion:reduce) {
+        #btnAlternarTema::before {transition:none;}
+      }
     </style>
     <style id="estilosAjudaAvancada">
       /* Mudança 6: ajuda em dois níveis; conteúdo somente quando solicitado. */
@@ -1563,6 +1606,50 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
         .ajuda-glossario dd {margin-bottom:8px;}
       }
       @media(prefers-reduced-motion:reduce){.ajuda-avancada > summary::before {transition:none;}}
+    </style>
+
+    <style id="estilosMonitorCompacto">
+      /* Diagnóstico na mesma grade que FFT e círculo, com largura completa. */
+      .grade > #painelMonitorDiagnostico {
+        grid-column:1 / -1; min-width:0; width:100%; max-width:none;
+        margin:0; box-sizing:border-box;
+        padding:11px 13px 10px;
+      }
+      .diag-monitor .diag-cabecalho {
+        display:flex; align-items:center; justify-content:space-between; gap:10px;
+        margin-bottom:3px;
+      }
+      .diag-monitor .diag-cabecalho h2 {
+        margin:0; font-size:16px; line-height:1.25;
+      }
+      .diag-monitor .diag-contagem {
+        min-width:42px; text-align:right; font-size:15px; line-height:1.25;
+      }
+      .diag-monitor > .diag-status {font-size:11px; line-height:1.4; margin:5px 0;}
+      .diag-monitor-grid {gap:5px; grid-template-columns:repeat(auto-fit,minmax(130px,1fr));}
+      .diag-monitor .diag-indicador {padding:7px 8px; border-radius:7px;}
+      .diag-monitor .diag-indicador span {font-size:10px; line-height:1.25; margin-bottom:3px;}
+      .diag-monitor .diag-indicador strong {font-size:12px; line-height:1.3;}
+      .diag-monitor .diag-acoes {margin:8px 0 5px; gap:5px 6px; align-items:center;}
+      .diag-monitor .diag-acoes button {
+        box-sizing:border-box; min-height:34px; padding:5px 8px;
+        border-radius:7px; font-size:11px; line-height:1.2;
+        font-weight:700; white-space:nowrap;
+      }
+      .diag-monitor .diag-acoes .diag-config-linha {
+        flex:1 1 100%; min-width:0; font-size:11px;
+        line-height:1.25; padding:2px 0;
+      }
+      .diag-monitor .diag-acoes .diag-config-linha input {width:16px;height:16px;}
+      .diag-monitor details {margin-top:8px;padding-top:7px;}
+      .diag-monitor summary {font-size:12px;}
+      @media(max-width:440px) {
+        .grade > #painelMonitorDiagnostico {padding:9px 9px 8px;}
+        .diag-monitor-grid {grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;}
+        .diag-monitor .diag-indicador {padding:6px 7px;}
+        .diag-monitor .diag-acoes button {font-size:10px;min-height:34px;padding:5px 7px;}
+        .diag-monitor .diag-cabecalho h2 {font-size:15px;}
+      }
     </style>
   </head>
   <body>
@@ -1612,18 +1699,6 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
                 <div class="campo campo-enarmonia"><label for="enarmoniaCorte">Nome da enarmonia</label>
                   <select id="enarmoniaCorte"><option value="solsustenido" selected>Sol#</option>
                     <option value="lab">Lab</option></select></div>
-              </div>
-            </details>
-            <details class="grupo-tecnico" id="configuracoesAparencia" open>
-              <summary>Aparência</summary>
-              <div class="grupo-tecnico-conteudo linha-config">
-                <div class="campo"><label for="temaInterface">Tema</label>
-                  <select id="temaInterface" aria-describedby="descricaoTemaInterface">
-                    <option value="light" selected>Claro — Marfim e carvão (padrão)</option>
-                    <option value="dark">Escuro — Grafite monocromático</option>
-                  </select>
-                  <small id="descricaoTemaInterface">A escolha é aplicada imediatamente. Use Salvar configurações para mantê-la ao reabrir o afinador.</small>
-                </div>
               </div>
             </details>
             <details class="grupo-tecnico" id="configuracoesYin">
@@ -1685,6 +1760,11 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
       <div class="ajuda-container">
         <button id="btnAjuda" class="btn-ajuda" type="button" aria-expanded="false" aria-controls="conteudoAjuda">
           <span class="icone-ajuda">?</span> Ajuda </button>
+        <!-- Controle de aparência deslocado para a barra principal.
+             O campo invisível preserva o contrato do perfil técnico v1. -->
+        <input id="temaInterface" type="hidden" value="light">
+        <button id="btnAlternarTema" class="botao-alternar-tema" type="button"
+                aria-label="Ativar tema escuro" title="Ativar tema escuro"></button>
         <section id="conteudoAjuda" class="conteudo-ajuda" aria-label="Ajuda do afinador" hidden>
           <div class="ajuda-topo"><h2>Ajuda rápida</h2><button id="btnFecharAjudaPainel" type="button" aria-label="Fechar ajuda">Fechar ×</button></div>
           <ol class="ajuda-passos">
@@ -1735,7 +1815,7 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
                 <p>O relatório pode incluir navegador, sistema, taxa de amostragem, canais, recursos WASM/SIMD e tempos de análise, quando disponíveis. O navegador normalmente não revela o modelo exato do chip de áudio. Se o limite de memória for atingido, a sessão deve ser encerrada com segurança.</p>
               </div></details>
               <details class="ajuda-capitulo"><summary>F. Aparência: temas claro e escuro</summary><div>
-                <p><strong>Claro — Marfim e carvão</strong> é o tema padrão (proposta visual 04); <strong>Escuro — Grafite monocromático</strong> é a alternativa (proposta 01). A troca de tema é imediata e altera painéis, FFT, círculo de quintas, monitor e leitura, mas <strong>não modifica as frequências nem os algoritmos</strong>.</p>
+                <p><strong>Claro — Marfim e carvão</strong> é o tema padrão (proposta visual 04); <strong>Escuro — Grafite monocromático</strong> é a alternativa (proposta 01). Toque no <strong>pequeno círculo à direita do botão Ajuda</strong> para alternar: um círculo escuro indica que você pode ativar o tema escuro; um círculo claro, que pode voltar ao claro. A troca altera imediatamente painéis, FFT, círculo de quintas, monitor e leitura, mas <strong>não modifica as frequências nem os algoritmos</strong>.</p>
                 <p>Para recuperar o tema escolhido em uma próxima visita, use <strong>Salvar configurações</strong>. <strong>Restaurar padrões</strong> devolve o tema claro.</p>
               </div></details>
               <details class="ajuda-capitulo"><summary>G. Glossário e interpretação técnica</summary><div>
@@ -1822,7 +1902,7 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
         </div>
       </div>
       <div class="grade">
-        <div class="subpainel">
+        <div class="subpainel painel-fft">
           <div class="fft-cabecalho-linha">
             <h2>Espectro FFT</h2>
             <div id="grupoAlgoritmoFundamental" class="controle-algoritmo" role="group"
@@ -1848,7 +1928,37 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
             <span><i class="legenda-cor" style="background:var(--ui-chart-detected)"></i>Vermelho: frequência detectada</span>
           </div>
         </div>
-        <div class="subpainel">
+        <!-- Monitor opcional, na ordem de leitura: FFT → diagnóstico → círculo de quintas. -->
+    <section id="painelMonitorDiagnostico" class="painel diag-monitor" aria-label="Monitor de diagnóstico" hidden>
+      <div class="diag-cabecalho">
+        <h2>Monitor de diagnóstico</h2>
+        <span id="diagContador" class="diag-contagem" aria-live="off">20 s</span>
+      </div>
+      <p class="diag-status">Valores observados do algoritmo ativo. Não são realizadas análises extras.</p>
+      <div class="diag-monitor-grid" aria-live="off">
+        <div class="diag-indicador"><span>Algoritmo / estado</span><strong id="diagAlgoritmo">—</strong></div>
+        <div class="diag-indicador"><span>Entrada RMS</span><strong id="diagRms">—</strong></div>
+        <div class="diag-indicador"><span>Frequência DSP</span><strong id="diagFreqDSP">—</strong></div>
+        <div class="diag-indicador"><span>Frequência exibida</span><strong id="diagFreqExibida">—</strong></div>
+        <div class="diag-indicador"><span>Nota / desvio</span><strong id="diagNota">—</strong></div>
+        <div class="diag-indicador"><span>FFT e resolução</span><strong id="diagFFT">—</strong></div>
+        <div class="diag-indicador"><span>Pico espectral</span><strong id="diagPico">—</strong></div>
+        <div class="diag-indicador"><span>Decisão / detalhes</span><strong id="diagDecisao">—</strong></div>
+        <div class="diag-indicador"><span>Tempo do Worker</span><strong id="diagDuracao">—</strong></div>
+        <div class="diag-indicador"><span>Taxa / descartes</span><strong id="diagCadencia">—</strong></div>
+      </div>
+      <div class="diag-acoes">
+        <button id="diagIniciar" type="button" title="Iniciar diagnóstico de 20 segundos" aria-label="Iniciar diagnóstico de 20 segundos">Iniciar · 20 s</button>
+        <button id="diagParar" type="button" title="Interromper diagnóstico" aria-label="Interromper diagnóstico" disabled>Parar</button>
+        <button id="diagExportar" type="button" disabled>Exportar ZIP</button>
+        <label class="diag-config-linha" for="diagIncluirAudio"><input type="checkbox" id="diagIncluirAudio"> Incluir áudio WAV (opcional)</label>
+      </div>
+      <p id="diagStatus" class="diag-status" role="status" aria-live="polite">Monitor pronto. Ative o microfone para iniciar um diagnóstico.</p>
+      <details><summary>Resumo da última sessão</summary><pre id="diagResumo" class="diag-eventos">Ainda não há diagnóstico gravado.</pre></details>
+      <details><summary>Eventos recentes</summary><pre id="diagEventos" class="diag-eventos">Nenhum evento.</pre></details>
+      <p class="diag-status">A gravação e a exportação são locais. O WAV pode conter conversas ao redor. Não há envio automático de dados.</p>
+    </section>
+        <div class="subpainel painel-quintas">
           <h2>Círculo de quintas</h2>
           <div id="circuloQuintas" class="circulo-quintas-dom">
             <div class="anel-externo"></div>
@@ -1883,34 +1993,6 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
       </div>
     </div>
 
-    <!-- Mudança 4: painel oculto por padrão, logo após o medidor e o espectro. -->
-    <section id="painelMonitorDiagnostico" class="painel diag-monitor" aria-label="Monitor de diagnóstico" hidden>
-      <h2>Monitor de diagnóstico</h2>
-      <p class="diag-status">Valores observados do algoritmo ativo. Não são realizadas análises extras.</p>
-      <div class="diag-monitor-grid" aria-live="off">
-        <div class="diag-indicador"><span>Algoritmo / estado</span><strong id="diagAlgoritmo">—</strong></div>
-        <div class="diag-indicador"><span>Entrada RMS</span><strong id="diagRms">—</strong></div>
-        <div class="diag-indicador"><span>Frequência DSP</span><strong id="diagFreqDSP">—</strong></div>
-        <div class="diag-indicador"><span>Frequência exibida</span><strong id="diagFreqExibida">—</strong></div>
-        <div class="diag-indicador"><span>Nota / desvio</span><strong id="diagNota">—</strong></div>
-        <div class="diag-indicador"><span>FFT e resolução</span><strong id="diagFFT">—</strong></div>
-        <div class="diag-indicador"><span>Pico espectral</span><strong id="diagPico">—</strong></div>
-        <div class="diag-indicador"><span>Decisão / detalhes</span><strong id="diagDecisao">—</strong></div>
-        <div class="diag-indicador"><span>Tempo do Worker</span><strong id="diagDuracao">—</strong></div>
-        <div class="diag-indicador"><span>Taxa / descartes</span><strong id="diagCadencia">—</strong></div>
-      </div>
-      <div class="diag-acoes">
-        <label class="diag-config-linha" for="diagIncluirAudio"><input type="checkbox" id="diagIncluirAudio"> Incluir áudio WAV (opcional)</label>
-        <button id="diagIniciar" type="button">Iniciar diagnóstico (20 s)</button>
-        <button id="diagParar" type="button" disabled>Interromper</button>
-        <button id="diagExportar" type="button" disabled>Exportar ZIP</button>
-        <span id="diagContador" class="diag-contagem" aria-live="off">20 s</span>
-      </div>
-      <p id="diagStatus" class="diag-status" role="status" aria-live="polite">Monitor pronto. Ative o microfone para iniciar um diagnóstico.</p>
-      <details><summary>Resumo da última sessão</summary><pre id="diagResumo" class="diag-eventos">Ainda não há diagnóstico gravado.</pre></details>
-      <details><summary>Eventos recentes</summary><pre id="diagEventos" class="diag-eventos">Nenhum evento.</pre></details>
-      <p class="diag-status">A gravação e a exportação são locais. O WAV pode conter conversas ao redor. Não há envio automático de dados.</p>
-    </section>
     <details class="subpainel secao-extensivel secao-intervalos">
       <summary class="secao-cabecalho">
         <span class="secao-titulo">Tabela de intervalos - Desvios</span>
@@ -7528,12 +7610,23 @@ self.onmessage = function (event) {
         const seguro=tema==='dark'?'dark':'light';
         document.documentElement.dataset.theme=seguro;
         seletorTemaInterface.value=seguro;
+        const temaDestino=seguro==='light'?'dark':'light';
+        const botaoTema=document.getElementById('btnAlternarTema');
+        const rotulo=temaDestino==='dark'?'Ativar tema escuro':'Ativar tema claro';
+        botaoTema.setAttribute('aria-label',rotulo);
+        botaoTema.title=rotulo;
         atualizarPaletaGrafico();
         // A FFT em canvas não recebe automaticamente as variáveis CSS.
         // Reapresentar o último espectro, mesmo com microfone desligado.
         redesenharGraficoAfinacao();
       }
       seletorTemaInterface.addEventListener('change',()=>aplicarTemaInterface(seletorTemaInterface.value));
+      document.getElementById('btnAlternarTema').addEventListener('click',()=>{
+        const destino=document.documentElement.dataset.theme==='dark'?'light':'dark';
+        seletorTemaInterface.value=destino;
+        // Reutiliza o fluxo existente: redesenha a FFT e marca o perfil como alterado.
+        seletorTemaInterface.dispatchEvent(new Event('change',{bubbles:true}));
+      });
       aplicarTemaInterface(seletorTemaInterface.value);
       // Mudança 3: conexões dos parâmetros técnicos ao motor real.
       INPUTS_TECNICOS_DSP.forEach(id=>
