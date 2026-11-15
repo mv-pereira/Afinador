@@ -1,244 +1,318 @@
-# Afinador — FFT, YIN, pYIN e SWIPE' com Círculo de Quintas Editável
+# Afinador — Oficina Pernambuco
 
-**[Acessar o afinador online](https://mv-pereira.github.io/Afinador/)**
+Afinador musical para navegador, com **identificação de frequência em tempo real**, **espectro FFT**, **círculo de quintas editável** e comparação entre quatro métodos de detecção: **YIN + FFT**, **pYIN**, **SWIPE'** e **Pico**. Inclui temperamentos, gerador de notas, configurações técnicas, dois temas visuais e um monitor opcional de diagnóstico.
 
-Afinador de instrumentos musicais executado no navegador, com **temperamentos históricos**, edição do **círculo de quintas por frações de coma**, visualização do espectro e emissão de notas de referência. A detecção de frequência utiliza **YIN, pYIN, SWIPE' ou Pico**, com processamento local em um *Web Worker* e FFT **PFFFT em WebAssembly**.
+O projeto é um aplicativo de afinação e experimentação acústica — **não** uma página institucional. A interface e as explicações estão em português do Brasil.
 
-> **Importante:** este README descreve a versão atualizada do `index.html`. Para que o endereço do GitHub Pages apresente todas as funcionalidades descritas aqui, publique também o HTML correspondente no repositório.
+> **Padrões ao abrir:** YIN + FFT adaptativo; FFT de **8.192 pontos**; tema **Claro — Marfim e carvão**; monitor oculto; gravação de áudio desativada; A4 **415,3 Hz** e temperamento **Pitagórico**. O acesso ao microfone depende de permissão do navegador e de um contexto seguro (normalmente HTTPS ou `localhost`).
 
-## Como usar em poucos passos
+## Índice
 
-1. Abra o afinador e pressione **Ativar microfone**. Autorize a captação quando o navegador solicitar. Toque, de preferência, **uma nota por vez**.
-2. Escolha o **temperamento** na barra inferior. O padrão é **Sistema Pitagórico**, com **Lá4 (A4) = 415,3 Hz**. A referência pode ser ajustada entre **300 e 500 Hz**.
-3. Selecione o modo de afinação:
-   - **Automático (padrão):** identifica a nota mais próxima de acordo com o temperamento atual e mostra o desvio.
-   - **Nota fixa:** escolha a nota-alvo com os botões **<** e **>**. O desvio será calculado em relação a essa nota, mesmo que outra esteja mais próxima do som captado.
-4. Escolha o método de detecção. **YIN é o padrão**; pYIN e SWIPE' são alternativas para comparar diferentes formas de estimar a fundamental. O modo **Pico** identifica o componente de maior intensidade da FFT.
-5. Observe a **frequência medida**, o **nome da nota** e o **desvio em cents**. Desvio negativo significa som mais grave que a referência; positivo, mais agudo.
-6. Para ouvir a afinação de referência, abra **Emissor de notas — temperamento atual**. Se o microfone estiver ativo ao mesmo tempo, prefira **fones de ouvido**.
+1. [Comece aqui](#1-comece-aqui)
+2. [Recursos e mostradores](#2-recursos-e-mostradores)
+3. [Métodos de detecção](#3-métodos-de-detecção)
+4. [Pontos FFT: resolução e limites](#4-pontos-fft-resolução-e-limites)
+5. [Referências musicais, temperamentos e círculo de quintas](#5-referências-musicais-temperamentos-e-círculo-de-quintas)
+6. [Configurações avançadas](#6-configurações-avançadas)
+7. [Salvar e restaurar configurações](#7-salvar-e-restaurar-configurações)
+8. [Temas e identidade visual](#8-temas-e-identidade-visual)
+9. [Ajuda rápida e Ajuda avançada](#9-ajuda-rápida-e-ajuda-avançada)
+10. [Monitor de diagnóstico](#10-monitor-de-diagnóstico)
+11. [Captura, JSON, WAV e ZIP](#11-captura-json-wav-e-zip)
+12. [Formato do diagnóstico](#12-formato-do-diagnóstico)
+13. [Privacidade e segurança](#13-privacidade-e-segurança)
+14. [Arquitetura técnica](#14-arquitetura-técnica)
+15. [Compatibilidade e limitações](#15-compatibilidade-e-limitações)
+16. [Solução de problemas](#16-solução-de-problemas)
+17. [Desenvolvimento e testes](#17-desenvolvimento-e-testes)
+18. [Organização, evolução e manutenção](#18-organização-evolução-e-manutenção)
+19. [Créditos e licenças](#19-créditos-e-licenças)
 
-**Dica:** se a leitura oscilar, sustente a nota, reduza ruídos próximos e experimente outro detector. Ataques curtos, harmônicos fortes e sinais sobrepostos podem dificultar a estimação.
+## 1. Comece aqui
 
----
+1. Abra o `index.html` **publicado sob HTTPS** ou servido localmente em `http://localhost` em um navegador compatível.
+2. Toque em **Ativar microfone** e autorize a captura quando o navegador solicitar.
+3. Toque **uma nota sustentada por vez**, em ambiente relativamente silencioso.
+4. Observe a **nota**, a **frequência estimada em Hz** e o **desvio em cents**. Aproximar-se de **0 cent** indica aproximação da afinação musical escolhida.
+5. Ajuste, se necessário, o **Lá de referência (A4)** e o **temperamento**, na barra inferior.
+6. Use **Parar microfone** ao terminar.
 
-## Visão geral
+O aplicativo não oferece uma URL de hospedagem no HTML. Se houver uma implantação pública, adicione ao repositório seu **endereço verificado**; não há endereço presumido neste documento.
 
-O Afinador combina ferramentas de **afinação monofônica** e de **estudo de temperamentos** em um único arquivo HTML, com CSS, JavaScript e os binários WebAssembly incorporados.
+## 2. Recursos e mostradores
 
-**Recursos principais:**
-
-- Afinação **Automática** ou por **Nota fixa**, com seleção de C0 a C8.
-- Quatro métodos de detecção: **YIN, pYIN, SWIPE' e Pico**.
-- FFT de **8192 pontos** para o espectro principal e análise multijanela para o SWIPE'.
-- Frequência estimada, nota musical, desvio numérico e medidor em **cents**.
-- **Notação científica e de Helmholtz simultâneas** no visor da nota, com alternância por toque.
-- **13 presets** de temperamento e edição individual das quintas por frações de coma.
-- Círculo de quintas, tabela de comas e tabela de desvios de intervalos.
-- Emissor de notas com volume, oitava, forma de onda e as duas notações.
-- Leitura acústica **Bruta** ou **Filtrada**; desempenho **Automático** ou **Econômico**.
-- Execução **local**, sem envio do áudio a servidores para processamento.
-
-## Modos de afinação
-
-### Automático — padrão
-
-O programa procura a nota mais próxima da frequência medida na tabela de frequências do **temperamento selecionado**. A frequência de referência e o desvio em cents acompanham a nota reconhecida.
-
-### Nota fixa
-
-O seletor começa em **Dó4 (C4)** e percorre de **C0 a C8**, em passos de semitom:
-
-- **<** desce um semitom; **>** sobe um semitom.
-- A nota-alvo acompanha as alterações no A4, no preset e nos ajustes individuais das quintas.
-- O desvio é calculado em relação à **nota-alvo**, independentemente da nota mais próxima do som.
-- Durante o silêncio, a nota-alvo permanece indicada, mas não é apresentada uma medição inexistente.
-
-No gráfico de FFT, a **linha verde tracejada** marca a nota-alvo e a **linha vermelha** indica a frequência detectada. O **zoom de ±100 cents** amplia somente a visualização; não aumenta a resolução real da análise.
-
-O medidor apresenta uma escala de **−40 a +40 cents**. Caso o desvio exceda essa escala, o ponteiro pode permanecer na extremidade, enquanto o valor numérico continua informando o desvio calculado.
-
-## Métodos de detecção de frequência
-
-O controle **Pico / Fundamental** alterna entre a observação do componente espectral dominante e a estimação da frequência fundamental. No modo Fundamental, é possível escolher **YIN**, **pYIN** ou **SWIPE'**.
-
-| Método | Como funciona | Em que pode ser mais útil |
-|---|---|---|
-| **YIN (padrão)** | Examina a periodicidade da onda no domínio do tempo e usa informações da FFT para verificar a coerência harmônica. | Afinação monofônica geral, ataques e mudanças de nota; pode reconhecer uma fundamental mais fraca que seus harmônicos. |
-| **pYIN** | Distribui probabilidades entre candidatas de frequência e acompanha sua evolução por um **Viterbi causal**. | Notas sustentadas e leituras que se beneficiam de continuidade temporal. Mudanças bruscas podem exigir mais tempo de resposta. |
-| **SWIPE'** | Avalia a saliência da fundamental pela estrutura de **harmônicos primos**, usando várias janelas FFT e uma escala perceptual ERB. | Timbres ricos em harmônicos e casos em que a fundamental não é a componente espectral mais intensa. Exige mais processamento. |
-| **Pico** | Localiza o pico de maior intensidade do espectro. | Análise do componente dominante, inspeção de harmônicos e comparação com detectores de fundamental. **Não garante que o pico seja a nota musical.** |
-
-Nenhum método é superior em todas as situações. O aplicativo é voltado principalmente a **uma nota por vez**; sinais polifônicos podem produzir leituras ambíguas.
-
-### Particularidades dos algoritmos
-
-- **YIN:** emprega janelas temporais adaptativas, mais longas para notas graves e mais curtas para notas agudas. O espectro PFFFT ajuda a avaliar a coerência dos harmônicos.
-- **pYIN:** utiliza candidatas probabilísticas, estados vozeados/não vozeados e um Viterbi executado em tempo real. Sua política temporal foi ajustada para permitir mudanças de oitava com evidência acústica forte e consistente, reduzindo o caso de retenção identificado como **PYIN-001**. Não é uma reprodução bit a bit de implementações pYIN offline.
-- **SWIPE':** é uma adaptação causal da implementação de referência de Kyle Gorman, baseada no método de Arturo Camacho. Utiliza FFT multijanela PFFFT no Worker. **Pode apresentar desvios maiores de precisão nos extremos graves e agudos**, que ainda exigem validação com instrumentos reais.
-- **Pico:** pode apresentar uma leitura de ruído ou de um harmônico como frequência, pois não possui um modelo próprio de confiança da fundamental.
-
-O controle adaptativo antigo de **sensibilidade/ruído** foi removido: os detectores recebem sinais fracos e aplicam seus próprios critérios. Permanece apenas um **piso RMS fixo de 0,00001** para reconhecer sinais praticamente nulos e limpar a leitura no silêncio.
-
-## Visor da nota: científica e Helmholtz
-
-Durante a afinação, o nome da nota é também um **botão** com duas representações simultâneas:
-
-- **Inicialmente:** a notação científica aparece **grande**, e a notação de Helmholtz aparece **pequena no canto inferior direito**.
-- **Primeiro toque:** a notação de Helmholtz assume a posição principal e a científica passa para o canto inferior direito.
-- **Segundo toque:** restaura a disposição inicial.
-
-Exemplos: **Lá4 ↔ a'**, **Dó4 ↔ c'**, **Fá1 ↔ FF**, **Fá2 ↔ F** e **Fá3 ↔ f**.
-
-A troca altera **apenas a apresentação**, sem modificar a frequência detectada, o desvio em cents, a nota-alvo ou o processamento acústico.
-
-## Como interpretar o desvio em cents
-
-O desvio é calculado pela relação entre a frequência medida e a frequência de referência:
-
-```text
-cents = 1200 × log2(frequência_medida / frequência_de_referência)
-```
-
-- **0 cent:** frequência medida igual à referência.
-- **Valor negativo:** som abaixo da referência (mais grave).
-- **Valor positivo:** som acima da referência (mais agudo).
-- **100 cents:** um semitom no temperamento igual; **1200 cents:** uma oitava.
-
-A referência vem do **temperamento atual**. Assim, a mesma frequência pode produzir desvios diferentes quando se muda de preset ou se ajusta uma quinta.
-
-## Temperamentos e círculo de quintas
-
-O aplicativo oferece **13 presets**:
-
-1. Sistema Pitagórico.
-2. Temperamento Igual (−1/12 do coma pitagórico por quinta).
-3. Mesotônico de 1/4 de coma sintônico.
-4. Mesotônico de 1/6 de coma sintônico.
-5. Kirnberger III.
-6. Werckmeister II.
-7. Werckmeister III.
-8. Vallotti.
-9. Young II.
-10. Neidhardt — Kleine Stadt.
-11. Neidhardt — Große Stadt.
-12. Bach / Barnes.
-13. Bach / Lehman.
-
-No **círculo de quintas**, é possível visualizar o sistema selecionado. A **Tabela de ajuste de comas** permite modificar cada quinta por frações de:
-
-- **Coma pitagórico (c.p.):** aproximadamente **23,460 cents**.
-- **Coma sintônico (c.s.):** aproximadamente **21,506 cents**.
-
-Os ajustes são acumulados e a **quinta residual** representa o fechamento do círculo. **Zerar ajustes** restaura o preset selecionado. O controle de enarmonia permite escolher a grafia **Sol# / Lab** no ponto de corte.
-
-A **Tabela de intervalos — Desvios** compara os intervalos resultantes com referências puras: **quinta justa (3:2), terça maior (5:4), terça menor (6:5), sexta maior (5:3) e sexta menor (8:5)**.
-
-## Emissor de notas
-
-O **Emissor de notas — temperamento atual** gera uma referência sonora sem depender da captação do microfone.
-
-- Permite selecionar notas por **notação científica e de Helmholtz** ou navegar por semitons.
-- A extensão inicial vai de **F1 (FF)** a **F7**; **Ampliar extensão** libera de **C0 a B9**.
-- Oferece ondas **senoidal, triangular, quadrada e dente de serra**.
-- Permite ajustar o volume e interromper a emissão.
-- A frequência emitida acompanha alterações no **A4**, no **temperamento** e nos ajustes das quintas.
-
-**Atenção:** se usar o emissor e o microfone simultaneamente, prefira **fones de ouvido** para evitar realimentação. O emissor produz formas de onda eletrônicas, não uma simulação da inarmonicidade de cordas reais.
-
-## Configurações
-
-| Controle | Função |
+| Recurso | O que faz |
 |---|---|
-| **Lá de referência (A4)** | Padrão **415,3 Hz**; ajustável entre **300 e 500 Hz**. |
-| **Temperamento** | Seleciona um dos 13 presets de afinação. |
-| **Pico / Fundamental** | Alterna entre pico espectral e detecção da fundamental. |
-| **Algoritmo YIN / pYIN / SWIPE'** | Escolhe o detector da fundamental; YIN é o padrão. |
-| **Leitura acústica: Bruta** | Apresenta o resultado sem filtragem temporal visual adicional. |
-| **Leitura acústica: Filtrada** | Aplica suavização opcional, ajustável, com possível atraso de resposta. |
-| **Desempenho: Automático** | Ajusta a cadência de análise à capacidade observada do dispositivo. |
-| **Desempenho: Econômico** | Limita a cadência de solicitações para reduzir o consumo de processamento. |
-| **Máx. gráfico (Hz)** | Define o limite superior de exibição da FFT; padrão **2000 Hz**. |
-| **Zoom na nota-alvo** | Amplia visualmente a região de ±100 cents da nota-alvo. |
-| **Enarmonia** | Seleciona a grafia Sol# ou Lab no ponto de corte. |
-| **Visor da nota** | Alterna, por toque, qual notação aparece em destaque. |
+| Automático / Nota fixa | Detecta a nota próxima ou compara com a nota-alvo escolhida por semitons. |
+| Visor de nota | Mostra a notação científica com equivalente de Helmholtz menor no canto; toque para inverter o destaque. É apenas apresentação. |
+| Frequência e escala de cents | Exibem a medição e seu desvio em relação à referência/nota-alvo. |
+| Espectro FFT | Mostra a distribuição espectral e marcadores de frequência e, no modo Nota fixa, de referência. |
+| Zoom na nota-alvo | Amplia o espectro perto da nota-alvo (±100 cents), sem alterar a FFT analisada. |
+| Círculo de quintas | Exibe e permite editar quintas; tabelas mostram ajustes de comas e intervalos. |
+| A4 e temperamento | Mudam as frequências musicais de referência. |
+| Gerador de notas | Emite ondas selecionáveis, com volume e extensão de notas C0–B9, usando a afinação configurada. |
+| Métodos | Alterna entre YIN + FFT, pYIN, SWIPE' e Pico, mantendo **um detector ativo por quadro**. |
+| Diagnóstico | Monitor ao vivo, registro de decisões e exportação local mediante ação explícita. |
 
-Não há mais controle de sensibilidade adaptativa nem botão de diagnóstico de 20 segundos nesta versão.
+**Frequência exibida não é necessariamente a frequência fundamental física**: a detecção depende do timbre, ruído, níveis harmônicos, qualidade de captura e decisões de confiança do método.
 
-## Funcionamento técnico
+## 3. Métodos de detecção
 
-O processamento de áudio é realizado localmente, usando **Web Audio API**, **Dedicated Web Worker** e **WebAssembly**:
+### YIN + FFT — padrão
 
-```text
-Microfone → Web Audio API → amostras temporais
-                               │
-                               ▼
-                       Dedicated Web Worker
-                         │
-                         ├── PFFFT WASM SIMD128
-                         │       └── FFT principal (8192 pontos)
-                         │           ├── Espectro para o gráfico
-                         │           ├── Validação harmônica do YIN
-                         │           └── Pico dominante
-                         │
-                         ├── YIN (periodicidade + espectro)
-                         ├── pYIN (candidatas + Viterbi causal)
-                         ├── SWIPE' (FFT multijanela PFFFT)
-                         └── Pico
-                               │
-                               ▼
-                    Frequência / estado / quadro
-                               │
-                               ▼
-             Temperamento → nota, cents e marcadores
+O YIN estima periodicidade na forma de onda usando uma função de diferença cumulativamente normalizada (**CMNDF**). A análise FFT auxilia na validação harmônica, na correção condicional de oitavas e no refinamento da frequência quando existe suporte espectral suficiente. A versão atual usa refinamento **adaptativo para notas abaixo de 350 Hz** e conserva o refinamento mais restrito nas frequências superiores.
+
+**Não existe opção para utilizar YIN puro (vanilla), desativar a FFT ou selecionar uma estratégia diferente de refinamento.** Ajustar o limiar CMNDF não altera essa arquitetura.
+
+### pYIN
+
+Método probabilístico com múltiplas candidatas e acompanhamento temporal por **Viterbi causal**. Os padrões são 100 limiares com distribuição **Beta(2, 18)**. O acompanhamento temporal pode reduzir oscilações e atrasar certas transições repentinas. O peso contextual e a confirmação de saltos de oitava são configuráveis dentro de limites.
+
+### SWIPE'
+
+Detector de altura baseado em **saliência harmônica**, com várias janelas FFT. Usa a infraestrutura PFFFT/WebAssembly e é mais exigente em cálculo. Se o motor necessário não estiver disponível, o aplicativo sinaliza a indisponibilidade; não substitui silenciosamente SWIPE' por um método equivalente improvisado.
+
+### Pico
+
+Exibe a frequência do **componente mais intenso do espectro**. É útil para investigar componentes dominantes, mas um harmônico pode ser mais intenso do que a fundamental: **Pico não garante a fundamental**. A interface apresenta um aviso em vermelho claro ao selecioná-lo.
+
+**Observação sobre filtros:** em leitura **Bruta**, não há suavização visual temporal adicional, mas o pYIN continua usando seu próprio rastreamento probabilístico; não confundir esses dois procedimentos.
+
+## 4. Pontos FFT: resolução e limites
+
+Em **Configurações → Geral e desempenho → Pontos FFT**:
+
+| Resolução | Pontos da FFT | Bins analisados | Duração nominal a 48 kHz |
+|---|---:|---:|---:|
+| Rápida | 4.096 | 2.048 | ≈85 ms |
+| **Padrão** | **8.192** | **4.096** | **≈171 ms** |
+| Alta | 16.384 | 8.192 | ≈341 ms |
+| Máxima | 32.768 | 16.384 | ≈683 ms |
+
+A separação entre bins é **Δf = taxa de amostragem ÷ pontos FFT**, em Hz. Mais pontos tendem a fornecer uma grade espectral mais fina, com maior exigência de amostras, memória e processamento. Isso **não é uma garantia de maior precisão em cents** e a duração nominal de uma janela **não é a latência total do aplicativo**.
+
+A resolução pode ser trocada com o microfone ligado. Ela atua na FFT principal e no refinamento do YIN; a janela temporal adaptativa YIN/pYIN e as múltiplas janelas do SWIPE' têm regras próprias. FFT de 4.096 pontos pode ser pouco adequada a sinais extremamente graves em taxas de amostragem muito altas.
+
+## 5. Referências musicais, temperamentos e círculo de quintas
+
+- **Lá (A4) inicial:** 415,3 Hz, ajustável no rodapé.
+- **Temperamento inicial:** Sistema Pitagórico. O menu permite selecionar os sistemas efetivamente oferecidos pelo aplicativo.
+- **Círculo de quintas:** cada quinta pode receber ajustes em frações de **coma sintônico ou pitagórico**. Tabelas mostram os valores resultantes; o comportamento dos pares enarmônicos segue os controles de nomenclatura.
+- **Zerar ajustes:** restaura o preset **musical** corrente, não as preferências técnicas.
+- **Nota fixa:** permite subir/descer a nota-alvo por semitons. Faixas fora da capacidade nominal do detector podem ter leitura inconclusiva.
+- **Emissor:** utiliza o mapa de frequências calculado para o temperamento e o A4 ativos. Use volume moderado, principalmente com fones.
+
+Os cálculos de desvio utilizam relações logarítmicas: `cents = 1200 × log2(frequência medida / frequência de referência)`.
+
+## 6. Configurações avançadas
+
+O painel **Configurações** é expansível. Seções técnicas internas permitem regular o que cada método realmente oferece; limites de entrada são aplicados para evitar parâmetros inválidos.
+
+| Grupo / ajuste | Padrão | Intervalo e efeito |
+|---|---|---|
+| Geral — FFT | **8.192 pontos** | 4.096 / 8.192 / 16.384 / 32.768. |
+| Geral — gráfico | **2.000 Hz** | Limita a escala visível, sem alterar a identificação acústica. |
+| Geral — leitura | **Bruta** | Filtrada é alternativa temporal; seu valor inicial é **70%**, configurável de 0–95%. |
+| Geral — desempenho | **Automático** | Alternativa Econômico, para reduzir consumo. |
+| Geral — enarmonia | **Sol#** | Alternativa Lab, apenas nomenclatura conforme o contexto. |
+| YIN + FFT — CMNDF | **0,17** | 0,05–0,26. |
+| YIN + FFT — janela temporal | **Automática** | Informativa; não há controle manual da janela ou do modo vanilla. |
+| pYIN — número de limiares | **100** | 20–200, passo 10. |
+| pYIN — Beta α / β | **2 / 18** | α: 0,5–10; β: 1–40. |
+| pYIN — confirmação de oitava | **2 quadros** | 1–5. |
+| pYIN — peso contextual de oitava | **0,72** | 0–0,95. |
+| SWIPE' — saliência mínima | **0,20** | 0,05–0,50. |
+| Diagnóstico — mostrar monitor | **Não** | Exibe/oculta os valores em tempo real. |
+| Aparência — tema | **Claro** | Alternativa Escuro. |
+
+**Ajustes de algoritmo afetam a detecção.** Valores válidos, mas extremos, podem reduzir a estabilidade ou produzir mais rejeições. O filtro Filtrada modifica a apresentação, não substitui os métodos YIN, pYIN ou SWIPE'.
+
+## 7. Salvar e restaurar configurações
+
+1. Modifique as preferências técnicas em **Configurações**: o efeito é imediato na sessão.
+2. Toque em **Salvar configurações** para gravá-las no `localStorage` deste navegador/origem.
+3. Ao abrir novamente a mesma origem, os valores salvos são recuperados, se o armazenamento estiver disponível.
+4. Toque em **Restaurar padrões** para voltar às preferências técnicas originais e limpar o perfil salvo.
+
+**Restaurar padrões não redefine A4, temperamento, nota-alvo ou quintas editadas.** Para os ajustes musicais do círculo, use **Zerar ajustes**. Limpar os dados de um site no navegador pode apagar as preferências técnicas, independentemente desses botões.
+
+## 8. Temas e identidade visual
+
+| Tema | Aparência | Papel |
+|---|---|---|
+| **Claro — Marfim e carvão** | Marfim, carvão e verde mineral discreto; baseado na proposta visual 04. | **Padrão** |
+| Escuro — Grafite monocromático | Preto/grafite e cinzas; baseado na proposta visual 01. | Alternativa |
+
+O seletor está em **Configurações → Aparência → Tema**. Mudar o tema adapta números, botões, FFT, círculo, monitor e configurações, **sem reiniciar o microfone ou alterar cálculos**. Para lembrar a preferência, use **Salvar configurações**; **Restaurar padrões** devolve o tema claro. A identidade visual incorpora a logo Oficina Pernambuco discretamente no cabeçalho.
+
+## 9. Ajuda rápida e Ajuda avançada
+
+O botão **Ajuda**, ao lado dos controles principais, oferece **somente instruções breves**: iniciar microfone, interpretar nota/Hz/cents, modos, A4, métodos e problemas comuns.
+
+Dentro dele, expanda **Ajuda avançada** para consultar oito capítulos: leitura e referências, métodos, FFT, configurações, diagnóstico, aparência, glossário e solução de problemas/privacidade. Os capítulos têm controles próprios de expansão. Fechar a Ajuda, abrir Configurações, começar a captura ou reabrir a página deixa a ajuda avançada **recolhida novamente**. Pressionar **Esc** ou o botão **Fechar** encerra a ajuda. A consulta não inicia gravações e não modifica a afinação.
+
+## 10. Monitor de diagnóstico
+
+Ative **Configurações → Diagnóstico → Exibir monitor de diagnóstico**. O monitor é **oculto por padrão** e acompanha apenas o método selecionado, sem executar detectores extras. A interface dos números atualiza-se aproximadamente a cada **250 ms**; o registro de uma sessão mantém cada quadro recebido.
+
+É possível observar frequência candidata, frequência do detector, leitura apresentada, nota/cents, nível RMS, resolução FFT, estimativas de custo do Worker e informações específicas de cada método. Valores ausentes significam informação indisponível, não necessariamente zero. O monitor apresenta estimativas e decisões computacionais; não é uma medida direta da verdade física do sinal.
+
+## 11. Captura, JSON, WAV e ZIP
+
+1. Ative o microfone e, se desejar, o monitor.
+2. Opcionalmente, marque **Incluir áudio WAV**; a caixa inicia **desmarcada** e só pode ser usada quando a infraestrutura AudioWorklet está disponível.
+3. Toque em **Iniciar diagnóstico (20 s)** e toque notas durante a contagem regressiva.
+4. A sessão encerra automaticamente após 20 segundos ou por **Interromper**. Os limites de quadros/memória também podem encerrar a captura com segurança.
+5. Toque em **Exportar ZIP** para produzir localmente o arquivo do diagnóstico.
+
+O ZIP utiliza entradas sem compressão (**STORE**) e contém sempre `diagnostico.json`. Contém `audio.wav` **apenas se a opção foi solicitada e a captura PCM contínua foi considerada íntegra**. A gravação é mono e o WAV é PCM 16 bits. O JSON serve para investigar decisões; o WAV, para reexecutar análises sobre o sinal recebido. Não são armazenadas FFTs integrais a cada quadro por padrão.
+
+O aplicativo **não envia automaticamente arquivos ou telemetria**. Exportar um arquivo e compartilhá-lo posteriormente são ações distintas e voluntárias.
+
+## 12. Formato do diagnóstico
+
+A exportação utiliza `diagnosticSchemaVersion: 1`. O JSON tem os campos principais:
+
+| Campo | Conteúdo |
+|---|---|
+| `application` | Nome e identificador da versão do aplicativo. |
+| `capture` | Instantes, duração solicitada/real, motivo do encerramento, contagens e integridade opcional do áudio. |
+| `environment` | Navegador/OS identificáveis, configurações reais e solicitadas de áudio, capacidades WebAssembly/SIMD/AudioWorklet. |
+| `settings` | Método ativo, pontos FFT, preferências técnicas e afinação musical da sessão. |
+| `summary` | Contagens, notas identificadas, frequências extrema e estatísticas dos quadros. |
+| `events` | Histórico de ações/alterações importantes. |
+| `frames` | Um objeto por análise recebida, incluindo estimativas, decisões, método e duração. |
+
+Exemplo **esquemático** (não representa valores medidos):
+
+```json
+{
+  "diagnosticSchemaVersion": 1,
+  "application": { "name": "Afinador — Oficina Pernambuco", "version": "mudancas-1-a-6" },
+  "capture": { "durationRequestedMs": 20000, "includesAudio": false, "framesRecorded": 1 },
+  "environment": { "capabilities": { "webAssembly": true, "audioWorklet": false } },
+  "settings": { "algorithm": "yin", "fftSize": 8192 },
+  "summary": { "framesRecorded": 1 },
+  "events": [],
+  "frames": [{ "frameId": 1, "algorithm": "yin", "stagesHz": { "detectorOutput": 220.0, "displayed": 220.0 }, "decision": { "state": "accepted", "reason": "candidate_selected" } }]
+}
 ```
 
-O motor PFFFT dispõe de **SIMD128** e **fallback escalar**. Quando o WASM não está disponível, há **fallback nativo** para YIN, pYIN e Pico; o **SWIPE' exige o PFFFT WASM** e não é substituído silenciosamente por outro algoritmo.
+O exportador real inclui outros campos; alguns são `null` quando não suportados ou indisponíveis. O valor `accepted` descreve a decisão daquele quadro, não certifica precisão absoluta. Uma frequência candidata pode ser rejeitada antes da apresentação, e uma transição Viterbi pode aguardar confirmação. Para comparar algoritmos entre versões, o áudio opcional é mais informativo do que apenas os espectros já transformados.
 
-O Worker utiliza identificadores de sessão, geração e quadro para impedir a apresentação de resultados antigos. A FFT do gráfico e os detectores consomem dados correspondentes ao mesmo quadro processado.
+### Dados do dispositivo e limites de identificação
 
-O YIN tem faixa **nominal de busca de aproximadamente 16 a 4600 Hz**; a precisão real depende da janela, da taxa de amostragem, do instrumento e do microfone. As análises multijanela e o motor FFT oferecem uma base para estudos futuros de parciais e **inarmonicidade**, mas o Afinador **ainda não realiza compensação automática de inarmonicidade**.
+O navegador pode fornecer nome/versão estimados do sistema, categoria do dispositivo, núcleos lógicos, memória estimada, taxa de amostragem e configurações efetivas de captura. Ele **normalmente não expõe** modelo exato do chip, driver de áudio ou versão exata de todos os componentes. O diagnóstico não busca IMEI, MAC, IP, localização nem identificadores persistentes.
 
-## Requisitos e execução
+## 13. Privacidade e segurança
 
-- Navegador atualizado com suporte à **Web Audio API**, **Web Workers** e **WebAssembly**.
-- Permissão de acesso ao **microfone**.
-- Para execução na web, um **contexto seguro (HTTPS)**. O GitHub Pages oferece HTTPS.
-- Em dispositivos que permitam abrir um HTML localmente, a disponibilidade do microfone pode variar conforme as restrições de segurança do navegador (`file://`).
+- O acesso ao **microfone** requer permissão do navegador e só é solicitado ao iniciar a função.
+- Processamento e arquivos são gerados **localmente**, sem envio automático do áudio ou diagnóstico a servidores.
+- O aplicativo não realiza varreduras de arquivos, rede ou aplicativos instalados e não consulta localização, IP ou identificadores de hardware persistentes.
+- A opção **Incluir áudio WAV** é voluntária e desativada inicialmente. **Áudio pode conter conversas e informações sensíveis**; ouça/revise antes de compartilhar.
+- Os registros JSON também podem conter informações técnicas sobre dispositivo e ambiente. Não se deve pressupor anonimato completo.
+- As configurações salvas em `localStorage` e as exportações ZIP são mecanismos distintos; salvar preferências não inicia nem arquiva diagnósticos.
+- APIs do navegador e políticas de permissão variam entre ambientes. O uso de funções convencionais não garante classificação idêntica por todos os sistemas de proteção.
 
-O arquivo `index.html` é **autocontido**: contém interface, Worker e binários WASM incorporados, sem precisar baixar bibliotecas de processamento durante a execução. Uma conexão com a internet não é necessária **para os cálculos acústicos**; o acesso pelo GitHub Pages, naturalmente, requer carregar a página.
+## 14. Arquitetura técnica
 
-## Testes e limitações conhecidas
+O `index.html` é **autocontido** para seu código de aplicação, estilos, marca e núcleos DSP embutidos. Uma descrição simplificada do fluxo é:
 
-Foram realizados testes automatizados em navegador Chromium, Worker e sinais sintéticos, incluindo comparação entre o PFFFT e a FFT anterior, cenários de ruído e harmônicos, mudanças de oitava e regressões dos quatro modos. **Esses testes não equivalem à homologação em microfones físicos de celulares Android ou iPhone.**
+```text
+Microfone / MediaStream
+       │
+ Web Audio API ────────► AudioWorklet PCM opcional (diagnóstico WAV)
+       │
+ AnalyserNode + buffers temporais
+       │
+ Worker DSP (mensagens com sessão/geração/quadro)
+       ├── YIN + refinamento FFT
+       ├── pYIN + rastreamento Viterbi causal
+       ├── SWIPE' multijanela (quando PFFFT disponível)
+       ├── Pico do espectro
+       └── PFFFT WASM SIMD/escalar ou FFT nativa de fallback
+       │
+ Resultado, confiança, espectro e metadados
+       │
+ Mostrador / escala de cents / canvas FFT / círculo / monitor
+```
 
-Limitações importantes:
+O **Worker dedicado** evita executar a maior parte do cálculo FFT na thread de interface. A infraestrutura WASM tem variantes SIMD e escalar embutidas; o código também oferece um caminho de fallback de FFT nativa. O SWIPE' depende especificamente da infraestrutura adequada, não de uma aproximação pela FFT nativa. O **AudioWorklet** é usado **somente quando o WAV opcional é solicitado**, para obter uma sequência contínua de amostras, sem remontar buffers sobrepostos do `AnalyserNode`.
 
-- **Monofonia:** acordes e fontes simultâneas podem produzir notas ambíguas.
-- **Erros de oitava:** continuam possíveis em alguns timbres e transições; a correção PYIN-001 reduz um caso de retenção temporal, mas não elimina todas as ambiguidades.
-- **SWIPE':** exige mais processamento e pode apresentar desvios de precisão nas regiões mais graves e mais agudas.
-- **Pico:** o maior componente espectral pode ser ruído ou um harmônico.
-- **Silêncio e sinais fracos:** cada detector tem seus critérios; o piso RMS mínimo não substitui uma avaliação da qualidade musical do som.
-- **Inarmonicidade:** não há modelo de compensação para parciais deslocados de cordas reais.
-- **FFT e zoom:** ampliar a representação do espectro não aumenta sua resolução física.
-- **Latência e consumo:** dependem do navegador, dispositivo, método escolhido e taxa de amostragem.
+O motor pode variar conforme navegador, permissões e recursos disponíveis. Ações sobre configurações relevantes reinicializam os estados necessários dos detectores; selecionar tema/abrir ajuda não deve gerar frames DSP adicionais.
 
-## Possíveis desenvolvimentos
+## 15. Compatibilidade e limitações
 
-- Validação sistemática em instrumentos e microfones físicos, sobretudo Android e iOS.
-- Medição de precisão, latência e consumo por detector em condições reais.
-- Análise de parciais e **inarmonicidade**, aproveitando os espectros do PFFFT.
-- Exportação e importação de temperamentos personalizados.
-- Perfis de afinação por instrumento.
-- Registro opcional de medidas e análise de estabilidade.
+- A captura de microfone costuma exigir **origem segura** (`https://` ou `http://localhost`) e permissão explícita.
+- `file://` pode não suportar Worker, WASM, AudioWorklet ou permissões da mesma maneira entre navegadores.
+- O PFFFT SIMD depende de suporte de WebAssembly SIMD; o modo escalar/fallback pode ter desempenho distinto.
+- Gravação de WAV requer AudioWorklet no contexto ativo; JSON continua disponível onde o monitor e o Worker funcionam.
+- O desempenho real depende de CPU, taxa de amostragem, bateria/gestão térmica e tamanho de FFT. Resoluções maiores e SWIPE' podem aumentar consumo e atraso.
+- Microfones podem aplicar redução de ruído, ganho automático ou cancelamento de eco (conforme as configurações efetivamente aplicadas), afetando harmônicos.
+- Sinais muito graves, curtos, fracos, polifônicos ou inarmônicos podem não gerar estimativas confiáveis; o método pode rejeitar a nota em vez de exibir uma frequência errada.
 
-## Créditos e licenças
+**Validação atual:** os testes automatizados deste pacote foram realizados em Chromium controlado e com áudio sintético. Não estabelecem compatibilidade universal nem substituem ensaios em Android/iOS reais, instrumentos reais e HTTPS com microfone físico. Em particular, a captura WAV por AudioWorklet requer essa validação de ponta a ponta.
 
-O código próprio do projeto está distribuído sob a **[Licença MIT](LICENSE)**, conforme o repositório.
+## 16. Solução de problemas
 
-O aplicativo também incorpora ou adapta trabalhos de terceiros, cujas atribuições e condições devem ser preservadas nas redistribuições:
+| Sintoma | O que verificar |
+|---|---|
+| Microfone não inicia | Permissão do site, HTTPS/localhost, conflito com outro app, navegador atualizado. |
+| Sem nota | Fonte sonora, intensidade, ruído, um som por vez, eventual saturação/eco. |
+| Nota aparece uma oitava acima/abaixo | Harmônicos fortes; compare YIN + FFT/pYIN e analise o diagnóstico. Pico não representa obrigatoriamente a fundamental. |
+| Leitura oscila | Sustente a nota, afaste ruído; experimente leitura Filtrada entendendo o maior tempo de resposta. |
+| FFT vazia ou irregular | Verifique microfone, escala máxima e estado de preparação do Worker. |
+| Lentidão | Use FFT de 8.192 ou 4.096 pontos; experimente Econômico e evite outras tarefas pesadas. |
+| SWIPE' indisponível | Verifique suporte a WebAssembly/PFFFT; use YIN + FFT ou pYIN. |
+| WAV não habilita | Verifique se AudioWorklet existe no contexto seguro e se o microfone está ativo. |
+| ZIP não baixa | Permissões de download, espaço livre, navegador; exporte após a sessão terminar. |
+| Preferências não persistem | Use Salvar configurações e verifique bloqueio/limpeza de armazenamento do site. |
+| Falha JavaScript | Abra o console do navegador, registre o erro e, se possível, anexe o ZIP diagnóstico sem dados pessoais. |
 
-- **PFFFT (Pretty Fast FFT):** Julien Pommier (2013), com base no **FFTPACK** de Paul Swarztrauber / **NCAR–UCAR**. Utilizado sob os termos de licença FFTPACK/UCAR indicados no código-fonte. O porte para o Afinador acrescenta **WASM SIMD128 e escalar, macros SIMD adaptadas, wrapper C, janelas configuráveis, planos reutilizáveis, tratamento de DC/Nyquist e integração ao Worker**.
-- **SWIPE':** método de **Arturo Camacho**, implementado em C por **Kyle Gorman** (copyright 2009–2013, **MIT**). Adaptado ao processamento causal em JavaScript e à FFT PFFFT multijanela, substituindo as dependências de FFTW e leitura de arquivo. Consulte a [implementação de referência de Gorman](https://github.com/kylebgorman/swipe).
-- **YIN e pYIN:** métodos associados aos trabalhos de **Alain de Cheveigné e Hideki Kawahara** (YIN) e **Matthias Mauch e Simon Dixon** (pYIN). O módulo pYIN do Afinador é uma **implementação própria em JavaScript**, baseada nas formulações publicadas e na documentação técnica, e não incorpora o porte GPL do código C++ de referência.
+## 17. Desenvolvimento e testes
 
-Os avisos legais associados ao PFFFT e ao SWIPE' estão mantidos no HTML distribuído. A licença MIT do repositório **não substitui as obrigações específicas** das partes de terceiros.
+O HTML é projetado para ser servido sem build obrigatório de frontend. Exemplo local, na pasta que contém `index.html`:
+
+```bash
+python3 -m http.server 8000
+```
+
+Abra `http://localhost:8000/` no **mesmo dispositivo**. Para acessar pelo celular usando outro computador, hospede a página em uma origem HTTPS: uma URL `http://IP-da-rede` em geral **não é equivalente ao `localhost` seguro** para permissões e AudioWorklet.
+
+### Regressões recomendadas
+
+1. Conferir carregamento e ausência de erros JavaScript.
+2. Validar os quatro tamanhos FFT e seus bins: 2.048 / 4.096 / 8.192 / 16.384.
+3. Reproduzir tons sintéticos e notas reais em YIN + FFT, pYIN e SWIPE' (quando disponível), incluindo transições de oitava; conferir Pico separadamente.
+4. Alternar tema, FFT e parâmetros durante a captura; comparar saída antes/depois sem resets indevidos.
+5. Testar A4/temperamentos, cent, nota fixa e emissor; verificar preservação dos ajustes musicais após Restaurar padrões.
+6. Validar salvar/reabrir/restaurar em uma origem real e conferir que a Ajuda avançada sempre inicia recolhida.
+7. Testar monitor e diagnóstico de 20 segundos, parada, limites e conteúdo `diagnostico.json`.
+8. Testar WAV 16 bits e integridade dos dados, o ZIP e o fluxo **real** em Android/iOS com microfone físico.
+9. Inspecionar layouts de 320, 360, 390, 412 e 768 px em ambos os temas e com os painéis abertos.
+
+Os relatórios/testes de desenvolvimento podem ser arquivados separadamente do aplicativo. **Não presuma que scripts de teste de uma sessão anterior estejam versionados no repositório** se não forem adicionados explicitamente a ele.
+
+## 18. Organização, evolução e manutenção
+
+A entrega mínima para publicação é:
+
+```text
+index.html   # Aplicativo completo com DSP, estilos e ajuda incorporados
+README.md    # Documentação deste aplicativo
+```
+
+O aplicativo acumulou seis conjuntos de alterações: **(1)** YIN FFT adaptativo e escolha dos pontos FFT; **(2)** nome YIN + FFT; **(3)** configurações técnicas com salvamento/restauração; **(4)** monitor e diagnósticos JSON/WAV opcionais; **(5)** temas Claro/Escuro; **(6)** Ajuda em dois níveis e documentação integral.
+
+Antes de publicar, mantenha o README sincronizado com os controles e padrões implementados. Não anuncie o código como release estável em todos os celulares apenas com base em testes sintéticos. Se optar por versionamento semântico, defina a política e um changelog no repositório; **nenhuma tag de release é presumida aqui**.
+
+## 19. Créditos e licenças
+
+- **Oficina Pernambuco:** marca e identidade visual fornecidas para o projeto. O HTML contém a logo incorporada; reutilização fora do projeto requer autorização de seu titular.
+- **YIN:** algoritmo de detecção de periodicidade descrito por Alain de Cheveigné e Hideki Kawahara (2002).
+- **pYIN:** abordagem probabilística de estimação de altura associada ao trabalho de Matthias Mauch e Simon Dixon (2014); o app utiliza uma adaptação causal própria com Viterbi.
+- **SWIPE':** método de Arturo Camacho (tese, 2007), com adaptação da implementação C de **Kyle Gorman (2009–2013)**. O HTML incorpora a declaração de licença **MIT** correspondente em `licencaSWIPEGormanMIT` e a fonte adaptada em `fonteSWIPEOriginalAdaptado`. **Não remova esse aviso.**
+- **PFFFT (Pretty Fast FFT):** biblioteca associada a **Julien Pommier**, com antecedentes em FFTPACK de Paul Swarztrauber; o HTML contém adaptação WebAssembly embutida e declaração de atribuição no código de inicialização do Worker. As obrigações específicas da biblioteca devem ser revisadas na publicação ou redistribuição.
+- **Web Audio API, Worker, WebAssembly e AudioWorklet:** APIs padronizadas dos navegadores, não serviços de upload.
+
+**Licença do aplicativo:** o material HTML disponível para esta entrega não fornece uma licença global do projeto; portanto, este README **não inventa** uma licença de código aberto. Antes de substituir a documentação em um repositório público, confirme os créditos, autores, URLs e eventuais arquivos de licença originais. **O `README.md` anteriormente hospedado no repositório não estava disponível nos arquivos fornecidos nesta etapa**, de modo que seus avisos adicionais não puderam ser conferidos automaticamente.
