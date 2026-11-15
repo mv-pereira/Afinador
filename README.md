@@ -123,13 +123,13 @@ O painel **Configurações** é expansível. Seções técnicas internas permite
 | pYIN — peso contextual de oitava | **0,72** | 0–0,95. |
 | SWIPE' — saliência mínima | **0,20** | 0,05–0,50. |
 | Diagnóstico — mostrar monitor | **Não** | Exibe/oculta os valores em tempo real. |
-| Aparência — tema | **Claro** | Alternativa Escuro. |
+| Tema (botão circular ao lado de Ajuda) | **Claro** | Alternativa Escuro; integração ao perfil salvo. |
 
 **Ajustes de algoritmo afetam a detecção.** Valores válidos, mas extremos, podem reduzir a estabilidade ou produzir mais rejeições. O filtro Filtrada modifica a apresentação, não substitui os métodos YIN, pYIN ou SWIPE'.
 
 ## 7. Salvar e restaurar configurações
 
-1. Modifique as preferências técnicas em **Configurações**: o efeito é imediato na sessão.
+1. Modifique as preferências técnicas em **Configurações** e, se desejar, o tema no botão circular ao lado de **Ajuda**: o efeito é imediato na sessão.
 2. Toque em **Salvar configurações** para gravá-las no `localStorage` deste navegador/origem.
 3. Ao abrir novamente a mesma origem, os valores salvos são recuperados, se o armazenamento estiver disponível.
 4. Toque em **Restaurar padrões** para voltar às preferências técnicas originais e limpar o perfil salvo.
@@ -143,7 +143,7 @@ O painel **Configurações** é expansível. Seções técnicas internas permite
 | **Claro — Marfim e carvão** | Marfim, carvão e verde mineral discreto; baseado na proposta visual 04. | **Padrão** |
 | Escuro — Grafite monocromático | Preto/grafite e cinzas; baseado na proposta visual 01. | Alternativa |
 
-O seletor está em **Configurações → Aparência → Tema**. Mudar o tema adapta números, botões, FFT, círculo, monitor e configurações, **sem reiniciar o microfone ou alterar cálculos**. Para lembrar a preferência, use **Salvar configurações**; **Restaurar padrões** devolve o tema claro. A identidade visual incorpora a logo Oficina Pernambuco discretamente no cabeçalho.
+O tema é alternado pelo **pequeno botão circular imediatamente à direita de Ajuda**, na barra superior de ações. O círculo representa **o tema de destino**, não o atual: no tema claro, ele é **grafite escuro** (toque para ativar o escuro); no tema escuro, ele é **marfim claro** (toque para voltar ao claro). A seção Aparência foi removida das Configurações. A troca adapta números, botões, FFT, círculo, monitor e configurações **imediatamente, sem reiniciar o microfone ou alterar cálculos**. Para manter a escolha após reabrir, use **Configurações → Salvar configurações**; **Restaurar padrões** devolve o tema claro. A identidade visual incorpora a logo Oficina Pernambuco discretamente no cabeçalho.
 
 ## 9. Ajuda rápida e Ajuda avançada
 
@@ -153,16 +153,16 @@ Dentro dele, expanda **Ajuda avançada** para consultar oito capítulos: leitura
 
 ## 10. Monitor de diagnóstico
 
-Ative **Configurações → Diagnóstico → Exibir monitor de diagnóstico**. O monitor é **oculto por padrão** e acompanha apenas o método selecionado, sem executar detectores extras. A interface dos números atualiza-se aproximadamente a cada **250 ms**; o registro de uma sessão mantém cada quadro recebido.
+Ative **Configurações → Diagnóstico → Exibir monitor de diagnóstico**. O monitor é **oculto por padrão** e, quando ativado, aparece **imediatamente abaixo do espectro FFT e acima do círculo de quintas**. Ele acompanha apenas o método selecionado, sem executar detectores extras. A interface dos números atualiza-se aproximadamente a cada **250 ms**; o registro de uma sessão mantém cada quadro recebido.
 
-É possível observar frequência candidata, frequência do detector, leitura apresentada, nota/cents, nível RMS, resolução FFT, estimativas de custo do Worker e informações específicas de cada método. Valores ausentes significam informação indisponível, não necessariamente zero. O monitor apresenta estimativas e decisões computacionais; não é uma medida direta da verdade física do sinal.
+É possível observar frequência candidata, frequência do detector, leitura apresentada, nota/cents, nível RMS, resolução FFT, estimativas de custo do Worker e informações específicas de cada método. Os botões e cartões do monitor são compactos para reduzir a altura ocupada, sem alterar os controles principais do aplicativo. Os nomes completos de Iniciar e Parar permanecem disponíveis para tecnologias assistivas. Valores ausentes significam informação indisponível, não necessariamente zero. O monitor apresenta estimativas e decisões computacionais; não é uma medida direta da verdade física do sinal.
 
 ## 11. Captura, JSON, WAV e ZIP
 
 1. Ative o microfone e, se desejar, o monitor.
 2. Opcionalmente, marque **Incluir áudio WAV**; a caixa inicia **desmarcada** e só pode ser usada quando a infraestrutura AudioWorklet está disponível.
-3. Toque em **Iniciar diagnóstico (20 s)** e toque notas durante a contagem regressiva.
-4. A sessão encerra automaticamente após 20 segundos ou por **Interromper**. Os limites de quadros/memória também podem encerrar a captura com segurança.
+3. Toque no botão compacto **Iniciar · 20 s** e toque notas durante a contagem regressiva exibida no cabeçalho do monitor.
+4. A sessão encerra automaticamente após 20 segundos ou pelo botão compacto **Parar** (interromper diagnóstico). Os limites de quadros/memória também podem encerrar a captura com segurança.
 5. Toque em **Exportar ZIP** para produzir localmente o arquivo do diagnóstico.
 
 O ZIP utiliza entradas sem compressão (**STORE**) e contém sempre `diagnostico.json`. Contém `audio.wav` **apenas se a opção foi solicitada e a captura PCM contínua foi considerada íntegra**. A gravação é mono e o WAV é PCM 16 bits. O JSON serve para investigar decisões; o WAV, para reexecutar análises sobre o sinal recebido. Não são armazenadas FFTs integrais a cada quadro por padrão.
