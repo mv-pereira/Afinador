@@ -5,8 +5,9 @@
 > **Destino de implementação:** `index.html` autocontido do projeto Afinador  
 > **Estado:** especificação para desenvolvimento futuro; **não significa que as novas ferramentas já estejam implementadas**.  
 > **Fonte primária:** `Roadmap.md` de 273 linhas enviado pelo responsável pelo projeto, complementado pelo `index.html` enviado na mesma conversa, pelas decisões acumuladas de projeto e pela pesquisa comparativa de ferramentas de afinação.  
-> **Versão deste documento:** 2.1 (inclui aquisição multiataque, agregação robusta e convergência; não é a versão do programa).
-> **Atualização 2.1:** aquisição repetida da mesma nota, com execuções independentes e encerramento sugerido pela qualidade, não por contador de ataques. Nenhuma funcionalidade futura foi implementada neste documento.
+> **Versão deste documento:** **2.2** (revisão integral de objetivos intervalares para temperamentos desiguais; não é a versão do programa).  
+> **Atualização 2.1:** aquisição repetida da mesma nota, com execuções independentes e encerramento sugerido pela qualidade, não por contador de ataques.  
+> **Atualização 2.2:** seção autônoma de preservação de temperamentos históricos versus coincidência acústica; nova semântica de alvos assinados entre parciais, predição ancorada na frequência-alvo (e não diretamente na frequência capturada), modos de otimização, transparência da interface, esquemas e testes. **Nenhuma funcionalidade futura foi implementada neste documento.**
 
 ## Como usar este documento
 
@@ -41,6 +42,8 @@ A experiência deve atender ao músico interessado em uma medição clara e ao u
 3. **Inarmonicidade:** distribuição observada dos parciais reais de uma nota; depende do instrumento, da corda e das condições de medição.
 4. **Curva instrumental:** correções por nota, calculadas ou escolhidas para um instrumento e um objetivo acústico específico.
 
+**Distinção adicional da revisão 2.2 [DEFINIDO]:** uma quinta ou duodécima intencionalmente temperada **não tem, necessariamente, alvo de batimento zero**; selecionar um par de parciais (3:1, 6:2, 9:3 etc.) identifica **o que comparar**, não **qual relação musical impor**. Uma curva pode preservar intacta a *tabela de quintas* e ainda modificar os **intervalos efetivamente resultantes**; a diferença entre correções de notas adjacentes à comparação deve ser medida e comunicada.
+
 O valor de inarmonicidade **não é**, isoladamente, um desvio de afinação, tampouco define a única curva ideal. Um coeficiente físico `B` não substitui um temperamento musical.
 
 ## 1.3 Regras de projeto
@@ -52,6 +55,7 @@ O valor de inarmonicidade **não é**, isoladamente, um desvio de afinação, ta
 - **Resultados reproduzíveis**: com o mesmo conjunto de dados, parâmetros e versão de algoritmo, obter o mesmo resultado dentro de tolerâncias definidas; diferenciar variação do áudio real de não determinismo do software.
 - **Aquisição multiataque por nota [DEFINIDO]**: o usuário pode tocar a mesma nota quantas vezes quiser em uma sessão; cada ataque válido produz observação independente, revisável e preservada. O programa propõe o encerramento se houver convergência verificada, sem limitar o número de repetições nem tratar centenas de quadros sobrepostos como centenas de amostras independentes.
 - **Aplicação reversível**: medições podem criar *prévia* de curva, mas não alteram automaticamente as frequências ativas do afinador nem reescrevem as quintas históricas.
+- **Fidelidade histórica explícita [DEFINIDO / RECOMENDADO]**: separação entre (a) temperamento teórico por fundamentais, (b) *desafinação assinada* entre parciais do mesmo intervalo, (c) deslocamento causado por rigidez das cordas e (d) correção efetivamente proposta. O modo padrão recomendado para um temperamento desigual é **Fidelidade ao temperamento**; a opção **Otimização acústica** é escolha deliberada e comparável. Fidelidade pode significar restrições distintas: preservação estrita de intervalos fundamentais em uma região ou preservação do padrão de desvios acústicos de referência; nenhuma das duas será anunciada como equivalente à outra.
 - **Arquitetura responsável com celulares**: cálculos intensivos em Worker, buffers limitados, atualização visual reduzida e regras claras para processos em andamento.
 - **Privacidade local**: sem transmissão automática de áudio, perfis ou metadados; exportação sob comando do usuário. Não usar rastreamento invasivo ou identificadores persistentes de hardware.
 - **Acessibilidade e consistência**: sem controles escondidos exclusivamente em gestos, informação não dependente só de cor, interfaces utilizáveis com toque, teclado e tecnologias assistivas.
@@ -152,7 +156,7 @@ Esta seção registra *o que motivou as decisões*, para não depender de discus
 2. **Uníssono não isolado**: duas ou três cordas próximas podem originar picos e batimentos que invalidam uma medição atribuída a uma única corda. O usuário deve escolher `corda isolada`, `uníssono` ou `nota completa`, com tratamento e avisos coerentes.
 3. **Ponto de inarmonicidade muito diferente dos vizinhos**: exigir inspeção e repetição, mas **não suavizar nem descartar automaticamente** um ponto repetível sem registrar a decisão.
 4. **Curva que se altera durante a análise**: cálculo em prévia é permitido, **aplicação silenciosa é proibida**.
-5. **Desvio numérico pequeno, resultado sonoro ruim**: a curva precisa evidenciar os compromissos entre oitavas, duodécimas, quintas e outros intervalos. Zero cent em relação a uma curva não prova que ela seja adequada.
+5. **Desvio numérico pequeno, resultado sonoro ruim**: a curva precisa evidenciar os compromissos entre oitavas, duodécimas, quintas e outros intervalos. Zero cent em relação a uma curva não prova que ela seja adequada. **Adicional 2.2:** pureza de parciais 3:1/6:2/9:3 não equivale automaticamente a uma duodécima correta em temperamento desigual; comparar com alvo assinado histórico, não apenas zero.
 6. **Informação demais ou de menos**: usar **informação progressiva**, preservando um caminho para a investigação matemática sem comprometer a medição rápida.
 7. **Seleção de microfone não evidente**: quando a plataforma permitir, indicar fonte e parâmetros efetivamente em uso; incluir um teste simples do nível de entrada e nunca insinuar que um dispositivo específico está conectado sem evidência da API.
 8. **Zoom espectral de difícil descoberta**: oferecer controle visível `Ampliar parcial`/`Zoom`, além de gestos opcionais.
@@ -189,7 +193,7 @@ Em larguras pequenas os controles poderão usar duas linhas, mas não poderão s
 | **Afinador** | Já existe; padrão | Fase 5 (integração futura) | Visor atual, cents, FFT, diagnóstico, círculo de quintas, tabelas, emissor. |
 | **Parciais e inarmonicidade** | Nova | Fases 1–2 | Captura de nota sustentada, espectro detalhado, parciais, confiança, modelo B e resíduos. |
 | **Perfis instrumentais** | Nova | Fases 3 e 6 | Instrumentos, medições por nota/corda, histórico, comparação, importação/exportação. |
-| **Curvas de afinação** | Nova | Fases 4–5 | Construção, critérios acústicos, edição e comparação de curvas, prévia e aplicação confirmada. |
+| **Curvas de afinação** | Nova | Fases 4–5 | Construção, objetivos de fidelidade histórica ou otimização acústica, alvos assinados por intervalo, edição/comparação de curvas, prévia e aplicação confirmada. |
 
 **Fase 7 (validação)** é transversal e não requer uma tela pública. **Fase 6 (modelos específicos)** amplia os seletores e análises existentes, sem criar automaticamente outra área.
 
@@ -198,7 +202,7 @@ Em larguras pequenas os controles poderão usar duas linhas, mas não poderão s
 - **Afinador:** mantém integralmente o layout e os algoritmos; um futuro indicador `Correção instrumental: desligada/ativada` aparece somente quando existir curva aplicável e validada.
 - **Parciais:** substitui o corpo de medição pelo fluxo de captura/inspeção de espectro. O círculo de quintas **não precisa ficar presente**, mas o temperamento base segue acessível por referência quando aplicável.
 - **Perfis:** exibe seleção de instrumento, cobertura de notas, sessões multiataque, execuções individuais, estimativa consolidada, comparação histórica, e gerenciamento de arquivos locais.
-- **Curvas:** exibe gráfico de correções por nota, curva anterior, proposta, intervalos afetados e estados `Rascunho / Prévia / Aplicada`.
+- **Curvas:** exibe gráfico de correções por nota, curva anterior, proposta, **modo de prioridade acústico-histórica**, intervalos afetados e estados `Rascunho / Prévia / Aplicada`. Para cada intervalo, distinguir desvio em fundamentais, diferença entre parciais e batimentos previstos.
 
 A barra inferior fixa atual pode tornar-se **contextual** [RECOMENDADO], sem perder acesso a A4 e temperamento: no Afinador permanece como hoje; em Parciais pode destacar `instrumento / nota`; em Perfis `instrumento / perfil`; em Curvas `temperamento base / curva`. Não mudar A4 ou o temperamento de maneira implícita ao alternar de área.
 
@@ -221,7 +225,7 @@ A barra inferior fixa atual pode tornar-se **contextual** [RECOMENDADO], sem per
 | Menu | `Afinador`, `Parciais`, `Perfis`, `Curvas` | 4 opções, dentro do mesmo menu |
 | Parciais | `Medir`, `Congelar`, `Limpar`, `Salvar medição` | 4 contextuais; `Medir novamente` e `Finalizar e revisar` são ações de sessão exibidas por estado, não permanentes |
 | Perfis | `Novo`, `Salvar`, `Importar`, `Exportar`, `Comparar` | 5 contextuais |
-| Curvas | `Gerar prévia`, `Editar`, `Comparar`, `Aplicar`, `Exportar` | 5 contextuais |
+| Curvas | `Gerar prévia`, `Editar`, `Comparar`, `Aplicar`, `Exportar`; seletor `Prioridade` entre fidelidade e otimização | 5 ações contextuais + 1 seletor de objetivo |
 | Afinador futuro | `Correção instrumental` | 1 interruptor contextual |
 
 Total estimado: **um novo botão permanentemente visível**; aproximadamente **14 ações contextuais principais** (e até duas ações de sessão apresentadas conforme o estado), mais um interruptor futuro. Além disso existirão seletores, menus e ações secundárias em painéis de detalhes; **não** há obrigação de mostrar 14 botões simultaneamente. Nomenclaturas e contagem são orientações de UX, ajustáveis nos testes de usabilidade.
@@ -236,11 +240,11 @@ Este princípio é uma das decisões centrais do projeto.
 
 **Camada 0 — Orientação imediata**: nome da ferramenta, estado da captura, nota esperada, próxima ação simples. Não exibir um resultado impreciso como definitivo.
 
-**Camada 1 — Resultado essencial (padrão)**: nota, frequência, quantidade de parciais confiáveis, **execuções aceitas/tentadas e indicação de convergência**, status de qualidade, eventualmente B com ressalva. Mensagens como `Aguardando sustentação`, `Medindo`, `Pronto para revisar` ou `Dados insuficientes`.
+**Camada 1 — Resultado essencial (padrão)**: nota, frequência, quantidade de parciais confiáveis, **execuções aceitas/tentadas e indicação de convergência**, status de qualidade, eventualmente B com ressalva. Na tela Curvas, o modo `Fidelidade ao temperamento` / `Otimização acústica` e o estado `prévia/aplicada` são essenciais e **não ficam escondidos**. Mensagens como `Aguardando sustentação`, `Medindo`, `Pronto para revisar` ou `Dados insuficientes`.
 
 **Camada 2 — Inspeção por toque**: abrir **cada execução do mesmo som** ou um parcial no espectro/tabela, comparar resultados entre ataques e visualizar quais tentativas foram rejeitadas. Mostrar frequência real/ideal, desvio, amplitude, janela de medição, estabilidade e status `aceito/candidato/rejeitado`.
 
-**Camada 3 — Detalhes matemáticos**: fórmula, modelo, **B por execução e B consolidado, dispersão entre execuções, ajuste conjunto com escala própria por ataque**, parâmetros, resíduos, pares de parciais e pesos do ajuste; indicação de pontos removidos, versões de algoritmos e critérios de confiança.
+**Camada 3 — Detalhes matemáticos**: fórmula, modelo, **B por execução e B consolidado, dispersão entre execuções, ajuste conjunto com escala própria por ataque**, parâmetros, resíduos, pares de parciais e pesos do ajuste; indicação de pontos removidos, versões de algoritmos e critérios de confiança. Em Curvas, detalhar `I_T`, `I_final`, `t_T^harm`, `s`, `t`, `r`, `Δ_b−Δ_a` e batimento previsto em Hz, sempre com unidades e convenção de sinais.
 
 **Camada 4 — Auditoria/depuração**: medições originais, decisões de exclusão, métricas por janela, latências, razão das alterações, identificação da fonte de áudio, exportação estruturada e eventual WAV por consentimento. Pode compartilhar apresentação com o Monitor de diagnóstico existente, mas o registro acústico duradouro pertence ao perfil.
 
@@ -703,7 +707,7 @@ Exemplos exclusivamente ilustrativos.
 
 ## 9.1 Objetivo [DEFINIDO]
 
-Construir curvas por nota com correção em cents relativamente a um **temperamento de referência explícito**, considerando medições de parciais, propriedades do instrumento e **critérios acústicos escolhidos** (por exemplo, compromissos entre oitavas e outros intervalos). Possibilitar comparação, interpolação com incerteza, ajustes manuais e aplicação opcional.
+Construir curvas por nota com correção em cents relativamente a um **temperamento de referência explícito**, considerando medições de parciais, propriedades do instrumento e **critérios acústicos escolhidos** (por exemplo, compromissos entre oitavas e outros intervalos). Possibilitar comparação, interpolação com incerteza, ajustes manuais e aplicação opcional. **Para temperamentos desiguais, nunca converter automaticamente a escolha de parciais comparados em obrigação de batimento zero**; distinguir alvos musicais e acústicos conforme a seção 9.7.
 
 **Princípio absoluto:** `B` não determina sozinho uma curva ideal; não existe um único conjunto universal de correções para todo instrumento.
 
@@ -720,7 +724,9 @@ Curva ativa: [Teórica (sem correção)]
     • prévia calculada, com intervalos de incerteza
     • pontos medidos / interpolados / editados pelo usuário
 
-[Critérios acústicos ▾] [Pesos dos intervalos ▾]
+Prioridade: [Fidelidade ao temperamento ▾]  (padrão para desigual)
+             [Otimização acústica]            (opção explícita)
+[Critérios acústicos ▾] [Pesos e restrições ▾]
 [Gerar prévia] [Comparar] [Editar pontos] [Aplicar] [Exportar]
 Estado: PRÉVIA — NÃO APLICADA
 
@@ -728,6 +734,8 @@ Nota selecionada: A4
 Teórica: 415,300 Hz | Proposta: 415,300 Hz | Δ: 0,0 c
 Informação: 6 parciais, 3 medições, incerteza em revisão
 
+Intervalo selecionado: [A3–E5 / duodécima ▾]
+[Desvio teórico / Desvio dos parciais / Batimento previsto]
 [Por que esta correção?] [Quais intervalos mudam?]
 ```
 
@@ -742,12 +750,13 @@ Informação: 6 parciais, 3 medições, incerteza em revisão
 ## 9.4 Camadas de informação no gráfico
 
 - Eixo horizontal: nota MIDI, com nomes científicos/Helmholtz quando couber; para piano, A0–C8.
-- Eixo vertical: **cents relativos ao temperamento base**, não necessariamente relativos ao igual temperamento. O rótulo deve nomear a referência usada.
+- Eixo vertical: **cents relativos ao temperamento base**, não necessariamente relativos ao igual temperamento. O rótulo deve nomear a referência usada. Em comparação adicional com temperamento igual, mostrar **um segundo conjunto de dados/escala explicitamente rotulado**, nunca trocar silenciosamente a referência.
 - Linha de referência `0` = temperamento base; linha da curva aplicada = versão atual; linha de prévia = proposta.
 - Pontos identificados por origem: `medidos`, `estimados por modelo`, `interpolados`, `manuais`, `sem dados`; incerteza quando validada.
 - Tooltips/seleção mostram Hz teórico, Hz proposto, Δcents, origem do ajuste, critérios usados e versões.
 - Permitir marcar quebra de escala ou mudança de material/categoria de corda em piano; suavização forte não deve apagar automaticamente uma irregularidade física repetível.
 - Comparar duas curvas por diferenças por nota, RMS/mediana dessas diferenças, extremos e listas dos intervalos mais afetados; essas estatísticas não são critérios únicos de qualidade acústica.
+- Em temperamentos desiguais, oferecer inspeção por par de notas: `intervalo por fundamentais previsto no temperamento`, `intervalo por fundamentais com curva`, `mudança Δ_superior−Δ_inferior`, `desvio assinado entre parciais ideal harmônico`, `desvio assinado previsto com B` e `diferença de frequências em Hz`; não chamar todos esses valores simplesmente de "desvio da duodécima".
 
 ## 9.5 Critérios acústicos e pesos
 
@@ -756,68 +765,204 @@ Exemplos de pares de parciais que podem aproximar frequências em intervalos:
 | Relação entre notas | Parciais possíveis a comparar | Observação |
 |---|---|---|
 | Oitava | 2:1, 4:2, 6:3, 8:4, 10:5 | Os melhores compromissos dependem do registro e da intensidade de cada parcial. |
-| Duodécima (oitava + quinta) | 3:1, 6:2, 9:3 | A comparação deve respeitar temperamento e instrumento. |
+| Duodécima (oitava + quinta) | 3:1, 6:2, 9:3 | **Parcial da nota inferior : parcial da superior**, nesta ordem. Em temperamento desigual, a diferença teórica assinada entre esses parciais normalmente **não é zero**; obedecer aos alvos e modos da seção 9.7. |
 | Quinta | 3:2, 6:4 | Pode competir com pureza de oitavas. |
 | Quarta | 4:3, 8:6 | Pode ser intencionalmente temperada. |
 | Dupla oitava | 4:1, 8:2 | Pode afetar a região aguda/grave. |
 
-Esses pares **não são uma receita obrigatória**; a implementação deve oferecer estilos objetivos e explicar quais relações cada estilo otimiza. Outras combinações e famílias podem ser acrescentadas após validação.
+Esses pares **não são uma receita obrigatória**; a implementação deve oferecer estilos objetivos e explicar quais relações cada estilo otimiza. Outras combinações e famílias podem ser acrescentadas após validação. **Selecionar `3:1` não significa solicitar pureza 3:1**: o alvo pode ser `t=0` (coincidência acústica) **ou um desvio assinado de referência** derivado do temperamento; a opção deve ser explícita, versionada e auditável.
 
 **O que visualizar ao tocar em um intervalo**:
 
 - Notas e ordens de parciais em confronto, suas frequências previstas **antes e depois** da curva.
-- Diferença em Hz/possível frequência de batimento `|f_a − f_b|`, com a ressalva de que batimento audível depende de amplitude e condições acústicas.
+- **Diferença assinada em cents** entre os parciais e diferença em Hz/possível frequência de batimento `|f_a − f_b|`; mostrar o **sinal** do desvio em cents e a magnitude em Hz separadamente. Batimento audível depende de amplitude e condições acústicas, e diferença em Hz não prova batimento audível.
 - Compromisso com outros intervalos: melhorar uma oitava pode piorar uma quinta; o painel deve deixar isso visível.
 - Pesos numéricos de cada critério e justificativa do valor padrão (com versão do estilo).
 - Região do instrumento em que o critério atua; possibilidade de pesos distintos por registro, quando tecnicamente fundamentada.
 
-## 9.6 Modelo matemático de curva [RECOMENDADO]
+## 9.6 Modelo matemático de curva e previsão de parciais [RECOMENDADO; revisado 2.2]
 
-O perfil fornece, para cada nota `m`, informações sobre parciais `p` e possíveis modelos. A curva define uma correção instrumental `Δ_m` em cents. A frequência-alvo nominal é
+**Grandezas independentes e unidades obrigatórias:** seja `m` uma nota MIDI, `p≥1` a ordem do parcial, `T` um snapshot imutável de temperamento/A4/quintas, `f_m^temp(T)` sua frequência fundamental teórica em Hz e `Δ_m` a correção instrumental proposta em cents. O alvo nominal da frequência fundamental é
 
 \[
-f_m^{\mathrm{alvo}}=f_m^{\mathrm{temp}}\,2^{\Delta_m/1200}.
+f_m^{\mathrm{alvo}}(\Delta_m)=f_m^{\mathrm{temp}}(T)\,2^{\Delta_m/1200}.
 \]
 
-Quando se analisa uma nota individual e se supõe que os parciais observados acompanhem aproximadamente um pequeno deslocamento global de afinação, uma frequência de parcial prevista sob correção pode ser modelada por
+A medição acústica de uma execução pode trazer `f_{m,1}^{observado}` **desafinado em relação a esse alvo**. É incorreto prever a nota-alvo simplesmente multiplicando `f_{m,p}^{observado}` por `2^{Δ_m/1200}`: isso deixaria a desafinação original embutida na curva. A nova regra é separar a **forma espectral** da **escala absoluta de afinação**:
+
+- Para corda rígida com `B_m` validado, definir `g_{m,p} = p sqrt((1+B_m p²)/(1+B_m))`, com `g_{m,1}=1`. Então `f_{m,p}^{previsto}(Δ_m)=f_m^alvo(Δ_m) g_{m,p}`.
+- Quando não se aplica B mas existe série empírica confiável, definir `g_{m,p}=f_{m,p}^{medido}/f_{m,1}^{referência acústica}` **dentro da mesma execução/estimativa consolidada** e com normalização/qualidade documentadas. Se o primeiro parcial estiver ausente, um estimador inferido e validado poderá suprir a escala; não usar cegamente o primeiro pico.
+- Se não existir `g` defensável para o parcial, marcar o critério como **não avaliável**, sem interpolar razões fictícias. Para instrumentos de modos não harmônicos, usar um modelo próprio e a semântica de modo modal, não impor `p` harmônico.
+- A aproximação de que `g` permanece constante durante a pequena correção de afinação é **[A VALIDAR]**; grandes mudanças de tensão podem exigir nova captura de B e da estrutura espectral.
+
+Para notas `a` (inferior) e `b` (superior), e respectivos parciais `p` e `q`, o desvio acústico **assinado** entre as frequências previstas é
 
 \[
-f_{m,p}^{\mathrm{prevista}}(\Delta_m)\approx
-  f_{m,p}^{\mathrm{perfil}}\,2^{\Delta_m/1200},
+s_{a,p;b,q}(\Delta)=1200\log_2\!\left(\frac{f_{a,p}^{\mathrm{previsto}}(\Delta_a)}{f_{b,q}^{\mathrm{previsto}}(\Delta_b)}\right).
 \]
 
-**hipótese aproximada**, válida somente dentro de um intervalo físico de ajuste que precisará de validação; grandes mudanças de tensão podem alterar B e outras propriedades, exigindo nova medição.
-
-Um critério de intervalo pode usar, quando o objetivo é coincidência de dois parciais, o resíduo
+`+` significa que o parcial da nota **inferior** tem frequência maior que o da nota **superior**; `−` significa menor. **Não confundir** `s` com `I_{a,b}` (intervalo entre fundamentais), com `Δ_b−Δ_a` (correção diferencial da curva), nem com `|f_{a,p}−f_{b,q}|` (diferença em Hz). O resíduo de um critério é
 
 \[
-r_{a,p,b,q}(\Delta)=1200\log_2\left(\frac{f_{a,p}^{\mathrm{prevista}}(\Delta_a)}{f_{b,q}^{\mathrm{prevista}}(\Delta_b)}\right)-t_{a,p,b,q},
+r_{a,p;b,q}(\Delta)=s_{a,p;b,q}(\Delta)-t_{a,p;b,q},
 \]
 
-onde `t` é o **alvo intervalar explícito** em cents. Se se desejar coincidência de frequências, `t=0`; para critérios compatíveis com temperamentos desiguais, o alvo **não deve ser implicitamente zero** sem decisão fundamentada.
+em que **`t` é o alvo explícito, assinado em cents**, definido por política e snapshot do temperamento. `t=0` significa coincidência física de parciais; **não** é a regra automática de duodécimas ou quintas em temperamento desigual. A seção 9.7 define dois estilos, um alvo histórico derivado e as restrições musicais necessárias.
 
-Exemplo de objetivo com critérios e suavidade:
+Uma família **ilustrativa**, não algoritmo fechado, de objetivos é
 
 \[
-J(\Delta)=\sum_k w_k\,\rho(r_k(\Delta))
+J(\Delta)=\sum_k w_k\,\rho\!\left(s_k(\Delta)-t_k\right)
  +\lambda\sum_m(\Delta_{m+1}-\Delta_m)^2
- +\mu\sum_m(\Delta_{m+1}-2\Delta_m+\Delta_{m-1})^2,
+ +\mu\sum_m(\Delta_{m+1}-2\Delta_m+\Delta_{m-1})^2
+ +J_{\mathrm{fidelidade}}(\Delta),
 \]
 
-com `w_k` conforme qualidade e critério, `ρ` perda robusta e `λ, μ` penalizações explicitamente controladas. Esta é uma **família de objetivos ilustrativa**, não um algoritmo de produção já escolhido. Deve-se testar se cada termo preserva as irregularidades reais da escala.
+com `w_k` ligados à confiabilidade e ao estilo escolhido; `ρ` robusta; `λ`, `μ` controlando suavidade; e `J_fidelidade`/restrições de 9.7. Os componentes devem ser **normalizados por escala e unidades** antes de ponderar; o tamanho da tabela de pares não pode dominar o objetivo apenas por quantidade. Pesos, limiares, restrições e perdas ainda requerem validação.
 
-**Âncora e calibração**: fixar uma nota e a frequência declarada ou impor uma condição equivalente, para evitar indeterminação por deslocamento global. Não mexer automaticamente em A4; se a âncora for outra nota, explicar a relação com A4 e o temperamento.
+**Âncora e identificabilidade:** fixar uma nota de referência ou condição equivalente. A âncora deve ser informada; ela não precisa necessariamente coincidir com A4, mas não altera implicitamente o A4 armazenado. O conjunto de intervalos e vínculos precisa ser conectado à âncora ou usar uma regra expressa para componentes desconexos, sob pena de múltiplas soluções equivalentes.
 
-**Medições ausentes**: interpolar com identificação `interpolada`, incerteza por região e política para extrapolação. Se a região for insuficiente para sustentar correção, usar `Δ=0` ou bloquear aplicação segundo regra explícita e conservadora [A VALIDAR], nunca inventar B ou correção com falsa precisão.
+**Ausências e extrapolação:** dados sem parciais válidos ou sem modelo adequado não produzem correções automáticas confiáveis. Pontos interpolados/extrapolados devem trazer fonte, status e incerteza; pode-se adotar `Δ=0` ou bloquear a aplicação conforme política conservadora documentada [A VALIDAR], sem criar falsos valores de B.
 
-## 9.7 Curva e temperamentos históricos
+## 9.7 Temperamentos desiguais, duodécimas e preservação da identidade histórica [DEFINIDO / RECOMENDADO — revisão 2.2]
 
-O mesmo conjunto de medições acústicas pode apoiar **mais de uma curva**, mas as correções `Δ_m` de uma curva são definidas relativamente a seu **temperamento base** e a um critério de intervalos. Ao trocar o temperamento após calcular a curva:
+### 9.7.1 Problema: comparar parciais não é decidir sua pureza
 
-- não aplicar automaticamente os mesmos `Δ_m` como se significassem a mesma coisa;
-- [RECOMENDADO] indicar incompatibilidade e oferecer `Recalcular prévia com este temperamento`, preservando a curva anterior;
-- se for implementada uma função `Rebasear`, declarar matematicamente qual grandeza se preserva (frequências-alvo absolutas versus objetivos intervalares) e exigir confirmação;
-- jamais alterar as frações de coma das quintas do temperamento anterior para “acomodar” a curva.
+O par `3:1` de uma duodécima significa comparar **terceiro parcial da nota inferior** com **primeiro parcial da nota superior**. Analogamente, `6:2` e `9:3` descrevem outros pares de ordens que se aproximariam em um intervalo de razão 3:1 **entre fundamentais harmônicas ideais**. A relação de fundamentais da **duodécima pura** é `3:1 ≈ 1901,955 cents`, mas um intervalo de 19 semitons no temperamento igual vale **1900 cents**. Um temperamento histórico pode prever outro valor, determinado pelas quintas/oitavas do preset (inclusive edição manual pelo círculo).
+
+Assim, exigir `s=0` em todas as duodécimas pode involuntariamente **retemperar o instrumento**. Uma afinação historicamente desigual e uma coincidência acústica exata não são objetivos equivalentes. O mesmo vale para quintas `3:2`, quartas `4:3` e outros intervalos temperados. 
+
+**Regra vinculante:** a escolha do **par** de parciais é uma decisão de observação; a escolha do **alvo** é outra decisão de otimização, exposta ao usuário e registrada no perfil da curva.
+
+### 9.7.2 Grandezas matemáticas: referência nominal, desvio acústico e curva
+
+Com `a<b` em altura, definir o intervalo **teórico entre fundamentais** do temperamento `T`:
+
+\[
+I_T(a,b)=1200\log_2\left(\frac{f_b^{\mathrm{temp}}(T)}{f_a^{\mathrm{temp}}(T)}\right).
+\]
+
+A diferença assinada entre **parciais harmônicos ideais**, na ausência de inarmonicidade e **antes de qualquer correção**, é
+
+\[
+t_T^{\mathrm{harm}}(a,p;b,q)
+ =1200\log_2\left(\frac{p}{q}\right)-I_T(a,b).
+\]
+
+Esse valor pode ser **diferente de zero e ter sinal musicalmente intencional**. Com a curva aplicada, o intervalo efetivo entre fundamentais torna-se
+
+\[
+I_{\mathrm{final}}(a,b)=I_T(a,b)+(\Delta_b-\Delta_a),
+\]
+
+logo **a tabela do temperamento não ser editada não significa que a relação entre fundamentais permaneceu igual**. A interface deve exibir `Δ_b−Δ_a` como "mudança de intervalo em relação ao temperamento".
+
+A diferença acústica prevista com o modelo de parciais de 9.6 obedece à identidade
+
+\[
+s_{a,p;b,q}(\Delta)
+ =t_T^{\mathrm{harm}}(a,p;b,q)
+ +1200\log_2\left(\frac{g_{a,p}/p}{g_{b,q}/q}\right)
+ +(\Delta_a-\Delta_b).
+\]
+
+Esta equação explicita **três fontes** que não devem ser misturadas: `t_T^harm` (característica do temperamento), `1200 log₂((g_a,p/p)/(g_b,q/q))` (contribuição da forma espectral/inarmonicidade) e `Δ_a−Δ_b` (decisão de extensão da curva). Se `g_{m,p}=p` e `Δ=0`, o desvio acústico coincide exatamente com o valor harmônico teórico do temperamento, **não necessariamente com zero**.
+
+**Exemplo calculável e apenas ilustrativo:** A3–E5, intervalo de 19 semitons, em um temperamento **hipotético** cuja quinta Lá–Mi tem **697 cents** e oitava teórica 1200 cents: `I_T=1897 c`, enquanto `1200 log₂(3)=1901,955 c`. Logo `t_T^harm(3:1)≈+4,955 c` (terceiro parcial de A3 acima do primeiro de E5). Impor coincidência 3:1 (`s=0`) com cordas ideais já exigiria `Δ_E5−Δ_A3≈+4,955 c`, modificando esse intervalo fundamental **sem qualquer inarmonicidade**. Esse 697 c **não é atribuído a nenhum preset específico** do programa; é apenas um exemplo aritmético. No temperamento igual, o alvo harmônico de 3:1 é ≈`+1,955 c`.
+
+### 9.7.3 Três significados possíveis de "preservar o temperamento"
+
+Distinguir explicitamente, na matemática, na UX e nos testes:
+
+1. **Preservação da fonte teórica — invariável em ambos os modos:** os presets, o círculo de quintas, A4 e `f_temp` não são modificados pela curva. A composição `f_final=f_temp·2^(Δ/1200)` é separada e reversível. Isso **sozinho não garante preservação de intervalos**.
+2. **Preservação estrita de determinados intervalos entre fundamentais:** exigir `I_final≈I_T` para pares selecionados, isto é, `Δ_b−Δ_a≈0`, com restrições duras ou tolerâncias. É apropriado, por exemplo, proteger uma região central ou relações críticas, mas **preservar estritamente todos os intervalos conectados com uma âncora fixa força Δ=0** e torna impossível uma curva de extensão não trivial.
+3. **Preservação do padrão acústico de temperamento, compensando a rigidez:** usar como alvo o desvio assinado `t_T^harm` de um par de parciais. Assim, `s(Δ)≈t_T^harm` para as relações selecionadas, em vez de forçar coincidência. Isso pode demandar `Δ_b−Δ_a≠0`, portanto **não preserva literalmente todos os intervalos entre fundamentais**. É um critério acústico contextual, não uma prova automática de reprodução histórica perfeita.
+
+O nome público "Fidelidade ao temperamento" designará uma **política híbrida transparente**: fonte histórica imutável, proteção explícita dos intervalos fundamentais relevantes e preservação ponderada dos alvos assinados em parciais. A interface deverá identificar a importância e a tolerância de cada subobjetivo; quando incompatíveis, apresentar o compromisso obtido, não afirmar que ambos foram plenamente satisfeitos.
+
+### 9.7.4 Dois modos de prioridade no construtor de curvas
+
+| Modo | Alvos de intervalo | Proteção da estrutura histórica | Quando usar |
+|---|---|---|---|
+| **Fidelidade ao temperamento** — padrão [RECOMENDADO] para temperamentos desiguais | Critérios de parciais usam inicialmente `t_T^harm` (com sinal); apenas intervalos fisicamente elegíveis. | Restrições explícitas sobre `Δ_b−Δ_a` para pares/região central relevantes, mais desvios e tolerâncias por registro [A VALIDAR]. | Ao estudar ou afinar mantendo a coloração intencional do temperamento; não equivale a "parciais totalmente sem batimentos". |
+| **Otimização acústica** — escolha explícita | Pode priorizar `t=0` para pares escolhidos, **ou** metas de batimentos assinados/não nulos e critérios intervalares próprios. | Presets continuam intocados; o usuário define quanto aceitar de alteração intervalar. Devem aparecer advertências se o deslocamento apagar traços do temperamento. | Experimentos controlados de compromisso de oitavas, duodécimas, quintas, estilos ou preferências instrumentais. |
+
+Em ambos os modos, `t` deve estar **por critério e não escondido em um "estilo" opaco**. O operador pode inspecionar os pesos, mas uma visualização simples deve traduzir o resultado: "duodécima A3–E5: referência do temperamento +4,955 c entre parciais; previsão com a curva +4,6 c; diferença do objetivo −0,355 c" (apenas exemplo). Não exibir todos os termos na tela inicial.
+
+**Se o temperamento for igual:** ainda existem diferenças entre a duodécima temperada (1900 c) e a pura (~1901,955 c). O modo selecionado, e não o rótulo "igual", deve determinar se `t` será 0 ou o desvio teórico harmônico. Sem inarmonicidade, o modo de fidelidade com âncora e proteção adequadas deveria produzir `Δ≈0`; o modo acústico poderá produzir correções adicionais como compromisso deliberado.
+
+### 9.7.5 Objetivo e restrições de otimização [RECOMENDADO; pesos A VALIDAR]
+
+Cada critério `k` precisa declarar: `lowerMidi`, `upperMidi`, `partialLower`, `partialUpper`, `temperamentIntervalCents`, `referencePartialDetuningCents`, `targetDetuningCents`, `targetPolicy`, `weight`, `confidence`, `register`, `reason` e `modelVersion`. O modelo/curva de origem deve ser versionado e vinculado ao snapshot efetivo de A4/temperamento/quintas.
+
+Os termos objetivos são separados, por exemplo:
+
+- `J_parciais`: mede `ρ(s_k(Δ)−t_k)` **com desvio assinado** e pesos adequados para cada família de intervalo.
+- `J_fundamentais`: mede `ρ(Δ_b−Δ_a)` ou impõe `|Δ_b−Δ_a|≤ε_{a,b}` para relações históricas protegidas. O `ε` é dependente da região, **[A VALIDAR]**; não fixar um valor universal como 1 cent sem ensaio.
+- `J_regularidade`: limita saltos artificiais entre notas, mas permite irregularidades reais em pontos repetíveis e mudanças de escala do piano.
+- `J_ancora`: fixa referência absoluta/nota âncora, sem alterar A4 implicitamente.
+- `J_manual`: respeita travas e deslocamentos escolhidos pelo usuário, registrando conflitos de restrições.
+
+O motor deve detectar e relatar restrições **incompatíveis, redundantes ou subdeterminadas**. Em vez de apresentar falsa precisão, mostrar, por exemplo, "não é possível cumprir simultaneamente a preservação estrita desta quinta e a coincidência exata desta duodécima". **Nenhum modo garante batimentos nulos em todos os intervalos.**
+
+O objetivo de uma possível **igualdade de velocidades de batimento** entre intervalos diferentes usa diferenças **assinadas de frequência em Hz**, avaliadas com hipóteses explícitas; não substituir esse objetivo automaticamente por `s=0` ou por desvio em cents. A percepção do batimento também depende de amplitude, acoplamento, decaimento e composição do som. A Fase 4 terá de validar empiricamente quais critérios musicais são adequados.
+
+### 9.7.6 Camadas progressivas na interface [RECOMENDADO]
+
+1. **Essencial:** selo de prioridade selecionada (`Fidelidade ao temperamento` ou `Otimização acústica`), curva em prévia/aplicada e alerta resumido `Oitavas estendidas; temperamento base preservado como referência`.
+2. **Comparação por intervalo:** selecionar `A3–E5 / duodécima / 3:1`; apresentar `fundamentais: referência 1897 c → proposta 1899 c (mudança +2 c)` e `parciais: alvo +4,955 c → previsão +... c`. Valores não fundamentados por medição devem aparecer como `—`, não números inventados.
+3. **Justificativa:** `por que esta meta?`, relação 3:1/6:2/9:3, B e qualidade dos parciais, pesos, concessões a oitavas/quintas, lista de notas alteradas e causas da diferença.
+4. **Auditoria:** snapshot de temperamento, A4, valores de `g_{m,p}`, alvos `t`, resíduos, restrições ativas, versão do algoritmo, medições por execução, relatório de consistência e histórico de confirmação.
+
+Mostrar **três grandezas sempre diferenciáveis** na comparação: (a) relação entre fundamentais em cents, (b) desvio assinado entre parciais em cents e (c) diferença absoluta entre frequências de parciais em Hz. Acrescentar magnitude/sinal e acessibilidade textual; nunca usar uma única cor ou um simples `0` sem legenda de referência. `Informação progressiva` não autoriza esconder que o modo selecionado altera o objetivo da curva.
+
+Se o usuário tentar aplicar uma prévia do modo acústico com mudanças importantes na estrutura do temperamento, exigir confirmação específica com **resumo de impacto verificável**. Não fixar o limiar de alerta antes da validação; mostrar o diff sempre que houver alteração efetiva.
+
+### 9.7.7 Sequência técnica de cálculo e auditoria
+
+1. Capturar `T` (identidade do temperamento, quintas efetivas, A4, tabela completa e hash canônico) **antes de calcular**; congelar uma versão da curva e um conjunto de medições por `measurementId`/`sessionId`.
+2. Validar nota MIDI, contexto corda/uníssono, modelo físico, estimativas de `B`/`g`, qualidades e cobertura por registro; rejeitar casos que não sustentem predição espectral.
+3. Construir `I_T(a,b)` e `t_T^harm` **a partir das frequências efetivas do instrumento no temperamento**, não de uma quinta fixa de 700 cents nem de pressuposto universal `3:1` puro.
+4. Para cada relação, escolher `targetPolicy`, calcular `targetDetuningCents` e documentar sua origem (temperamento harmônico, coincidência, valor manual ou modelo alternativo). Calcular `s_k(Δ)` e `r_k(Δ)`. Normalizar escalas/pesos e registrar equações.
+5. Montar a função objetivo com ancoragem, regularidade e proteção histórica, testar conectividade/identificabilidade e detectar incompatibilidades; em caso de falha retornar `invalid/inconclusive`, não uma curva aparentemente pronta.
+6. Calcular **somente prévia** com parâmetros e versão identificáveis; antes de oferecer `Aplicar`, produzir relatório de `I_T`, `I_final`, `Δ_b−Δ_a`, `s(Δ)`, `t`, `r`, diferença entre parciais em Hz e incerteza; mostrar onde faltam dados.
+7. O usuário pode inspecionar/editar, comparar os dois modos usando **mesmas medições/snapshot** e aplicar explicitamente uma versão. O motor nunca reescreve `T`, notas observadas ou uma curva anteriormente aplicada.
+8. Ao mudar A4, quintas ou temperamento, invalidar compatibilidade da curva calculada; oferecer **recalcular prévia** com novo snapshot. A função eventual `Rebasear` deve oferecer explicitamente manter frequências absolutas ou redefinir critérios musicais; não reutilizar Δ automaticamente.
+
+### 9.7.8 Como calcular e testar a compensação de inarmonicidade sem retemperar em silêncio
+
+Um caso útil para testar o significado do modo **Fidelidade** é um único par de notas cuja referência histórica é `t_T^harm` e cujas funções de parcial `g` são confiáveis. A condição `s(Δ)=t_T^harm` implica
+
+\[
+\Delta_b-\Delta_a=1200\log_2\!\left(\frac{g_{a,p}/p}{g_{b,q}/q}\right).
+\]
+
+Portanto, com parciais perfeitamente harmônicos (`g=p` e `g=q`), o modo de fidelidade acústica produz `Δ_b−Δ_a=0` para esse par **mesmo se o intervalo histórico não for puro**. Se houver inarmonicidade, a correção diferencial compensa a alteração relativa dos parciais, mas **o intervalo de fundamentais efetivo muda na quantidade exibida**. Uma restrição estrita de `Δ_b−Δ_a≈0` pode entrar em conflito; o otimizador deve informar essa tensão e fornecer um compromisso verificável. Essa identidade é um **caso analítico unitário**, não uma receita suficiente para otimizar um instrumento inteiro.
+
+No modo de **coincidência acústica** (`t=0`), mesmo quando `g=p` e `g=q` o ajuste desejado pode ser `Δ_b−Δ_a=t_T^harm` (com a convenção de sinal de 9.6); isto é, pode **mudar o temperamento intencionalmente**. Não chamar tal decisão de "compensação pura de inarmonicidade".
+
+### 9.7.9 Compatibilidade ao alternar temperamentos e evidência histórica
+
+As medições acústicas podem alimentar mais de uma curva, mas os `Δ_m` são **interpretados relativamente a `T`** e ao alvo `targetPolicy`. Uma curva calculada para um temperamento não é automaticamente transferível para outro. As opções seguras são:
+
+- **Recalcular prévia:** usar as mesmas medições compatíveis com um novo snapshot de temperamento/A4/quintas e novos `t_T^harm`, produzindo nova versão. Não importar pesos de modo antigo sem verificar a semântica.
+- **Rebasear frequências absolutas:** se uma operação explícita futura for solicitada, `Δ_m^{novo}=1200 log₂(f_m^{alvo,antigo}/f_m^{temp,novo})`. A **frequência absoluta** permanece, mas a fidelidade aos intervalos do novo temperamento **não** está garantida. Exigir confirmação e marcar como `rebase_absolute`, sem aceitar isso como recálculo acústico.
+- **Reotimizar musicalmente:** manter dados acústicos e estilo histórico, mas gerar novo conjunto de alvos e resolver outra curva. É diferente de rebasear.
+
+Ao citar precedentes, distinguir fatos de capacidade documentada de matemática interna não pública: **TuneLab** apresenta campos separados para desvio de temperamento e desvio da curva; **PianoMeter** e **pianoscope** documentam temperamentos desiguais e estilos de extensão; o procedimento **EBVT de Bill Bremmer (2001)** é exemplo prático de temperamento desigual com oitava estendida; **Dixon, Mauch e Tidhar (2012)** estudam conjuntamente inarmonicidade e classificação de temperamentos em cravos. **Nenhuma dessas fontes prova que um produto implemente exatamente a política de alvos `t_T^harm` aqui recomendada**; ela é uma proposta matemática deste roadmap a validar musicalmente.
+
+### 9.7.10 Critérios de aceitação específicos de temperamentos desiguais
+
+- [ ] Para cada par, ordens e nota inferior/superior têm convenção consistente; `t_T^harm` reproduz diferenças exatas para 3:1, 6:2 e 9:3 no regime harmônico.
+- [ ] `B=0`, `Δ=0`: `s=t_T^harm` para todo temperamento/intervalo elegível; nenhuma correção espúria é atribuída à rigidez.
+- [ ] Duodécima de 1900 cents → alvo 3:1 `+1,955 c`; duodécima hipotética de 1897 cents → `+4,955 c`; trocar entre modelos não altera o temperamento base.
+- [ ] `t=0` com parciais ideais pode alterar `I_final` deliberadamente; a interface apresenta `Δ_b−Δ_a` e não rotula o resultado como fidelidade histórica.
+- [ ] Se todos os intervalos protegidos forem estritos e conectarem todas as notas a uma âncora, o sistema reconhece `Δ=0` como única solução para eles e não promete extensão adicional.
+- [ ] Restrições incompatíveis retornam diagnóstico compreensível e não produzem prévia aplicável automaticamente.
+- [ ] Previsões de parciais são ancoradas em `f_temp·2^(Δ/1200)` e razões acústicas `g`, **não** na afinação observada de uma corda desafinada.
+- [ ] Gráficos/textos distinguem cents relativos ao temperamento, desvio parcial assinado e batimento em Hz; modo de prioridade e mudança de intervalo sempre visíveis.
+- [ ] Recalcular com um temperamento diferente produz snapshot/targets atualizados; rebase absoluto não se passa por preservação musical.
+- [ ] Comparar os dois modos com os mesmos dados acústicos; documentar seus compromissos em oitavas, duodécimas, quintas e regiões do teclado.
 
 ## 9.8 Edição manual e histórico
 
@@ -825,17 +970,17 @@ O mesmo conjunto de medições acústicas pode apoiar **mais de uma curva**, mas
 - Exibir indicação `manual`, `calculado` ou `interpolado` para cada ponto.
 - Permitir `Desfazer`, `Restaurar prévia`, comparar versão anterior e exportar sem aplicar.
 - Não modificar medições originais ao editar curva. Medição é fato observado; curva é interpretação/decisão.
-- Versões aplicadas deverão manter `curveId`, `baseTemperamentId`, A4, perfis de origem, algoritmo, pesos, correções, histórico de decisões e versões.
+- Versões aplicadas deverão manter `curveId`, `baseTemperamentId`, A4, **snapshot/hash efetivo do temperamento**, `priorityMode`, `targetPolicy`/`targetDetuningCents` de cada relação, proteção de intervalos fundamentais, perfis de origem, algoritmo, pesos, correções, resíduos e histórico de decisões.
 - Não sobrescrever uma curva aprovada ao abrir o mesmo perfil após novas medições.
 
 ## 9.9 Aceitação da Fase 4
 
 - [ ] Gerar a mesma prévia ao repetir o cálculo com as mesmas entradas e parâmetros, dentro de tolerâncias numéricas documentadas.
 - [ ] Curva exibe **pontos medidos, interpolados, manuais e incertos** de maneira distinta.
-- [ ] Alterar pesos produz diff explicável e lista de intervalos afetados.
+- [ ] Alterar pesos ou alternar `Fidelidade ao temperamento`/`Otimização acústica` produz diff explicável de frequências, mudanças de intervalos por fundamentais e desvios assinados entre parciais.
 - [ ] Validar âncora e detecção de problemas de determinabilidade; não gerar curvas arbitrárias quando o sistema está subdeterminado.
 - [ ] Tolerar dados ausentes e medições ruins sem inventar correções conclusivas.
-- [ ] Comparar curvas de diferentes instrumentos e estilos com A4/temperamento explicitamente identificados.
+- [ ] Comparar curvas de diferentes instrumentos e estilos com A4/temperamento explicitamente identificados; **não comparar Δ diretamente entre snapshots diferentes sem normalizar as referências**.
 - [ ] `Gerar prévia` nunca modifica a afinação ativa; `Aplicar` exige confirmação; `Desativar` volta às referências teóricas.
 - [ ] Realizar testes acústicos e auditivos com instrumentos reais, incluindo comparações cegas quando factível; melhoria numérica não equivale automaticamente a melhoria musical.
 
@@ -855,7 +1000,8 @@ f_{\mathrm{final}}(n)=f_{\mathrm{temperamento}}(n)\cdot2^{\Delta_n/1200}
 
 - Correção desligada → `Δ_n=0` **para todos os fins**: comparação, nota-alvo e emissor (se ele seguir a opção).
 - Correção ligada → referência corrigida disponível para leitura da nota, modo Nota fixa e, **opcionalmente**, emissor de notas.
-- O círculo de quintas preserva sempre os valores e presets históricos, sem absorver `Δ_n`.
+- O círculo de quintas preserva sempre os valores e presets históricos, sem absorver `Δ_n`. **Mas** os intervalos realmente emitidos entre notas podem mudar: `I_final(a,b)=I_T(a,b)+(Δ_b−Δ_a)`. O painel de comparação deve tornar esse efeito explícito mesmo quando a tabela de quintas não muda.
+- O registro da curva deve declarar `priorityMode`, critérios acústicos, alvos assinados por parcial, restrições de fidelidade, snapshot de referência e relatório intervalar. `Fidelidade ao temperamento` não significa "todas as fundamentais continuam em intervalos exatamente iguais" se houver extensão; mostrar limites/compromissos.
 
 ## 10.2 Controle futuro no Afinador
 
@@ -864,8 +1010,9 @@ Próximo ao medidor principal ou à referência da nota, mas **não** dentro do 
 ```text
 Correção instrumental:  [ Desligada / Ativada ]
 Curva: Piano de estudo — v3 (base: Pitagórico; A4 415,3 Hz)
-Nota A3: teórica 207,650 Hz  | instrumental 207,900 Hz | Δ +2,1 c
-[Comparar referências] [Abrir curva]
+Prioridade: Fidelidade ao temperamento; restrições consultáveis
+Nota A3: teórica 207,650 Hz | instrumental 207,900 Hz | Δ +2,1 c
+[Comparar referências] [Ver intervalos afetados] [Abrir curva]
 ```
 
 Números do exemplo fictícios.
@@ -881,7 +1028,7 @@ O controle somente fica ativo quando existe curva **aplicada, compatível e vál
 5. O emissor de notas possui opção `Seguir correção instrumental` desativada por padrão [RECOMENDADO], separada da emissão teórica já existente. O programa deve explicar claramente quando está gerando f_teórico ou f_final.
 6. A4 de referência, temperamento histórico, perfis instrumentais e curva aplicada são entidades distintas; desligar a curva não restaura arbitrariamente A4 ou quintas.
 7. O diagnóstico registra `curveApplied`, `curveId`, `curveVersion`, `baseTemperamentId`, `targetHzTheoretical`, `targetHzInstrumental`, `activeTargetHz`, `deltaCents`, sem alterar os logs dos algoritmos.
-8. Na exportação das medições acústicas, não confundir `f1Medida` com `nota-alvo corrigida`; são grandezas diferentes.
+8. Na exportação das medições acústicas, não confundir `f1Medida` com `nota-alvo corrigida`; são grandezas diferentes. **O cálculo dos parciais-alvo deve partir da nova frequência nominal e de razões espectrais `g`, jamais da frequência medida desafinada.**
 9. Se a curva for excluída ou deixar de ser compatível, falhar de modo seguro: **desativar correção e informar**, sem manter frequência-alvo sem identificação.
 10. Ativação/desativação durante microfone ativo não deve exigir parar o áudio nem recalcular uma nova amostra; apenas reprojetar a comparação com os mesmos dados acústicos quando adequado.
 
@@ -890,10 +1037,10 @@ O controle somente fica ativo quando existe curva **aplicada, compatível e vál
 - [ ] Com `Δ=0`, resultados de referência idênticos aos do afinador original (dentro de erro de ponto flutuante).
 - [ ] Alternância ligada/desligada muda apenas a referência-alvo, não a frequência acústica detectada.
 - [ ] Modo Nota fixa e emissor respeitam independentemente as escolhas; compatibilidade é auditável.
-- [ ] Nenhuma quinta histórica ou preset foi alterado por cálculos acústicos.
+- [ ] Nenhuma quinta histórica ou preset foi alterado por cálculos acústicos; **mudanças reais de intervalos causadas por `Δ_b−Δ_a` foram quantificadas e identificadas, sem alegar falsamente preservação literal**.
 - [ ] Troca de temperamento e A4 invalida/bloqueia corretamente curva incompatível.
 - [ ] Restauração de configurações técnicas não elimina perfis e curvas acústicas; eventual comando de restaurar curva deve ser separado e confirmado.
-- [ ] Números em cents e Hz conferidos com exemplos matemáticos e testes de ida/volta.
+- [ ] Números em cents e Hz conferidos com exemplos matemáticos e testes de ida/volta, incluindo duodécimas 3:1/6:2/9:3 sob temperamentos iguais e desiguais.
 
 ---
 
@@ -933,6 +1080,9 @@ Quando `B` não for fisicamente apropriado, a tela continua útil como **Analisa
 - Rejeitar NaN, infinito, B abaixo do domínio físico aceito, frequências ≤0, ordenações inválidas, divisão por zero.
 - Propriedade de reconstrução: a partir de `F,B` conhecidos, obter parciais previstos; ajustar com ruído controlado; avaliar erro de B e de f1 separadamente.
 - Curvas: `Δ=0` equivale ao temperamento original; `f_final/f_base=2^(Δ/1200)`; inversão e arredondamento estáveis.
+- **Temperamentos desiguais (9.7):** testar `I_T`, `I_final`, `t_T^harm`, `s(Δ)` e diferença `Δ_b−Δ_a` com convenção de sinal; pares 3:1, 6:2, 9:3, 2:1, 3:2; desvio 3:1 de +1,955 c no igual e +4,955 c no exemplo hipotético com `I_T=1897 c`.
+- **Modelo B e alvo:** com `B=0`, a política de fidelidade não produz extensão espúria; com `B>0`, a identidade de compensação de 9.7.8 deve ser recuperada para par isolado sem restrições conflitantes. Alterar o pitch de uma execução observada **sem alterar `g`** não pode alterar os parciais-alvo propostos.
+- **Incompatibilidades:** restrições estritas conectadas a uma âncora não admitem extensão não trivial; identificar sistema desconexo, superdeterminado/incompatível, invalidade de snapshot e alteração de pesos sem versão.
 - Isolamento entre A4, temperamento histórico e Δ_n.
 
 ### B. DSP sintético
@@ -969,6 +1119,7 @@ Quando `B` não for fisicamente apropriado, a tela continua útil como **Analisa
 - Avaliar a estabilidade da atribuição de ordem do parcial em agudos/graves.
 - Repetir após afinação para verificar previsões e condições alteradas.
 - Avaliar curvas por **intervalos auditivos reais** e, quando possível, comparações cegas/pareadas e registros independentes do mesmo instrumento.
+- Comparar **os dois modos** de 9.7 usando o mesmo piano/cravo, mesma sessão acústica e temperamentos iguais e desiguais: além de parciais, medir se os intervalos fundamentais, desvios assinados e batimentos previstos foram documentados corretamente e se a coloração/compromisso histórico é percebido conforme a escolha.
 - Não atribuir melhora ao algoritmo por um teste em um único piano; registrar tamanho e composição da amostra.
 
 ### E. Layout e acessibilidade
@@ -1005,7 +1156,7 @@ Critérios de validação estatística:
 
 1. Atribuição de parciais falha sistematicamente em casos comuns sem avisos.
 2. A interface apresenta B definitivo quando o ajuste é indeterminado.
-3. Curvas são aplicadas sem confirmação ou modificam as quintas históricas.
+3. Curvas são aplicadas sem confirmação, modificam as quintas históricas ou **alteram silenciosamente intervalos característicos de um temperamento sob alegação enganosa de fidelidade histórica**.
 4. Resultados não são reproduzíveis para o mesmo áudio/mesmo conjunto de parâmetros.
 5. Não há tratamento de perfis corrompidos ou incompatíveis.
 6. O desempenho/travamento em celular real não foi testado ou as limitações não foram comunicadas.
@@ -1038,7 +1189,9 @@ INDEX.HTML (interface autocontida)
 │   ├── IndexedDB / migrações / transações
 │   └── JSON versionado / importação / exportação
 ├── Motor de curvas [NOVO]
-│   ├── Critérios intervalares / pesos / otimização
+│   ├── Snapshot histórico / alvos assinados / critérios intervalares
+│   ├── Fidelidade ao temperamento × Otimização acústica
+│   ├── Pesos / restrições / otimização / relatório de intervalos
 │   ├── Estados Rascunho / Prévia / Aplicada
 │   └── Versões / auditoria / compatibilidade
 └── Camada de afinação composta [NOVO na Fase 5]
@@ -1125,9 +1278,9 @@ INDEX.HTML (interface autocontida)
 
 **`InharmonicityEstimate`** — resultado opcional do ajuste: modelo, parâmetros F/B/f1, parciais usados, resíduos, incerteza, status e motivo.
 
-**`TuningCurve`** — versão imutável de correções Δ por nota, referência musical, dados de origem, critérios/ponderações, resultado de otimização, estado e histórico.
+**`TuningCurve`** — versão imutável de correções Δ por nota, referência musical, **`priorityMode`/alvos assinados dos parciais, restrições de fidelidade em fundamentais, snapshot histórico**, dados de origem, critérios/ponderações, resultado de otimização, estado e histórico.
 
-**`CurveApplication`** — vínculo entre curva **compatível** e afinador, com confirmação, horário, versão e condição de ativação.
+**`CurveApplication`** — vínculo entre curva **compatível** e afinador, com confirmação, horário, versão, condição de ativação, resumo do modo de prioridade e registro de mudanças intervalares aceitas.
 
 **`AuditEvent`** — evento que registra transições de estado e intervenções: quem/por que excluiu um parcial, marcou um outlier ou aplicou uma curva.
 
@@ -1328,9 +1481,25 @@ Os três valores `B` individuais são **inteiramente fictícios**. O consolidado
   ],
   "objective": {
     "modelId": "weighted-partial-intervals",
-    "version": "prototype-1",
+    "version": "prototype-2.2-unvalidated",
+    "priorityMode": "temperament_fidelity",
+    "targetPolicyDefault": "harmonic_temperament_signed",
+    "partialRatioModel": "stiff_string_or_validated_empirical",
     "intervalCriteria": [],
-    "smoothness": null
+    "fundamentalIntervalConstraints": [],
+    "smoothness": null,
+    "anchorPolicy": { "midiNote": 69, "deltaCents": 0.0 }
+  },
+  "intervalAudit": {
+    "status": "not_computed",
+    "pairs": [],
+    "requiredFieldsPerPair": [
+      "lowerMidi", "upperMidi", "partialLower", "partialUpper",
+      "temperamentIntervalCents", "referencePartialDetuningCents",
+      "targetDetuningCents", "predictedPartialDetuningCents",
+      "fundamentalIntervalShiftCents", "predictedPartialDifferenceHz",
+      "targetPolicy", "qualityStatus"
+    ]
   },
   "sourceMeasurementIds": ["measure-001"],
   "quality": { "status": "not_validated", "reasons": [] },
@@ -1338,7 +1507,7 @@ Os três valores `B` individuais são **inteiramente fictícios**. O consolidado
 }
 ```
 
-**Advertência**: os deltas, o hash e a lista de medições são *fictícios*. A curva ilustrativa não pode ser aplicada em produção; faltam critérios intervalares, validação e medições suficientes.
+**Advertência**: os deltas, o hash e a lista de medições são *fictícios*. A curva ilustrativa não pode ser aplicada em produção; `intervalCriteria` e `intervalAudit.pairs` vazios significam **sem evidência intervalar**. Nenhum modo pode transformar esse exemplo em curva válida. Em implementação real, cada entrada de `intervalCriteria` deve conter `lowerMidi`, `upperMidi`, `partialLower`, `partialUpper`, `temperamentIntervalCents`, `referencePartialDetuningCents`, `targetDetuningCents`, `targetPolicy`, `weight`, `qualityStatus` e versões/hashes; cada relatório deve preservar os valores teóricos, previstos, diferenças em Hz e mudanças em fundamentais, conforme 9.7.5–9.7.7.
 
 ## 14.4 Regras formais para os esquemas
 
@@ -1348,7 +1517,9 @@ Os três valores `B` individuais são **inteiramente fictícios**. O consolidado
 - `B` não tem unidade; `F` e `f1` têm Hz. `fundamentalEstimateHz` pode diferir de `firstPartialMeasuredHz`.
 - IDs internos do perfil/medição são distintos; **sessionId, executionId e measurementId são identificadores diferentes** (o measurementId pode ter vínculo 1:1 com execução). Integridade referencial e ordem de `executionIds` são obrigatórias; não armazenar serial do instrumento como identificador técnico permanente por padrão.
 - Preservar status `measured / inferred / interpolated / manually_edited` e distinguir “pico rejeitado” de “medição descartada da curva”.
-- Proteger compatibilidade de curva não apenas pelo `baseTemperamentId` mas também por **snapshot/hash efetivo** da tabela ou das quintas, pois presets podem ter sido personalizados.
+- Proteger compatibilidade de curva não apenas pelo `baseTemperamentId` mas também por **snapshot/hash efetivo** da tabela ou das quintas, pois presets podem ter sido personalizados. O hash de snapshot deve usar canonicalização documentada, com unidades, precisão e representação de `A4` definidas; não usar hashes textuais sensíveis a formatos locais inconsistentes.
+- Em curvas, exigir `priorityMode`, `targetPolicyDefault` e, por relação, `targetDetuningCents` **assinado**; registrar distinção entre `temperamentIntervalCents`, `fundamentalIntervalShiftCents` e `predictedPartialDetuningCents` para impedir que dados de batimento sejam confundidos com cents entre fundamentais. Na migração, campos ausentes devem ser declarados `unknown/not_computed`, nunca presumidos como `t=0`.
+- Uma medição acústica anterior à afinação não deve se transformar em alvo absoluto por multiplicação ingênua: preservar `f1` observado e razões espectrais `g` separadamente; o alvo é sempre reconstruído a partir de `f_temp` e `Δ` no snapshot ativo.
 - Importações desconhecidas devem permanecer **não aplicadas**, jamais substituir curva ativa automaticamente.
 - Não usar JSON de diagnóstico de 20 segundos como armazenamento primário do perfil; ele é um relatório de sessão, não a entidade histórica canônica.
 - Arquivos exportados são cópias locais; salvar no `IndexedDB` e exportar ZIP/JSON são operações distintas, com feedback separado.
@@ -1364,7 +1535,7 @@ Cada nota medida deve responder de maneira rastreável:
 |---|---|
 | **O que foi medido?** | PCM opcional, segmento temporal, picos candidatos, Hz/amplitude/ordem, estado de cada parcial. |
 | **Quanto confio?** | Estabilidade dentro de cada execução, dispersão **entre ataques independentes**, SNR, contagens de tentativas/aceitas, incerteza, influência de cada pico/execução e adequação do modelo. |
-| **Como foi calculado?** | Fórmula B, parâmetros de ajuste, conjunto de parciais aceitos, perdas/pesos, versão e resíduos. |
+| **Como foi calculado?** | Fórmula B, parâmetros de ajuste, conjunto de parciais aceitos, perdas/pesos, versão e resíduos; no caso de curva, `I_T`, `t_T^harm`, `g`, `priorityMode`, alvo assinado, restrições e desvios resultantes. |
 | **O que mudou?** | Histórico da nota, evolução do B, curveVersion/delta e eventos de edição/aplicação. |
 
 Fluxo de inspeção:
@@ -1407,7 +1578,7 @@ A **Ajuda avançada** deve acrescentar capítulos progressivos:
 4. Modelo B, hipótese de corda rígida, ajustes robustos e resíduos.
 5. Diferença entre medido, inferido, interpolado e corrigido.
 6. Medições por corda, uníssono, nota completa; cuidados especiais de piano/cravo e outros instrumentos.
-7. Construção de curva, critérios intervalares, pesos e batimentos; por que não existe uma curva única.
+7. Construção de curva, critérios intervalares, pesos e batimentos; por que não existe uma curva única; **duodécimas 3:1/6:2/9:3, temperamentos desiguais, alvos assinados e modos de fidelidade/otimização**, com advertência contra pureza indiscriminada.
 8. Camadas de temperamento histórico e correção instrumental.
 9. Perfis, versões, persistência, exportação e privacidade.
 10. Limitações e plano de testes em celulares.
@@ -1419,7 +1590,7 @@ A **Ajuda avançada** deve acrescentar capítulos progressivos:
 - Ao implementar cada fase, atualizar `README.md`, os capítulos da Ajuda e o roadmap **no mesmo conjunto de alterações**, separando `Disponível`, `Experimental` e `Planejado`.
 - A interface usa **inarmonicidade** na nomenclatura em português; arquivos técnicos podem usar `inharmonicity` por compatibilidade de nomes internacionais, mas sem alternar grafias sem motivo no texto exibido.
 - `Parcial` é a palavra preferida para componentes medidos; não usar `harmônico` como sinônimo universal para componentes desviados ou modos de sinos.
-- `Temperamento` não é `curva`, `B` não é `cents de afinação`, `f1` não é necessariamente o pico dominante.
+- `Temperamento` não é `curva`, `B` não é `cents de afinação`, `f1` não é necessariamente o pico dominante; `parcial selecionado` não é `alvo de batimento zero`; `t_T^harm` não é `I_T`; `f1 observada` não é automaticamente `f1 alvo`.
 - Registrar créditos e licenças da implementação existente; não apagar avisos ao refatorar HTML.
 
 ---
@@ -1438,8 +1609,8 @@ A **Ajuda avançada** deve acrescentar capítulos progressivos:
 | **2B — Agregação e convergência** | Ajuste conjunto robusto por execução com `F_j` próprio, estabilidade entre ataques, exclusão reversível, sugestão de parada sem bloqueio. | Não confundir quadros e ataques; detectar erros sistemáticos e modelos ruins. |
 | **2C — Validação de B** | Ensaios de cordas reais, incerteza e calibragem dos critérios de convergência e parada sugerida. | Sem B falso em dados insuficientes; estudos de repetibilidade entre ataques. |
 | **3 — Perfis** | IndexedDB, histórico, 88 teclas, exportação/importação, compatibilidade. | Round-trip sem perda, migração testada. |
-| **4A — Curvas em prévia** | Critérios de intervalo, otimização, comparação, incerteza, sem aplicação. | Reprodutibilidade e significados intervalares claros. |
-| **4B — Curvas com histórico** | Edição, versões, diff, aprovação explícita. | Sem mudança silenciosa da referência. |
+| **4A — Curvas em prévia** | Critérios de intervalo, objetivos explícitos `Fidelidade ao temperamento` e `Otimização acústica`, `t_T^harm`, otimização, comparação, incerteza, sem aplicação. | Casos analíticos com temperamentos iguais/desiguais e 3:1/6:2/9:3; reprodutibilidade e significados intervalares claros. |
+| **4B — Curvas com histórico** | Edição, versões, diff, relatório de mudança de intervalos fundamentais e de desvios parciais, aprovação explícita. | Sem mudança silenciosa da referência ou de significado histórico. |
 | **5 — Integração opt-in** | Curva aplicada opcionalmente ao Afinador/Nota fixa e emissor. | Frequências corretas, desligar restaura teoria, quintas preservadas. |
 | **6 — Instrumentos adicionais** | Modelos adequados a famílias diversas. | Modelo B não imposto a fontes não cordofônicas. |
 | **7 — Contínuo** | Testes matemáticos, comparação real, desempenho/privacidade/documentação. | Obrigatório a cada marco anterior. |
@@ -1478,6 +1649,7 @@ A **Ajuda avançada** deve acrescentar capítulos progressivos:
 - Parciais com qualidade individual, status de aceitação e dados detalhados consultáveis.
 - **Aquisição multiataque:** tocar uma mesma nota quantas vezes desejar; observações independentes preservadas; convergência é recomendação informativa, jamais encerramento compulsório por contagem de ataques.
 - Separar medida, interpretação via B, perfil instrumental, construção de curva e aplicação.
+- Não equiparar pares de parciais 3:1, 6:2, 9:3 a alvos universais de pureza. A finalidade histórica de cada relação é identificada via snapshot de temperamento; as mudanças da curva nos intervalos fundamentais devem ser transparentes, mesmo sem modificar as quintas.
 - Não copiar telas, códigos ou textos de aplicativos comerciais; aproveitar apenas lições gerais.
 - Temperamentos históricos não serão adulterados pela curva instrumental; correções independentes e reversíveis.
 - Atualizações de curva não devem mudar a afinação ativa silenciosamente.
@@ -1499,6 +1671,7 @@ A **Ajuda avançada** deve acrescentar capítulos progressivos:
 - Curva por instrumento em estados **Medindo → Prévia → Aplicada**, com confirmação e versionamento.
 - Diff e explicação dos efeitos intervalares (parciais e batimentos), em vez de gráfico de Railsback sozinho.
 - Auditoria acústica por nota, rastreável de curva até pico espectral.
+- Dois modos explícitos de objetivo em Curvas: `Fidelidade ao temperamento` (recomendado para desiguais, com proteção de fundamentais e alvo assinado relativo ao temperamento) e `Otimização acústica` (objetivos escolhidos deliberadamente). Ambos são validações futuras, não resultados garantidos.
 - Amostragem contínua com timestamps e consumidores de áudio isolados; Worker separado ou outra solução que preserve desempenho comprovado.
 
 ## 17.3 Pontos a validar antes de fixar padrões de produção
@@ -1514,7 +1687,9 @@ A **Ajuda avançada** deve acrescentar capítulos progressivos:
 | Número mínimo de parciais para B | Depende de cobertura de ordens e ruído | Testar identificabilidade e influência dos pontos |
 | Método robusto exato de ajuste B | Vários estimadores têm vantagens e falhas | Comparar robustez, erro e custo em cenários de contaminação |
 | Restrições de B por família | Não há um único intervalo universal | Definir modelos físicos e faixas observadas com referências |
-| Critérios de curva e pesos iniciais | Não existe uma afinação musical ideal única | Comparar compromissos acústicos e resultados auditivos |
+| Critérios de curva e pesos iniciais | Não existe uma afinação musical ideal única | Comparar compromissos acústicos e resultados auditivos; distinguir alvo assinado histórico de coincidência física |
+| Prioridade histórica vs acústica: pesos/limites | Fidelidade estrita em todas as notas é incompatível com extensão não trivial | Definir regiões e relações protegidas, tolerâncias e avisos por instrumento/temperamento; validar com músicos e afinadores |
+| Interpretação dos batimentos previstos | Desvio em cents pode não prever audibilidade ou estética | Testar previsão em Hz, componentes reais, registro, amplitude, decaimento e comparações auditivas |
 | Suavização/interpolação de curvas | Pode ocultar irregularidade verdadeira | Comparar previsão com notas retidas e quebra de escala |
 | Curva perante troca de temperamento | Δ base-específico; rebasing é ambíguo | Definir política explícita e validar propriedades matemáticas |
 | Persistência do modo Ferramentas | Preferência de UX não decidida | Teste de usabilidade; padrão conservador é Afinador |
@@ -1565,13 +1740,26 @@ Nenhum ponto pendente autoriza preencher um valor silenciosamente. O implementad
 
 ---
 
+## 18.1 Termos de temperamento e otimização acrescentados na revisão 2.2
+
+- **`I_T(a,b)` — intervalo teórico fundamental:** diferença em cents entre as frequências **fundamentais** de `b` e `a` previstas pelo temperamento do snapshot, sem curva.
+- **`t_T^harm(a,p;b,q)` — desvio harmônico histórico assinado:** comparação, em cents, entre `p·f_temp(a)` e `q·f_temp(b)`; **não** é um parâmetro de inarmonicidade.
+- **`g_{m,p}` — fator espectral relativo:** relação entre a frequência prevista do parcial `p` e a fundamental-alvo da mesma nota. Pode vir de B validado ou de medição empírica apropriada; `g_{m,1}=1` e para série ideal `g_{m,p}=p`.
+- **`s_{a,p;b,q}(Δ)` — desvio acústico assinado:** diferença em cents entre as frequências **de dois parciais previstos**; positivo se o da nota inferior for mais agudo. Não equivale ao intervalo em fundamentais.
+- **`targetPolicy` — política do alvo:** `harmonic_temperament_signed`, `acoustic_coincidence_zero`, `manual_signed`, ou outro identificador versionado. Deve determinar o valor de `t`, não a mera escolha do par de parciais.
+- **`priorityMode` — modo de prioridade:** `temperament_fidelity` ou `acoustic_optimization`; cada um determina quais restrições musicais/objetivos acústicos são usados. Nenhum modo modifica presets.
+- **`Δ_b−Δ_a` — mudança efetiva de intervalo:** diferença entre correções instrumentais das notas superior e inferior; igual a `I_final−I_T`, mesmo com tabela teórica imutável.
+- **Rebasear curva:** transformar correções de uma base para outra mantendo frequências absolutas, sem afirmar preservação da assinatura musical do novo temperamento; distinto de reotimizar.
+
+---
+
 # 19. Referências e fontes de evidência
 
 ## 19.1 Materiais do próprio projeto
 
 1. **`Roadmap.md` original, 273 linhas**, enviado em 15/11/2026. Seus objetivos, sete fases, fórmulas e critérios originais estão reproduzidos integralmente no Anexo A.
 2. **`index.html` enviado em 15/11/2026**, ~8.347 linhas: referência de interface e arquitetura atual, incluindo todas as seis mudanças prévias e os ajustes finais de tema e diagnóstico compacto. O número exato de linhas pode variar conforme normalização de finais de linha.
-3. Discussões de produto consolidadas nesta especificação: botão `Ferramentas`, quatro áreas, informação progressiva, avaliação por parcial, ajuste B robusto, perfis, curvas, controles de aplicação e auditabilidade. **Revisão 2.1:** repetição livre de ataques da mesma nota, identificação automática/manual, ajuste conjunto robusto, comparação/convergência, preservação de execuções e encerramento por decisão do usuário. O documento foi escrito para que essas decisões não dependam de novas consultas à conversa.
+3. Discussões de produto consolidadas nesta especificação: botão `Ferramentas`, quatro áreas, informação progressiva, avaliação por parcial, ajuste B robusto, perfis, curvas, controles de aplicação e auditabilidade. **Revisão 2.1:** repetição livre de ataques da mesma nota, identificação automática/manual, ajuste conjunto robusto, comparação/convergência, preservação de execuções e encerramento por decisão do usuário. **Revisão 2.2:** temperamentos desiguais, duodécimas, alvos assinados por parciais, modos de fidelidade e otimização, mudanças de intervalos fundamentais, modelo físico ancorado no alvo e integridade da auditoria. O documento foi escrito para que essas decisões não dependam de novas consultas à conversa.
 
 ## 19.2 Manuais e documentação oficiais consultados
 
@@ -1589,6 +1777,21 @@ Nenhum ponto pendente autoriza preencher um valor silenciosamente. O implementad
   Modos de troca automática, correção de altura, curva e controles especializados.
 - **Pesquisa sobre otimização por entropia espectral:** https://www.sciencedirect.com/science/article/pii/S0003682X20300050  
   Demonstra diversidade de objetivos científicos e necessidade de avaliar reproducibilidade e preferência musical. Não utilizar como autorização para implementar algoritmo fechado.
+
+### 19.2.1 Precedentes documentados específicos de temperamentos desiguais (revisão 2.2)
+
+- **TuneLab — manual Android v3.0 (setembro de 2024):** https://tunelab-world.com/TuneLabAndroidManual-3.0.pdf  
+  Apresenta separadamente `Tuning Curve Offset` e `Temperament Offset` para temperamentos desiguais, além dos parciais usados na afinação. Isso documenta a coexistência de duas camadas, **não** prova que seus critérios internos adotem `t_T^harm`.
+- **PianoMeter — documentação oficial:** https://pianometer.com/support/  
+  Seções *Unequal Temperaments* e *Tuning Style (Interval Weights)* documentam temperamentos desiguais, estilos intervalares e pares de duodécimas 3:1/9:3. A implementação interna de preservação musical não é presumida.
+- **pianoscope — manual oficial:** https://pianoscope.app/manual4/website/en/tuning-documents/temperament/index.html  
+  Documenta seleção de temperamentos históricos/desiguais; manual de curvas: https://www.pianoscope.app/manual4/html/index.en.html. Não atribuir a ele o método matemático proposto neste documento sem prova.
+- **Bill Bremmer, "New Bearing Plan for EBVT" (3 de junho de 2001):** https://www.moypiano.com/ptg/pianotech.php/2001-June/086958.html  
+  Plano prático de temperamento desigual com oitava A3–A4 estendida do tipo 6:3. **A própria postagem ressalta que o plano não detalha como compensar a inarmonicidade**; não apresentá-la como implementação formal de metas assinadas para todas as duodécimas.
+- **Simon Dixon, Matthias Mauch e Dan Tidhar, JASA 131(1), 878–887 (2012), DOI 10.1121/1.3651238:** https://pubmed.ncbi.nlm.nih.gov/22280710/  
+  Pesquisa conjunta sobre estimativa de inarmonicidade e classificação de temperamentos a partir de gravações de cravo, evidência de que as grandezas interagem mas precisam ser identificadas separadamente. Não a confundir com estudo de otimização de curvas para piano.
+
+**Limite de evidência:** os dois modos de prioridade, a política de alvo harmônico histórico `t_T^harm` e o objetivo com proteção explícita dos intervalos fundamentais são **especificações propostas para o Afinador**, ainda [A VALIDAR]; referências demonstram o problema e recursos relacionados, **não** uma comparação experimental de qualidade ou equivalência de algoritmos.
 
 ## 19.3 Relatos de comunidade (evidência qualitativa, não estatística)
 
@@ -1618,6 +1821,10 @@ Antes de iniciar uma fase, confirmar:
 - [ ] O usuário consegue inspecionar dados gradualmente, sem abrir um painel técnico inteiro para afinar uma nota.
 - [ ] Não houve alteração silenciosa de A4, círculo de quintas, temperamento histórico ou configuração dos algoritmos atuais.
 - [ ] A curva instrumental exige confirmação e pode ser desativada com retorno exato à referência teórica.
+- [ ] Para temperamentos desiguais, a duodécima 3:1/6:2/9:3 tem **alvo assinado próprio**, sem pureza zero presumida; o modo acústico é escolha deliberada.
+- [ ] O gráfico mostra separadamente intervalo entre fundamentais, diferença assinada de parciais e magnitude em Hz, bem como `Δ_b−Δ_a` em comparação com o preset, sem alegar fidelidade literal quando há mudança.
+- [ ] A previsão usa `f_temp·2^(Δ/1200)` e razões espectrais `g`; não herda por engano o desafino original da medição.
+- [ ] O snapshot/hash de A4, quintas e tabela é imutável por curva; troca de temperamento bloqueia reutilização silenciosa de Δ e exige recálculo explícito.
 - [ ] Os perfis registram tipo de corda, data, origem, versões e qualidade.
 - [ ] Dados acústicos e histórico têm esquema versionado, política de importação segura e exportação local.
 - [ ] O diagnóstico atual de 20 segundos não foi confundido com o armazenamento histórico de perfis.
@@ -1625,7 +1832,7 @@ Antes de iniciar uma fase, confirmar:
 - [ ] Testes sintéticos, reais, matemáticos, de layout, persistência e privacidade estão documentados com limites claros.
 - [ ] README/Ajuda/roadmap foram atualizados conjuntamente.
 
-**Decisão orientadora final:** não queremos apenas um afinador que “acerta” uma frequência. Queremos um ambiente em que o usuário compreenda **o que foi realmente observado no instrumento, quão confiável é cada parcela da análise, por que determinada curva foi proposta e quais compromissos ela introduz** — preservando a facilidade de uso do afinador original.
+**Decisão orientadora final (revisão 2.2):** não queremos apenas um afinador que “acerta” uma frequência. Queremos um ambiente em que o usuário compreenda **o que foi realmente observado no instrumento, quão confiável é cada parcela da análise, por que determinada curva foi proposta e quais compromissos ela introduz**. Ao trabalhar com duodécimas e outros intervalos, o objetivo não é impor pureza acústica universal, mas permitir **conservar, negociar ou alterar deliberadamente** o padrão de um temperamento histórico, sempre com as consequências matemáticas expostas e a referência musical original preservada e reversível.
 
 ---
 
