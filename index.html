@@ -1670,6 +1670,42 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
         .diag-monitor .diag-cabecalho h2 {font-size:15px;}
       }
     </style>
+    <style id="estilosNavegacaoOitavas">
+      /* Navegação canônica por tecla + oitava, sem suposições de MIDI. */
+      .controle-passo-alvo {
+        display:grid; grid-template-columns:46px 46px minmax(0,1fr) 46px 46px;
+        align-items:stretch; gap:7px; width:100%;
+      }
+      .controle-passo-alvo .btn-passo-alvo {
+        width:100%; height:auto; min-height:49px; flex:none; box-sizing:border-box;
+      }
+      .controle-passo-alvo .valor-nota-alvo {
+        min-width:0; max-width:none; flex:none; padding:7px 5px;
+        display:flex; flex-direction:column; justify-content:center;
+      }
+      .controle-passo-alvo #notaAlvoNome {
+        font-size:clamp(15px,2vw,23px); overflow-wrap:anywhere; line-height:1.13;
+      }
+      .controle-passo-alvo .btn-passo-oitava {
+        display:flex; flex-direction:column; justify-content:center; align-items:center;
+        gap:0; line-height:1; background:var(--ui-badge);
+      }
+      .controle-passo-alvo .btn-passo-oitava span {font-size:22px; font-weight:800;}
+      .controle-passo-alvo .btn-passo-oitava small {
+        display:block; font-size:10px; font-weight:800; letter-spacing:.02em; margin-top:3px;
+      }
+      @media(max-width:650px) {
+        .controle-passo-alvo {grid-template-columns:40px 40px minmax(0,1fr) 40px 40px; gap:5px;}
+        .controle-passo-alvo .btn-passo-alvo {min-height:44px;}
+        .controle-passo-alvo #notaAlvoNome {font-size:clamp(14px,3.7vw,19px);}
+      }
+      @media(max-width:355px) {
+        .controle-passo-alvo {grid-template-columns:36px 36px minmax(0,1fr) 36px 36px; gap:4px;}
+        .controle-passo-alvo .btn-passo-alvo {min-height:42px;}
+        .controle-passo-alvo #notaAlvoNome {font-size:14px;}
+        .controle-passo-alvo .btn-passo-oitava span {font-size:20px;}
+      }
+    </style>
   </head>
   <body>
     <div class="painel">
@@ -1804,7 +1840,7 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
               <details class="ajuda-capitulo"><summary>A. Leitura do afinador e referências musicais</summary><div>
                 <p><strong>Microfone:</strong> Ativar microfone solicita permissão. Ao iniciar, o motor DSP é preparado; sem sinal suficiente a leitura fica indisponível. Parar microfone interrompe a captura. Se o acesso for negado, reveja a permissão do site e utilize uma página HTTPS (ou localhost em ambiente de desenvolvimento).</p>
                 <p><strong>Valores no mostrador:</strong> Hz é a frequência estimada; a nota é uma representação musical dessa frequência; cents expressam o desvio relativo à referência musical escolhida (100 cents = um semitom no temperamento igual). Uma nota pode ficar sem leitura se não houver evidência suficiente.</p>
-                <p><strong>Automático</strong> escolhe a nota detectada; <strong>Nota fixa</strong> mostra a comparação com a nota-alvo, que pode ser avançada ou recuada em semitons. A marcação de ±100 cents e o limite máximo de frequência do gráfico alteram a visualização, não o resultado acústico.</p>
+                <p><strong>Automático</strong> escolhe a nota detectada; <strong>Nota fixa</strong> compara com a nota-alvo. Os botões internos &lt; e &gt; percorrem os alvos adjacentes (semitons no teclado cromático de 12 notas); os botões externos «8ª e 8ª» mudam uma oitava, conservando a tecla física, inclusive em teclados divididos e EDOs. O visor mostra a grafia científica com oitava e a notação de Helmholtz, quando aplicável. A marcação de ±100 cents e o limite máximo de frequência do gráfico alteram a visualização, não o resultado acústico.</p>
                 <p><strong>Notação:</strong> o botão da nota alterna o destaque entre a notação científica e Helmholtz. A alternativa fica pequena no canto inferior direito. Isso não altera a afinação.</p>
                 <p><strong>A4 e temperamento:</strong> a barra inferior começa em 415,3 Hz e no sistema Pitagórico. O cilindro acústico representa as quintas editadas em frações de coma; tabelas de comas e intervalos mostram os resultados. <strong>Zerar ajustes</strong> restaura as quintas do preset musical, enquanto <strong>Restaurar padrões</strong>, nas Configurações, redefine apenas preferências técnicas/visuais.</p>
                 <p><strong>Emissor de notas:</strong> escolha a onda, a faixa C0–B9 e o volume. O som acompanha as referências musicais definidas. Evite microfonar o próprio alto-falante; use fones e volume moderado se emitir e captar simultaneamente.</p>
@@ -1891,16 +1927,20 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
           <label class="teclado-seletor-alvo" for="seletorTeclaAlvo">Tecla física (nome e frequência)
             <select id="seletorTeclaAlvo" aria-label="Selecionar tecla física da nota-alvo"></select>
           </label>
-          <div class="controle-passo-alvo">
-            <button id="notaAlvoAnterior" class="btn-passo-alvo" type="button"
-                    aria-label="Alvo anterior disponível" title="Alvo anterior disponível">&lt;</button>
+          <div class="controle-passo-alvo" aria-label="Navegação da nota-alvo: oitavas nas extremidades e passos adjacentes próximos ao visor">
+            <button id="notaAlvoOitavaAnterior" class="btn-passo-alvo btn-passo-oitava" type="button"
+                    aria-label="Uma oitava abaixo, mantendo a mesma tecla" title="Oitava abaixo (mesma tecla)"><span aria-hidden="true">«</span><small aria-hidden="true">8ª</small></button>
+            <button id="notaAlvoAnterior" class="btn-passo-alvo btn-passo-adjacente" type="button"
+                    aria-label="Alvo anterior disponível (passo adjacente)" title="Alvo anterior disponível">&lt;</button>
             <div class="valor-nota-alvo" aria-live="polite" aria-atomic="true">
               <small>Nota-alvo</small>
-              <strong id="notaAlvoNome">Dó4 · C4</strong>
+              <strong id="notaAlvoNome">Dó4 · c′</strong>
               <span id="notaAlvoFrequencia">-- Hz</span>
             </div>
-            <button id="notaAlvoProxima" class="btn-passo-alvo" type="button"
-                    aria-label="Próximo alvo disponível" title="Próximo alvo disponível">&gt;</button>
+            <button id="notaAlvoProxima" class="btn-passo-alvo btn-passo-adjacente" type="button"
+                    aria-label="Próximo alvo disponível (passo adjacente)" title="Próximo alvo disponível">&gt;</button>
+            <button id="notaAlvoOitavaProxima" class="btn-passo-alvo btn-passo-oitava" type="button"
+                    aria-label="Uma oitava acima, mantendo a mesma tecla" title="Oitava acima (mesma tecla)"><span aria-hidden="true">»</span><small aria-hidden="true">8ª</small></button>
           </div>
           <small id="avisoNotaAlvoForaFaixa" role="note" hidden>Nota-alvo fora da faixa nominal de 16–4600 Hz do detector: a medição pode ser inconclusiva.</small>
         </div>
@@ -7025,6 +7065,8 @@ self.onmessage = function (event) {
       const painelNotaAlvo = document.getElementById("painelNotaAlvo");
       const notaAlvoAnterior = document.getElementById("notaAlvoAnterior");
       const notaAlvoProxima = document.getElementById("notaAlvoProxima");
+      const notaAlvoOitavaAnterior = document.getElementById("notaAlvoOitavaAnterior");
+      const notaAlvoOitavaProxima = document.getElementById("notaAlvoOitavaProxima");
       const notaAlvoNome = document.getElementById("notaAlvoNome");
       const notaAlvoFrequencia = document.getElementById("notaAlvoFrequencia");
       const zoomNotaAlvo = document.getElementById("zoomNotaAlvo");
@@ -9498,17 +9540,26 @@ self.onmessage = function (event) {
         }
         el.value=escolhido.keyId+'@'+escolhido.octave;
       }
-      function moverAlvoFixo(direcao) {
+      function moverAlvoFixo(direcao, unidade='adjacente') {
         const lista=alvosFixosDisponiveis();
         const atual=resolverAlvoFixoDisponivel();
-        if(!lista.length||!atual)return;
-        const idx=lista.findIndex(a=>a.targetId===atual.targetId);
-        const proximo=lista[Math.min(lista.length-1,Math.max(0,idx+direcao))];
-        if(proximo){
-          alvoFixoPorTecla={keyId:proximo.keyId,pitchId:proximo.pitchId,
-            oitava:proximo.octave};
-          atualizarNotaAlvo();
+        if(!lista.length||!atual)return false;
+        let proximo;
+        if(unidade==='oitava') {
+          // A oitava conserva keyId mesmo em teclados divididos e EDO;
+          // nunca deslocar 12 índices em uma lista de 13 ou 14 graus.
+          proximo=CatalogoAlvosCanonicos.porTecla(
+            estadoMusicalAtual.catalogoAlvos,atual.keyId,atual.octave+direcao);
+          if(!proximo||!lista.some(a=>a.targetId===proximo.targetId))return false;
+        } else {
+          const idx=lista.findIndex(a=>a.targetId===atual.targetId);
+          proximo=lista[Math.min(lista.length-1,Math.max(0,idx+direcao))];
+          if(!proximo||proximo.targetId===atual.targetId)return false;
         }
+        alvoFixoPorTecla={keyId:proximo.keyId,pitchId:proximo.pitchId,
+          oitava:proximo.octave};
+        atualizarNotaAlvo();
+        return true;
       }
       document.getElementById('seletorTeclaAlvo')?.addEventListener('change',ev=>{
         const a=alvosFixosDisponiveis().find(t=>t.keyId+'@'+t.octave===ev.target.value);
@@ -9577,13 +9628,26 @@ self.onmessage = function (event) {
 
       function atualizarNotaAlvo() {
         const alvo = descricaoNotaAlvo();
-        notaAlvoNome.textContent = `${alvo.nome} · ${alvo.cientifica}`;
+        // A grafia latina com oitava já identifica a nota científica;
+        // a segunda grafia é Helmholtz, não a letra inglesa duplicada.
+        const helmholtz=alvo.cientifica&&alvo.nome!==alvo.cientifica
+          ?nomeHelmholtzDaGrafia(alvo.cientifica):null;
+        notaAlvoNome.textContent = helmholtz
+          ? `${alvo.nome} · ${helmholtz}` : alvo.nome;
+        notaAlvoNome.title = helmholtz
+          ? `Notação científica: ${alvo.nome}. Helmholtz: ${helmholtz}.`
+          : alvo.nome;
         notaAlvoFrequencia.textContent = Number.isFinite(alvo.frequencia)
           ? `${alvo.frequencia.toFixed(3)} Hz` : "-- Hz";
         const disponiveis=alvosFixosDisponiveis();
         const idx=disponiveis.findIndex(a=>a.targetId===alvo.targetId);
         notaAlvoAnterior.disabled=idx<=0;
         notaAlvoProxima.disabled=idx===-1||idx>=disponiveis.length-1;
+        const c=estadoMusicalAtual?.catalogoAlvos;
+        const abaixo=c&&alvo.keyId?CatalogoAlvosCanonicos.porTecla(c,alvo.keyId,alvo.oitava-1):null;
+        const acima=c&&alvo.keyId?CatalogoAlvosCanonicos.porTecla(c,alvo.keyId,alvo.oitava+1):null;
+        notaAlvoOitavaAnterior.disabled=!abaixo||!disponiveis.some(a=>a.targetId===abaixo.targetId);
+        notaAlvoOitavaProxima.disabled=!acima||!disponiveis.some(a=>a.targetId===acima.targetId);
         sincronizarSeletorTeclaAlvo();
         avisoNotaAlvoForaFaixa.hidden = Number.isFinite(alvo.frequencia) &&
           alvo.frequencia >= FREQ_MIN_YIN && alvo.frequencia <= FREQ_MAX_YIN;
@@ -10206,6 +10270,12 @@ self.onmessage = function (event) {
       notaAlvoProxima.addEventListener("click", () => {
         moverAlvoFixo(1);
         invalidarConfiguracaoDSP();
+      });
+      notaAlvoOitavaAnterior.addEventListener('click', () => {
+        if(moverAlvoFixo(-1,'oitava')) invalidarConfiguracaoDSP();
+      });
+      notaAlvoOitavaProxima.addEventListener('click', () => {
+        if(moverAlvoFixo(1,'oitava')) invalidarConfiguracaoDSP();
       });
       pontosFFTSelect.addEventListener('change', () => aplicarPontosFFT(pontosFFTSelect.value));
       atualizarDescricaoPontosFFT();
