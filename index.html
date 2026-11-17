@@ -9033,7 +9033,7 @@ self.onmessage = function (event) {
           const S=settings.scale??1,eta=.48;
           if(!Number.isFinite(S)||S<.25||S>3)throw new RangeError('Escala do cilindro inválida.');
           const cx=width/2,cy=height<470?207:247;
-          const R=Math.min(214,Math.max(78,(width-66)*.33));
+          const R=Math.min(267.5,Math.max(97.5,(width-66)*.4125));
           function coord(k,p) {
             const ang=theta(k),d=p-700*k;
             return {x:cx+R*Math.cos(ang),y:cy+eta*R*Math.sin(ang)-S*d,
@@ -9129,13 +9129,13 @@ self.onmessage = function (event) {
           if(!Number.isFinite(scale)||scale<.25||scale>3)throw new RangeError('Zoom EDO inválido');
           const stacked=width<580 && orbits.length>1;
           const columns=stacked?1:Math.min(2,orbits.length);
-          const rowHeight=orbits.length>1?280:height;
+          const rowHeight=orbits.length>1?(stacked?230:280):height;
           const panels=orbits.map((degrees,index)=>{
             const pw=width/columns;
             const px=(index%columns)*pw;
             const py=Math.floor(index/columns)*rowHeight;
             const h=rowHeight;
-            const R=Math.min(180,Math.max(55,(pw-76)*.31));
+            const R=Math.min(225,Math.max(68.75,(pw-76)*.3875));
             const cx=px+pw/2,cy=py+h/2,eta=.48;
             const degreeAt=t=>degrees[t%degrees.length];
             const steps=degrees.length;
@@ -9315,14 +9315,14 @@ self.onmessage = function (event) {
           }else if(label.length){
             const center=entry.type==='edo'
               ?g.panels.find(panel=>panel.edges.includes(entry))||g.panels[0]:g;
-            const raioExterno=entry.type==='extension'?66:47;
+            const raioExterno=entry.type==='extension'?63:45;
             const radials=label.length===1?[raioExterno]:[raioExterno-7,raioExterno+13];
             for(let idx=0;idx<label.length;idx++){
               const dist=radials[idx];
               let p=entry.line.map(q=>{
                 const angle=q.theta;
                 return {x:q.x+Math.cos(angle)*dist,
-                  y:q.y+Math.sin(angle)*center.eta*dist};
+                  y:q.y+Math.sin(angle)*(center.eta*dist+9)};
               });
               if(p[p.length-1].x<p[0].x)p=p.reverse();
               const id='inscricaoQuinta_'+i+'_'+idx;
@@ -9392,7 +9392,8 @@ self.onmessage = function (event) {
           // Chromium pode devolver um bbox incorretamente enorme para textPath
           // quase vertical. Medir a geometria REAL dos caminhos externos,
           // pontos, guias e textos comuns, com margem para os glifos curvos.
-          const medidos=[guia,back,front,pontos,textos,fracaoPaths,
+          const medidos=[guia,back,front,pontos,textos,
+            ...(fracaoPaths.childNodes.length?[fracaoPaths]:[]),
             ...fracaoGroup.querySelectorAll('.cilindro-fracao-lobo')];
           let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
           for(const el of medidos){
@@ -9402,11 +9403,12 @@ self.onmessage = function (event) {
             maxX=Math.max(maxX,r.x+r.width);maxY=Math.max(maxY,r.y+r.height);
           }
           if(!Number.isFinite(minY))throw new RangeError('SVG sem geometria');
-          const x0=Math.min(-12,Math.floor(minX-30));
-          const x1=Math.max(g.width+12,Math.ceil(maxX+30));
-          const h=Math.max(260,Math.ceil(maxY-minY+56));
+          const x0=Math.floor(minX-18);
+          const x1=Math.ceil(maxX+18);
+          const h=Math.max(170,Math.ceil(maxY-minY+32));
           const yCentro=(minY+maxY)/2;
-          svg.setAttribute('viewBox',[x0,yCentro-h/2,x1-x0,h].join(' '));
+          const deltaX=g.kind==='edo'?Math.max(0,(g.width-(x1-x0))/2):0;
+          svg.setAttribute('viewBox',[x0-deltaX,yCentro-h/2,x1-x0+2*deltaX,h].join(' '));
         }catch(_){svg.setAttribute('viewBox','0 0 '+g.width+' '+g.height);}
         const graphName=document.getElementById('nomeTemperamentoCentro');
         if(graphName)atualizarNomeTemperamentoCentro();
