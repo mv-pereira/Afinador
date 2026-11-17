@@ -1252,9 +1252,7 @@ select option {background:var(--ui-panel); color:var(--ui-text);}
   border-radius:14px;overflow:hidden;}
 #cilindroSvg {width:100%;height:auto;display:block;touch-action:manipulation;
   color:var(--ui-heading-text);background:var(--ui-surface);}
-.cilindro-anel {stroke:var(--ui-border);stroke-width:1.5;}
-.cilindro-guia-secundaria {stroke:var(--ui-border);stroke-width:1;
-  stroke-dasharray:3 5;opacity:.55;}
+.cilindro-anel {stroke:var(--ui-border);stroke-width:1.5;opacity:.62;}
 /* As tonalidades são calculadas por quinta. A frente/trás afeta somente a luz. */
 .cilindro-elo {fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;
   pointer-events:none;}
@@ -9217,12 +9215,6 @@ self.onmessage = function (event) {
           const ellipse=svgNo('ellipse',{cx:centroX,cy:centroY,rx:R,ry:R*eta,
             fill:'none','class':'cilindro-anel'});
           guia.appendChild(ellipse);
-          for(const offset of [-44,44])guia.appendChild(svgNo('ellipse',{
-            cx:centroX,cy:centroY+offset,rx:R,ry:R*eta,fill:'none',
-            'class':'cilindro-guia-secundaria'}));
-          [-1,1].forEach(side=>guia.appendChild(svgNo('line',{
-            x1:centroX+side*R,y1:centroY-44,x2:centroX+side*R,y2:centroY+44,
-            'class':'cilindro-guia-secundaria'})));
           if(g.kind==='edo'&&g.panels.length>1)guia.appendChild(svgNo('text',{
             x:centroX,y:Math.max(20,centroY-(p.R*p.eta)-68),
             'class':'cilindro-titulo-ciclo','text-anchor':'middle'},
