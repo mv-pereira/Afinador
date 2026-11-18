@@ -1,6 +1,6 @@
 # Afinador — Oficina Pernambuco
 
-**[Acessar o Afinador](https://mv-pereira.github.io/Afinador/)** · **[Guia de uso](GUIA_DE_USO.md)** *(em preparação)*
+**[Acessar o Afinador](https://mv-pereira.github.io/Afinador/)** · **[Guia de uso](GUIA_DE_USO.md)**
 
 Aplicativo web de afinação musical, estudo de temperamentos e investigação acústica, desenvolvido para computadores e dispositivos móveis. Reúne detecção de altura em tempo real, edição de sistemas de afinação, análise de parciais e inarmonicidade, perfis instrumentais, cálculo experimental de curvas de afinação e síntese sonora.
 
