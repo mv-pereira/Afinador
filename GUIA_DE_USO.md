@@ -2,19 +2,19 @@
 
 **[Abrir o Afinador](https://mv-pereira.github.io/Afinador/)** · [README do projeto](README.md)
 
-Este manual corresponde ao HTML da **Etapa 18 — Simplificação das famílias instrumentais e seleção explícita do modelo acústico**, incluindo a ajuda contextual das etapas 16 e 16.5 e as curvas experimentais da Etapa 17, em português do Brasil. Abrange as cinco ferramentas, seus controles, a interpretação dos resultados e a resolução de problemas. Se a página publicada apresentar controles diferentes, confira se está usando a versão correspondente a este guia.
+Este manual corresponde ao HTML da **Etapa 19 — Caracterização espectral empírica e otimização de curvas independente de modelo físico** (com ajuda interna revisada), incluindo a ajuda contextual das etapas 16 e 16.5 e as curvas experimentais da Etapa 17, em português do Brasil. Abrange as cinco ferramentas, seus controles, a interpretação dos resultados e a resolução de problemas. Se a página publicada apresentar controles diferentes, confira se está usando a versão correspondente a este guia.
 
-> **Importante:** o afinador convencional permite comparar uma nota com uma referência musical. As medições de inarmonicidade, os ajustes físicos e as curvas instrumentais são experimentais e ainda não foram homologados fisicamente. Uma revisão aprovada de piano, fortepiano ou cravo pode ser aplicada experimentalmente aos alvos do Afinador, após armazenamento local, revalidação das fontes, reprodução do cálculo e confirmação explícita. Isso não constitui homologação física nem recomendação universal de afinação.
+> **Importante:** o afinador convencional permite comparar uma nota com uma referência musical. As medições de inarmonicidade, os ajustes físicos e as curvas instrumentais são experimentais e ainda não foram homologados fisicamente. Uma revisão aprovada de piano, fortepiano ou cravo, ou de Outro pela fonte empírica independente de B, pode ser aplicada experimentalmente aos alvos do Afinador, após armazenamento local, revalidação das fontes, reprodução do cálculo e confirmação explícita. Isso não constitui homologação física nem recomendação universal de afinação.
 
 <a name="sumario"></a>
 ## Sumário
 
 - [Capítulo 0 — Panorama e preparação](#cap-0): [qual ferramenta usar](#escolha), [primeiro acesso](#preparacao), [configurações](#configuracoes), [ajuda contextual](#ajuda-contextual), [dados e privacidade](#dados).
 - [Capítulo 1 — Afinador](#cap-1): [afinar uma nota](#afinar), [correção instrumental](#correcao-afinador), [detectores](#detectores), [FFT](#fft), [temperamentos](#temperamentos), [cilindro e edição](#cilindro), [teclados e EDO](#teclados), [biblioteca](#biblioteca), [configurações](#cfg-1), [diagnóstico](#diagnostico), [troubleshooting](#ts-1).
-- [Capítulo 2 — Parciais e inarmonicidade](#cap-2): [modelos por instrumento](#modelos), [captura individual](#captura-individual), [multiataque](#multiataque), [interpretar parciais](#interpretar-parciais), [coeficiente B](#coeficiente-b), [consolidação](#consolidacao), [configurações](#cfg-2), [troubleshooting](#ts-2).
+- [Capítulo 2 — Parciais e inarmonicidade](#cap-2): [modelos por instrumento](#modelos), [captura individual](#captura-individual), [multiataque](#multiataque), [interpretar parciais](#interpretar-parciais), [coeficiente B](#coeficiente-b), [consolidação de B](#consolidacao), [caracterização empírica](#empirica), [configurações](#cfg-2), [troubleshooting](#ts-2).
 - [Capítulo 3 — Perfis instrumentais](#cap-3): [criar perfil](#criar-perfil), [salvar sessões](#salvar-sessoes), [consultar e comparar](#comparar-sessoes), [backup](#backup-perfil), [configurações](#cfg-3), [troubleshooting](#ts-3).
-- [Capítulo 4 — Curvas de afinação](#cap-4): [pré-requisitos](#pre-curva), [gerar prévia](#gerar-curva), [interpretação](#ler-curva), [revisões](#revisar-curva), [histórico](#historico-curva), [aplicação experimental](#aplicar-curva), [configurações](#cfg-4), [troubleshooting](#ts-4).
-- [Capítulo 5 — Emissor de notas](#cap-5): [emitir](#emitir), [síntese aditiva](#sintese), [espectro medido](#reconstrucao), [espectro personalizado](#personalizado), [configurações](#cfg-5), [troubleshooting](#ts-5).
+- [Capítulo 4 — Curvas de afinação](#cap-4): [pré-requisitos](#pre-curva), [gerar prévia](#gerar-curva), [fonte empírica independente](#curva-empirica), [interpretação](#ler-curva), [revisões](#revisar-curva), [histórico](#historico-curva), [aplicação experimental](#aplicar-curva), [configurações](#cfg-4), [troubleshooting](#ts-4).
+- [Capítulo 5 — Emissor de notas](#cap-5): [emitir](#emitir), [síntese aditiva](#sintese), [espectro medido](#reconstrucao), [síntese consolidada](#sintese-empirica), [espectro personalizado](#personalizado), [configurações](#cfg-5), [troubleshooting](#ts-5).
 - [Apêndice A — Glossário](#glossario) · [Apêndice B — Relatar problemas e preservar dados](#relatos).
 
 <a name="cap-0"></a>
@@ -28,9 +28,9 @@ Abra **Ferramentas** na barra superior e selecione o ambiente de trabalho deseja
 | Ferramenta | Pergunta que responde | Entrada | Saída |
 | --- | --- | --- | --- |
 | Afinador | A nota está acima ou abaixo da afinação desejada? | Som isolado e referência musical | Frequência, nota ou grau e desvio em cents; espectro; representação do temperamento |
-| Parciais e inarmonicidade | Quais componentes existem no som? Eles obedecem a uma série ou a um modelo físico? | Uma captura ou repetições da mesma nota | Picos, parciais, evidências de qualidade, ajuste experimental de B quando elegível |
+| Parciais e inarmonicidade | Quais componentes existem no som? Eles obedecem a uma série ou a um modelo físico? | Uma captura ou repetições da mesma nota | Picos, parciais, caracterização empírica consolidada e ajuste experimental de B quando elegível |
 | Perfis instrumentais | Como conservar e comparar as medições do meu instrumento? | Sessões finalizadas e identificação física | Histórico local, mapa de teclas, comparações e backups JSON |
-| Curvas de afinação | Que correções poderiam conciliar as propriedades de piano, fortepiano ou cravo com uma afinação escolhida? | Perfil instrumental elegível, referência musical e objetivos | Prévia, auditoria, revisões e aplicação experimental reversível |
+| Curvas de afinação | Que correções poderiam conciliar propriedades acústicas do instrumento com uma afinação escolhida? | Perfil instrumental elegível, referência musical e objetivos | Prévia, auditoria, revisões e aplicação experimental reversível |
 | Emissor de notas | Como soa uma frequência, uma série de parciais ou uma reconstrução sintética? | Nota-alvo, parâmetros de síntese ou medição | Som gerado e inspeção do espectro sintético |
 
 Não é necessário atravessar todas as ferramentas. Para afinar um violão, por exemplo, basta o Afinador. Para estudar uma flauta, use Parciais → Outro → Série harmônica; para repetir a experiência em outro dia, use também Perfis. O Emissor pode ser usado sozinho, sem microfone. As Curvas exigem uma preparação acústica muito mais rigorosa do que a afinação convencional.
@@ -44,6 +44,8 @@ Não é necessário atravessar todas as ferramentas. Para afinar um violão, por
 | Investigar um timbre | Parciais → captura individual ou multiataque → inspeção → Emissor (opcional) |
 | Investigar repetibilidade de uma corda | Parciais → multiataque → confirmar tecla e corda → revisar → salvar em Perfis → comparar em outra sessão |
 | Estudo de curva de piano, fortepiano ou cravo | Preparar referência, registro e mapa → medir cordas isoladas → guardar perfis → Curvas → gerar prévia → revisar e exportar |
+| Caracterização empírica sem modelo de corda rígida | Parciais → Outro → Série harmônica → multiataque → pausar/finalizar → caracterização empírica → Perfis |
+| Estudo de curva empírica independente | Medir fontes físicas identificadas → guardar sessões → Curvas → escolher fonte empírica independente → verificar elegibilidade → gerar e revisar prévia |
 | Aplicar uma curva experimental | Curvas → aprovar revisão → guardar histórico local → aplicar experimentalmente → confirmar → Afinador; desligar quando necessário |
 
 ### O que é compartilhado e o que é independente
@@ -407,7 +409,7 @@ Abra **Modelo acústico de Outro (avançado)**. Ao selecionar Outro no fluxo nor
 
 Nos modos exploratório e não harmônico, a análise é centrada nos picos; a identificação de nota e as apresentações dependentes de ordens harmônicas não são usadas. Em Série harmônica, a identificação de nota pode ser útil, mas não há B. Em Corda rígida, selecione **Como a nota soa? → Uma corda isolada**, mesmo que já tenha usado esse modelo antes. Sem declaração de isolamento, a sessão de Outro neste modelo não pode iniciar. **Qual corda?** permite identificar a fonte; use sinal limpo, sem efeitos, e documente técnica, posição, casa (se pertinente) e condições em **Técnica / condição (opcional)**. Não existem mais seletores específicos de trastes ou de instrumento elétrico. A declaração é responsabilidade do usuário; escolher o modelo não comprova isolamento nem adequação física.
 
-Mudar o modelo de Outro limpa a condição e identificação de corda anteriormente selecionadas. Escolha antes de iniciar: o contexto fica fixado para a sessão. Nenhum modelo de Outro é elegível para gerar curvas de afinação, mesmo se B for consistente.
+Mudar o modelo de Outro limpa a condição e identificação de corda anteriormente selecionadas. Escolha antes de iniciar: o contexto fica fixado para a sessão. Outro pode alimentar curvas somente pela fonte **Parciais empíricos — independente de B (experimental)**, nos modelos Série harmônica ou Corda rígida e quando satisfizer os critérios próprios da fonte. Ter B consistente não é suficiente nem necessário nessa via. Os modos sem ordens continuam excluídos.
 
 Para estudar um piano, não desmonte, abafe ou manipule componentes internos sem conhecimento técnico apropriado. Se não for possível isolar a corda de modo seguro, registre a nota completa como tal. Os resultados ainda podem ser úteis para inspeção acústica, mesmo sem B.
 
@@ -451,7 +453,7 @@ Escolha **Manual — marcar cada toque**. Durante a sessão, pressione **Iniciar
 - **Pausar** interrompe a coleta sem apagar execuções anteriores. Após a pausa, retome pelo controle de medição, se o contexto continuar válido.
 - Quando houver uma sugestão, confira **Confirme a tecla (ou deixe sem identificação)** e pressione **Confirmar tecla** somente se souber qual tecla física foi tocada. Se duas grafias coincidirem ou não for possível identificar, use **Continuar sem identificar a tecla**. O registro continua útil de forma exploratória.
 - **Finalizar e revisar** encerra a escuta e permite inspecionar todas as execuções. Uma finalização por meta, quando habilitada, não confirma automaticamente a tecla nem B.
-- Em **Histórico de execuções**, pressione **Inspecionar** na execução desejada para examinar seus resultados. **Mais antigas** e **Mais recentes** navegam pelas páginas disponíveis. Com a coleta pausada ou finalizada, use **Excluir do conjunto** ou **Restaurar ao conjunto** nas execuções elegíveis; excluir uma execução da consolidação não apaga sua observação original. Em **Revisar parciais (avançado)**, quando disponível, use **Excluir parcial n** ou **Restaurar parcial n** para retirar ou devolver uma ordem ao ajuste daquela execução. O resultado original de B é preservado, o ajuste revisado pode ficar inconclusivo e a alteração fica registrada. Se a inspeção estiver congelada, libere o resultado antes de selecionar outra execução. Se alterar inclusões, aguarde o recálculo ou use **Recalcular resultado**.
+- Em **Histórico de execuções**, pressione **Inspecionar** na execução desejada para examinar seus resultados. **Mais antigas** e **Mais recentes** navegam pelas páginas disponíveis. Com a coleta pausada ou finalizada, use **Excluir do conjunto** ou **Restaurar ao conjunto** nas execuções elegíveis; excluir uma execução da consolidação não apaga sua observação original. Em **Revisar parciais (avançado)**, quando disponível, use **Excluir parcial n** ou **Restaurar parcial n** para retirar ou devolver uma ordem ao conjunto daquela execução, inclusive em Série harmônica. A exclusão é respeitada na caracterização empírica e, quando aplicável, no ajuste de B. O resultado original de B é preservado, o ajuste revisado pode ficar inconclusivo e a alteração fica registrada. Se a inspeção estiver congelada, libere o resultado antes de selecionar outra execução. Se alterar inclusões, aguarde o recálculo ou use **Recalcular resultado**.
 - **Salvar no perfil** encaminha a sessão concluída para o registro instrumental. **Baixar sessão (JSON)** guarda os dados sem depender do banco local. **Descartar sessão** elimina a sessão de trabalho; exporte ou salve antes se precisar dela.
 
 Não mude de nota, corda, posição do microfone, família, modelo acústico ou contexto musical no meio da sessão. Se a base ou a captação mudar, revise/exporte o conjunto anterior e comece outro. O sistema pode pausar em caso de suspensão do áudio, perda de continuidade, mudança do microfone, mudança de ferramenta, segundo plano ou limite de memória; há também limite de dez minutos de escuta contínua. Os registros já obtidos devem ser examinados antes de retomar ou descartar.
@@ -509,7 +511,7 @@ Quando o modelo for elegível e houver evidência suficiente, abra **Inarmonicid
 Um resíduo pequeno em todas as ordens identificadas indica que o modelo explica bem aquelas observações. Não prova que a ordem foi corretamente atribuída ou que a corda seja idealmente isolada. Resíduos sistemáticos, componentes sobrepostas, instabilidade e valores incompatíveis pedem revisão. Um resultado inconclusivo deve ser conservado como tal; não adote B = 0 por conveniência.
 
 <a name="consolidacao"></a>
-## 2.6. Resultado da sessão: consolidação e repetibilidade
+## 2.6. Resultado da sessão: consolidação de B e repetibilidade
 
 Para sessões de corda rígida elegíveis, o motor procura um B comum e permite uma escala F diferente por execução. Não é uma simples média dos B individuais; cada execução conserva sua evidência, inclusive a relação entre frequências e resíduos. Por padrão, são requeridas ao menos três execuções elegíveis para consolidação e dez para a avaliação por reamostragem. Há outros testes de consistência, contexto, identificabilidade e qualidade.
 
@@ -528,10 +530,54 @@ O bootstrap reamostra ataques independentes, por padrão em 399 repetições, pa
 
 Em **Execuções fora do ajuste**, examine os motivos: rejeição, contexto incompatível, nota não confirmada, frequência divergente, exclusão manual, parcial inválido ou condição física inadequada. Excluir observações só para reduzir resíduos introduz viés. Prefira registrar o motivo físico de uma exclusão e preservar as observações originais.
 
+<a name="empirica"></a>
+### Caracterização espectral empírica (independente de B)
+
+A caracterização empírica descreve as relações de frequência efetivamente observadas, sem ajustar a equação da corda rígida. Não é um quinto modelo acústico nem um novo coeficiente B. Está disponível para sessões multiataque com os modelos Série harmônica e Corda rígida, inclusive piano, fortepiano e cravo. Não se aplica a Exploratório e Componentes não harmônicos, que não atribuem ordens à série.
+
+1. Escolha a família e o modelo apropriados. Para investigar um instrumento sem hipótese de corda rígida, use **Outro → Modelo acústico de Outro (avançado) → Série harmônica**.
+2. Meça várias execuções independentes da mesma nota e fonte física. Preserve a técnica, a condição da fonte e a captação.
+3. Pause ou finalize a sessão e abra **Caracterização espectral empírica (independente de B)**. Examine o número de ataques com primeiro parcial medido e aceito, o gráfico e a tabela. A apresentação não depende da existência de B individual ou consolidado.
+4. Revise observações e exclusões quando houver justificativa acústica. Salve a sessão no perfil para consultar posteriormente. Para experimentar curvas, confirme a tecla e identifique a fonte física (ver [4.2](#curva-empirica)).
+
+#### Como os desvios são calculados
+
+Para cada execução `i`, o primeiro parcial `f₁,ᵢ` medido e aceito serve de referência. Para uma ordem `n` com frequência observada `fₙ,ᵢ`:
+
+- Razão observada: `rₙ,ᵢ = fₙ,ᵢ / f₁,ᵢ`.
+- Desvio da série ideal: `δₙ,ᵢ = 1200 × log₂[rₙ,ᵢ / n]`, em cents.
+- Desvio consolidado: mediana dos desvios daquela ordem entre os ataques admitidos.
+- Razão consolidada: `rₙ = n × 2^(mediana(δₙ)/1200)`.
+
+Por exemplo, numa execução em que o primeiro parcial mede 220 Hz, o segundo mede 440,5 Hz e o terceiro 659,2 Hz, os desvios são aproximadamente +1,97 e −2,10 cents. O primeiro parcial tem desvio zero por construção. Essa normalização permite comparar a estrutura da série mesmo quando a altura absoluta varia um pouco entre ataques. Não significa que as alturas absolutas tenham ficado constantes.
+
+O cálculo admite somente execuções elegíveis, incluídas no conjunto, com resultado experimental e sem códigos de rejeição. Usa parciais aceitos, não excluídos, com frequência positiva, amplitude válida, SNR local de pelo menos 12 dB e ordem inteira de 1 a 24. Ordens duplicadas entre esses candidatos não são utilizadas. Um ataque precisa ter um único primeiro parcial admitido, a até 15 cents da fundamental estimada e, quando há frequência de referência válida da sessão, a até 45 cents dela. Não se utiliza uma fundamental virtual como substituta de um primeiro parcial ausente. O reconhecimento automático de ordens continua sujeito às tolerâncias do analisador; não há atribuição manual de ordem a picos arbitrários.
+
+#### Ler a tabela e o gráfico
+
+| Indicador | Interpretação |
+| --- | --- |
+| Razão mediana | Multiplicador de frequência consolidado em relação ao primeiro parcial |
+| Desvio (¢) | Mediana dos desvios assinados em cents; negativo significa componente abaixo do múltiplo ideal |
+| MAD (¢) | Mediana dos desvios absolutos em relação à mediana da ordem; medida descritiva robusta de dispersão |
+| Máx. \|desvio da mediana\| (¢) | Maior afastamento absoluto observado da mediana; não é intervalo de confiança |
+| Ataques | Observações admitidas para a ordem / total de execuções elegíveis e incluídas, inclusive as que não forneceram primeiro parcial válido |
+| Estáveis | Observações em que tanto a ordem quanto o primeiro parcial têm estabilidade temporal registrada entre 0 e 3 cents |
+| Bootstrap 95% (¢) | Intervalo exploratório da mediana, quando calculável |
+| Suporte para curva* | Provisório ou Insuficiente, segundo os critérios por ordem; não autoriza por si só uma curva |
+
+O gráfico apresenta as medianas por ordem e barras de dispersão máxima simétricas em torno delas, não barras do bootstrap. A cor distingue suporte provisório para curva de evidência insuficiente. A tabela pode ser deslocada horizontalmente. O **RMS descritivo** é a raiz da média dos quadrados dos desvios medianos das ordens superiores com pelo menos três ataques e cobertura de 60%; o primeiro parcial não entra nesse RMS. Compare RMS apenas com cobertura e ordens equivalentes. Um RMS pequeno não confirma a causa física dos desvios.
+
+O bootstrap empírico usa 399 reamostragens por ordem quando há de 10 a 64 observações admitidas naquela ordem. O intervalo de 95% é descritivo, não uma incerteza calibrada; um intervalo zero pode ser degenerado. A ausência de intervalo não equivale a certeza nem impede necessariamente uma curva. Não confunda os critérios estatísticos fixos desta caracterização com as preferências do ajuste de B.
+
+#### Descrever, sintetizar e usar em curvas são finalidades distintas
+
+Uma tabela empírica pode existir com poucos dados, desvios irregulares ou sem B válido. A síntese consolidada requer a ordem 1 e pelo menos outra ordem com três ataques e 60% de cobertura, mas não exige suporte para curva. A fonte de curvas exige adicionalmente repetibilidade, estabilidade, identidade física e contexto de referência (ver [4.2](#curva-empirica)). Assim, um resultado útil para estudo pode permanecer inadequado para definir alvos de afinação. Nenhum desses caminhos inventa ordens ausentes.
+
 <a name="cfg-2"></a>
 ## 2.7. Configurações de Parciais e inarmonicidade
 
-Os grupos avançados permitem experimentos controlados. Configurações acústicas personalizadas são registradas nas sessões, consideradas exploratórias para fins de curvas e não habilitam uma medição automaticamente como fonte de correções. A alteração durante uma sessão em curso não muda os parâmetros congelados daquela sessão; para testar novos critérios, finalize e inicie outra. A escala e o filtro de candidatos são visuais.
+Os grupos avançados permitem experimentos controlados. Configurações acústicas personalizadas são registradas nas sessões, consideradas exploratórias para fins de curvas e não habilitam uma medição automaticamente como fonte de correções. A alteração durante uma sessão em curso não muda os parâmetros congelados daquela sessão; para testar novos critérios, finalize e inicie outra. A escala e o filtro de candidatos são visuais. Os limiares próprios da caracterização empírica e da fonte independente de curvas não são substituídos pelas preferências de ajuste de B; consulte [a caracterização empírica](#empirica).
 
 ### Aquisição e apresentação (aberto)
 
@@ -625,7 +671,9 @@ Além dos limites individuais, janela mínima ≤ máxima; duração útil míni
 | Escuta pausada/interrompida | Mantenha a página em primeiro plano, confira a continuidade do microfone e não use Emissor/diagnóstico simultaneamente; retome com contexto válido. |
 | Limite de memória atingido | Exporte a sessão e reduza o volume de novas revisões; conclua ou descarte antes de recomeçar. |
 | Não consegue guardar no perfil | Finalize, aguarde a conclusão do cálculo e confira família, corda e modelo de Outro. Exporte JSON para não perder a sessão. Veja [Capítulo 3](#cap-3). |
-| Sessão personalizada não aparece para curva | É uma restrição deliberada: restaure critérios de referência e adquira novas medições elegíveis de Piano, Fortepiano ou Cravo. Outro não é fonte de curvas. Não edite manualmente o JSON para contorná-la. |
+| Caracterização empírica vazia | Confira modelo harmônico ou de corda rígida, ataques incluídos, primeiro parcial medido e aceito, SNR e ordens válidas. Não force uma fundamental ausente. |
+| Desvios aparecem, mas suporte para curva é insuficiente | Confira cobertura, estabilidade do primeiro parcial e da ordem, dispersão e SNR. Repita em condições equivalentes; veja [4.2](#curva-empirica). |
+| Sessão personalizada não aparece para curva | É uma restrição deliberada: restaure critérios de referência e adquira novas medições elegíveis de Piano, Fortepiano ou Cravo. Para Outro, use Série harmônica ou Corda rígida e escolha a fonte empírica independente em Curvas, com parâmetros de referência. Não edite manualmente o JSON para contorná-la. |
 
 [Voltar ao sumário](#sumario)
 
@@ -655,7 +703,7 @@ Duas cordas da mesma tecla do piano podem ter propriedades diferentes. Identifiq
 
 1. No [Capítulo 2](#multiataque), finalize a sessão, confirme a tecla quando conhecida e examine a condição da fonte. Aguarde o cálculo terminar.
 2. Pressione **Salvar no perfil**, em Parciais. A ferramenta Perfis mostra **Sessão pronta para salvar**.
-3. Selecione o instrumento correto ou crie um perfil novo da mesma família e, no caso de Outro, do mesmo modelo acústico. Confira **Identificação física da corda/grupo (da mesma tecla)**.
+3. Selecione o instrumento correto ou crie um perfil novo da mesma família e, no caso de Outro, do mesmo modelo acústico. Confira **Identificação física da corda/grupo (da mesma tecla)**. Para Outro com Série harmônica, identifique a fonte real (por exemplo, tubo ou registro), mesmo que não seja corda. Essa identificação é necessária para a fonte empírica de curvas.
 4. Pressione **Salvar sessão neste perfil**. Aguarde a confirmação do banco; não suponha que foi armazenada antes da confirmação.
 5. Alternativamente, use **Baixar sessão sem salvar** para fazer uma cópia independente, ou **Cancelar salvamento** para abandonar o encaminhamento sem criar um registro.
 
@@ -666,17 +714,18 @@ O histórico mantém a referência e as frequências originais da sessão. O apl
 
 O **Mapa de teclas** permite escolher a tecla e abrir seu **Histórico**. Use **Medições sem tecla / fora do mapa** para consultar registros que não se associam à disposição. A ordenação pode ser por mais recentes, mais antigas ou qualidade provisória; essa última é uma ajuda de triagem, não classificação metrológica definitiva.
 
-Ao selecionar uma sessão, procure os dados de modelo, família, fonte, identificação, condições de áudio, parâmetros acústicos registrados, execuções, resíduos e intervalo de B, quando disponíveis. O espectro armazenado possui sua própria faixa; não é áudio reexecutável e não ganha conteúdo ao alternar a escala. Os detalhes de uma execução conservam evidências e ressalvas; filtros visuais não apagam os itens ocultos.
+Ao selecionar uma sessão, procure os dados de modelo, família, fonte, identificação, condições de áudio, parâmetros acústicos registrados, execuções, resíduos e intervalo de B, quando disponíveis. Para sessões harmônicas ou de corda rígida, consulte também **Caracterização espectral empírica**: a tabela é recalculada a partir dos dados originais e das exclusões arquivadas, sem armazenar uma segunda versão conflitante das estatísticas. O espectro armazenado possui sua própria faixa; não é áudio reexecutável e não ganha conteúdo ao alternar a escala. Os detalhes de uma execução conservam evidências e ressalvas; filtros visuais não apagam os itens ocultos.
 
 Para comparar, selecione **Primeira sessão**, **Segunda sessão** e **Comparar sessões**. Prefira duas sessões distintas, da mesma tecla e corda, com técnica, captação e parâmetros equivalentes. Verifique a mensagem de compatibilidade antes de interpretar diferenças.
 
 | Situação | Interpretação |
 | --- | --- |
-| Duas sessões compatíveis de corda rígida | É possível observar diferenças de frequência e B, dispersão, qualidade e contexto; não são combinadas automaticamente em um novo ajuste conjunto. |
+| Duas sessões compatíveis de corda rígida | É possível observar diferenças de frequência e B, dispersão, qualidade e contexto; não são combinadas automaticamente em um novo ajuste conjunto. Para a caracterização empírica, consulte as tabelas de cada sessão separadamente. |
 | Contextos de áudio diferentes | Comparação limitada; a diferença pode resultar da captação. |
 | Configurações acústicas diferentes | Consulte as observações separadamente; não trate resultados como fisicamente equivalentes. |
 | Família, procedimento ou modelo diferente | Não atribua a diferença a variação física de B sem evidência. |
-| Modelos sem B | Compare frequências e espectros observados; não há correspondência modal automática. |
+| Série harmônica, sessões compatíveis | O comparador apresenta desvios medianos das ordens superiores comuns com pelo menos três ataques e 60% de cobertura em cada sessão. |
+| Outros modelos sem B | Compare frequências e espectros observados separadamente; não há correspondência modal automática. |
 | Revisões de uma mesma sessão | Mostram efeito da revisão; não são duas aquisições independentes. |
 
 **Medir novamente** encaminha a tecla selecionada para Parciais, desde que ela exista na configuração musical atual. O modelo de Outro é recuperado do perfil; nos modelos Exploratório e Componentes não harmônicos, o botão **Medir novamente (sem tecla)** encaminha a captura sem atribuição de tecla. Em Corda rígida, declare novamente a condição de isolamento. Confira novamente a corda e o contexto. Se existir uma sessão anterior em memória, finalize/exporte ou descarte-a explicitamente antes de trocar de nota. Se a tecla estiver ausente do layout atual, recupere a configuração musical correspondente. Não altere o mapa para forçar coincidência.
@@ -692,7 +741,7 @@ Também é possível importar um JSON de sessão multiataque exportado de Parcia
 
 Não renomeie IDs ou hashes manualmente para forçar mesclagem. Um arquivo JSON de outra ferramenta não é necessariamente um perfil importável, embora todos tenham a mesma extensão. O limite geral de arquivos acústicos corresponde ao orçamento de segurança de 32 MiB, com restrições adicionais de estrutura e conteúdo; um perfil muito grande deve ser preservado e dividido por procedimentos suportados (por exemplo, exportar sessões e organizar perfis menores para novas coletas), sem descartar a única cópia existente.
 
-Os dados locais podem ser perdidos quando a origem do site muda (por exemplo, localhost versus GitHub Pages), quando o navegador limpa o armazenamento ou quando o aparelho é substituído. Para migrar, exporte no aparelho antigo e importe no novo. Os arquivos novos registram família, modelo e condição da sessão; para Outro, a compatibilidade do modelo é verificada também na importação e no salvamento. A Etapa 18 não garante leitura de contextos acústicos antigos nem das famílias substituídas. A validação requer APIs de segurança como SHA-256; se indisponíveis, use HTTPS/localhost em navegador compatível.
+Os dados locais podem ser perdidos quando a origem do site muda (por exemplo, localhost versus GitHub Pages), quando o navegador limpa o armazenamento ou quando o aparelho é substituído. Para migrar, exporte no aparelho antigo e importe no novo. Os arquivos novos registram família, modelo e condição da sessão; para Outro, a compatibilidade do modelo é verificada também na importação e no salvamento. A reformulação da Etapa 18 não garante leitura de contextos acústicos antigos nem das famílias substituídas. Na Etapa 19 as estatísticas empíricas são derivadas das observações e exclusões conservadas; não é preciso acrescentá-las manualmente ao JSON. As curvas empíricas registram a sua própria política de otimização e continuam sujeitas à revalidação. A validação requer APIs de segurança como SHA-256; se indisponíveis, use HTTPS/localhost em navegador compatível.
 
 <a name="cfg-3"></a>
 ## 3.5. Configurações de Perfis instrumentais
@@ -737,7 +786,7 @@ Aplique as preferências, reabra uma evidência se necessário e use **Salvar al
 <a name="cap-4"></a>
 # Capítulo 4 — Curvas de afinação
 
-Esta ferramenta investiga correções instrumentais para **piano, fortepiano e cravo**. Outro não é suportado na otimização de curvas, independentemente do modelo acústico. Uma corda rígida apresenta parciais desviados em relação a uma série ideal, de modo que relações entre parciais de teclas diferentes podem sugerir correções nas frequências de afinação. O objetivo é permitir o estudo dessas relações com evidência rastreável e restrições explícitas, não produzir uma receita universal de estiramento de oitavas.
+Esta ferramenta investiga correções instrumentais para **piano, fortepiano e cravo**. **Outro** também pode ser estudado pela fonte empírica independente de B, explicitamente selecionada e sujeita a condições adicionais. Parciais de uma fonte real podem desviar da série ideal, e as relações entre parciais de teclas diferentes podem sugerir correções nas frequências de afinação, tanto por um modelo físico quanto por razões medidas repetíveis. O objetivo é permitir o estudo dessas relações com evidência rastreável e restrições explícitas, não produzir uma receita universal de estiramento de oitavas.
 
 > **Todas as curvas desta versão são experimentais e não homologadas fisicamente.** Gerar, aprovar ou guardar uma revisão não modifica a afinação por si só. A aplicação experimental é uma operação distinta, reversível, que exige fontes locais verificadas, recálculo coincidente e confirmação explícita. Consulte [4.5](#aplicar-curva).
 
@@ -745,12 +794,12 @@ Esta ferramenta investiga correções instrumentais para **piano, fortepiano e c
 ## 4.1. Pré-requisitos e preparação do perfil
 
 1. Escolha a base musical adequada (temperamento, referência e layout). Guarde uma definição na [biblioteca pessoal](#biblioteca) para poder recuperá-la posteriormente.
-2. Crie um perfil de **Piano, Fortepiano ou Cravo** com o mapa físico correto, conforme [3.1](#criar-perfil). Para cravo e fortepiano, use um perfil por registro ou conjunto de cordas, com extensão e oitavas efetivamente soantes; não misture 8′ e 4′.
-3. Obtenha sessões multiataque de cordas isoladas, com identificação inequívoca de tecla e corda, utilizando os parâmetros acústicos de referência. Consulte [2.3](#multiataque) e [2.6](#consolidacao).
+2. Crie um perfil de **Piano, Fortepiano ou Cravo**, ou de **Outro** com Série harmônica ou Corda rígida se estudar a fonte empírica, com o mapa físico correto, conforme [3.1](#criar-perfil). Para cravo e fortepiano, use um perfil por registro ou conjunto de cordas, com extensão e oitavas efetivamente soantes; não misture 8′ e 4′.
+3. Obtenha sessões multiataque com identificação inequívoca de tecla e fonte física, utilizando os parâmetros acústicos de referência. Piano, fortepiano e cravo exigem corda isolada, inclusive na fonte empírica. Outro com Corda rígida também exige isolamento; Outro com Série harmônica admite nota completa ou condição desconhecida. Uníssonos declarados não são aceitos para curvas. Consulte [2.3](#multiataque) e [2.6](#consolidacao).
 4. Salve as sessões no perfil. Use várias teclas da região que pretende estudar; poucas teclas podem permitir inspecionar alguns intervalos, mas não necessariamente construir uma curva completa.
 5. Confira a ordem real das teclas. Registre condições de corda, grupos de uníssono e transições construtivas. Não suponha que todo o instrumento constitua uma região fisicamente homogênea.
 
-Sessões personalizadas de análise, registros inconclusivos e famílias diferentes não são intercambiáveis com as fontes de uma curva do instrumento escolhido. A seleção das fontes avalia compatibilidade da base musical, identidade física, qualidade e consistência das observações. Quando há mais de uma corda medida para a tecla, selecione a fonte representativa se a interface solicitar, ou deixe a tecla sem correção. Uma fonte representativa não descreve automaticamente todas as cordas de um uníssono.
+Sessões personalizadas de análise e famílias diferentes não são intercambiáveis com as fontes de uma curva do instrumento escolhido. Na fonte empírica independente, B ausente ou inconclusivo não é impedimento por si só, mas a evidência por ordem deve ser elegível. A seleção das fontes avalia compatibilidade da base musical, identidade física, qualidade e consistência das observações. Quando há mais de uma corda medida para a tecla, selecione a fonte representativa se a interface solicitar, ou deixe a tecla sem correção. Uma fonte representativa não descreve automaticamente todas as cordas de um uníssono.
 
 ### O que significa uma correção de curva
 
@@ -765,7 +814,7 @@ Em **Ferramentas → Curvas de afinação**, siga a sequência numerada da inter
 
 ### 1. Escolha o instrumento
 
-Selecione um **Perfil** de piano, fortepiano ou cravo. **Atualizar perfis** atualiza a lista; **Ir para Perfis instrumentais** permite organizar os dados antes do estudo. Se o banco local estiver indisponível ou se quiser analisar uma cópia, use **Abrir backup de perfil (sem importar)**. O backup é validado para uso nesta ferramenta, sem criar automaticamente um novo perfil local.
+Selecione um **Perfil** de piano, fortepiano ou cravo, ou um perfil Outro elegível para a fonte empírica independente. **Atualizar perfis** atualiza a lista; **Ir para Perfis instrumentais** permite organizar os dados antes do estudo. Se o banco local estiver indisponível ou se quiser analisar uma cópia, use **Abrir backup de perfil (sem importar)**. O backup é validado para uso nesta ferramenta, sem criar automaticamente um novo perfil local.
 
 Examine o quadro de disponibilidade e escolha, quando solicitadas, as fontes de cada tecla. Registros de cordas diferentes ou sessões divergentes requerem revisão; o aplicativo pode deixar a tecla sem evidência utilizável.
 
@@ -783,13 +832,13 @@ Escolha uma **Tecla fixa de referência** entre as opções elegíveis. No cravo
 | Campo | Uso |
 | --- | --- |
 | Estilo de pesos | Conservador, Equilibrado ou Acústico: modifica a importância relativa das relações entre teclas; não é classificação de qualidade do instrumento. |
-| Fonte de parciais | Automática conservadora, Modelo B ou Parciais medidos. O motor respeita critérios de elegibilidade; escolher uma fonte não torna dados insuficientes válidos. |
+| Fonte de parciais | Automática conservadora, Modelo B, Parciais medidos ou Parciais empíricos — independente de B (experimental). Escolher uma fonte não torna dados insuficientes válidos. |
 | Proteger estritamente quintas e quartas centrais | Na política experimental de Fidelidade, protege as relações centrais definidas na região de ±600 cents da âncora. |
 | Incluir terças maiores (5:4) e menores (6:5) no cálculo | Acrescenta relações de terças quando há evidência; começa desmarcado no piano e marcado em fortepiano e cravo. |
 | Preservar estritamente terças próximas das puras | No objetivo Fidelidade, protege a largura fundamental de terças a até 1 cent da razão justa; começa marcado no cravo e desmarcado nos demais. Pode limitar a compensação acústica. |
-| Declaro uma região fisicamente homogênea | Autoriza interpolação limitada entre primeira e última tecla selecionadas. Declare somente se a região realmente não tiver quebras de escala ou mudanças de categoria de corda relevantes. |
+| Declaro uma região fisicamente homogênea | Nas três fontes anteriores à Etapa 19, autoriza interpolação limitada entre primeira e última tecla selecionadas. Na fonte empírica independente, deixe desmarcado: a interpolação é proibida. Declare somente se a região realmente não tiver quebras de escala ou mudanças de categoria de corda relevantes. |
 
-O estilo Equilibrado e a fonte Automática conservadora são pontos de partida. Cada família possui pesos-base específicos, que são hipóteses experimentais de projeto, não regras históricas comprovadas nem parâmetros calibrados. A seguir, os pesos-base do estilo Equilibrado antes dos multiplicadores do usuário:
+O estilo Equilibrado e a fonte Automática conservadora são pontos de partida. Piano, fortepiano e cravo possuem pesos-base específicos; em Outro, todos os estilos partem de pesos unitários iguais por família intervalar, ajustáveis por multiplicadores. Esses pesos são hipóteses experimentais de projeto, não regras históricas comprovadas nem parâmetros calibrados. A seguir, os pesos-base do estilo Equilibrado antes dos multiplicadores do usuário:
 
 | Família de intervalo | Piano | Fortepiano | Cravo |
 | --- | ---: | ---: | ---: |
@@ -801,9 +850,42 @@ O estilo Equilibrado e a fonte Automática conservadora são pontos de partida. 
 | Terça maior | 0,5 | 0,9 | 1,2 |
 | Terça menor | 0,35 | 0,65 | 0,9 |
 
-Os pesos são distribuídos pelas relações disponíveis de cada família; relações desativadas ou sem evidência não fornecem termos acústicos. No piano há ainda uma ênfase experimental de registro (certos parciais mais altos no grave e mais baixos no agudo). O Modelo B usa previsões de componentes do modelo de corda rígida quando elegível; Parciais medidos usa observações compatíveis. Por padrão, não há interpolação ou suavização entre teclas sem confirmação de uma região homogênea. **Extrapolação é proibida**: não se deve prolongar uma tendência além da evidência disponível.
+Os pesos são distribuídos pelas relações disponíveis de cada família; relações desativadas ou sem evidência não fornecem termos acústicos. No piano há ainda uma ênfase experimental de registro (certos parciais mais altos no grave e mais baixos no agudo). O Modelo B usa previsões de componentes do modelo de corda rígida quando elegível; Parciais medidos usa observações compatíveis, mas ainda requer B consolidado elegível. Na fonte empírica independente, somente razões de ordens observadas com suporte são utilizadas. Nas três fontes anteriores, por padrão não há interpolação ou suavização entre teclas sem confirmação de uma região homogênea; a fonte empírica independente não permite interpolação em nenhuma hipótese. **Extrapolação é proibida**: não se deve prolongar uma tendência além da evidência disponível.
 
 Pressione **Gerar prévia**. Aguarde a conclusão; **Cancelar cálculo** interrompe a operação. Se a base musical mudar durante o cálculo, a operação pode ser invalidada. Se houver dados insuficientes, preserve as orientações e retorne à coleta em vez de forçar a geração. A prévia inicial não altera as frequências ativas do Afinador.
+
+<a name="curva-empirica"></a>
+### Fonte empírica independente de B (experimental)
+
+A quarta opção de fonte não substitui o caminho usual. Ela permite estudar correções quando as relações dos parciais são repetíveis, mesmo que a equação de corda rígida não consiga explicá-las. O otimizador utiliza as razões empíricas consolidadas em lugar de depender de B. Para duas teclas A e B, com razões medidas `rA,p` e `rB,q`, as frequências previstas das componentes para determinados alvos fundamentais `fA` e `fB` são `fA × rA,p` e `fB × rB,q`. Os objetivos musicais, pesos e proteções continuam definindo o compromisso entre as relações disponíveis. A hipótese de que essas razões permanecem estáveis durante pequenas mudanças de afinação não está homologada fisicamente.
+
+| Fonte de parciais | B consolidado provisoriamente consistente | Ordens utilizadas | Outro |
+| --- | --- | --- | --- |
+| Automática conservadora (padrão) | Exigido | Modelo ou evidência medida segundo critérios anteriores | Não |
+| Modelo B | Exigido | Previsões elegíveis do modelo físico | Não |
+| Parciais medidos | Exigido | Observações compatíveis, subordinadas à validação anterior | Não |
+| Parciais empíricos — independente de B (experimental) | Não exigido | Somente razões realmente medidas e repetíveis | Sim, em Série harmônica ou Corda rígida |
+
+#### Preparar e verificar a evidência
+
+1. No perfil, reúna sessões de várias teclas, com parâmetros de referência, tecla confirmada e fonte física identificada. Não combine fontes diferentes como se fossem uma única observação. Consulte a [caracterização empírica](#empirica) de cada sessão.
+2. Abra **Ferramentas → Curvas de afinação** e selecione o perfil. Nas **Opções avançadas**, escolha **Parciais empíricos — independente de B (experimental)**. Em Outro essa escolha é obrigatória; não existe seleção automática dessa fonte.
+3. Examine a disponibilidade de teclas, escolha as fontes representativas quando solicitado, confirme a ordem física e selecione a âncora. Configure objetivo e proteções como no procedimento anterior. Deixe a declaração de região homogênea desmarcada.
+4. Gere a prévia somente quando houver evidência suficiente. Revise as origens, as relações efetivamente usadas e a cobertura. Se houver lacunas ou sessões conflitantes, faça novas medições ou reveja as fontes. Não complete a curva artificialmente.
+
+| Critério de suporte por ordem | Exigência experimental |
+| --- | --- |
+| Primeiro parcial | Medido e aceito, conforme os filtros da caracterização empírica |
+| Ataques estáveis | Pelo menos 3 |
+| Cobertura | Pelo menos 60% do total de execuções elegíveis e incluídas |
+| SNR local | Pelo menos 12 dB em cada observação admitida |
+| SNR mediano da ordem | Pelo menos 20 dB |
+| Estabilidade temporal | Todas as observações da ordem e respectivos primeiros parciais com estabilidade disponível de até 3 cents |
+| Afastamento máximo da mediana | Até 1 cent |
+
+A tecla precisa ter suporte na ordem 1 e em pelo menos outra ordem superior. O indicador **Suporte para curva** na tabela empírica é apenas uma triagem por ordem: o cálculo verifica ainda a tecla física confirmada, a fonte identificada, as condições de isolamento aplicáveis, o contexto musical compatível, os parâmetros de referência e a integridade das fontes. Uma sessão descartada do modelo não pode ser utilizada. Os critérios são fixos e provisórios; não constituem homologação física. Um intervalo de bootstrap não é requisito adicional obrigatório nessa fonte.
+
+A fonte não prevê ordens que não foram medidas, não interpola teclas e não extrapola além da evidência. Se não houver correção sustentada, o alvo permanece teórico. A política de cálculo fica identificada como `19-1.0-empirical-experimental`. A prévia, revisão, histórico e eventual aplicação seguem as verificações já existentes; não há aplicação automática. Em Outro, os pesos unitários são uma hipótese genérica de estudo, não uma recomendação universal de como afinar instrumentos de outras famílias.
 
 <a name="ler-curva"></a>
 ## 4.3. Interpretar a prévia e inspecionar intervalos
@@ -888,7 +970,7 @@ A receita, a referência, o mapa físico e as fontes formam parte do contexto do
 <a name="aplicar-curva"></a>
 ### Aplicar experimentalmente uma revisão ao Afinador
 
-1. Gere uma prévia completa de Piano, Fortepiano ou Cravo, com a política de otimização da Etapa 17 (`17-1.0-experimental`). Revise as correções, intervalos fundamentais, origens e ressalvas.
+1. Gere uma prévia completa elegível: Piano, Fortepiano ou Cravo pela política da Etapa 17 (`17-1.0-experimental`), ou qualquer uma das quatro famílias pela fonte empírica independente da Etapa 19 (`19-1.0-empirical-experimental`), respeitando as condições de modelo e fonte física. Revise as correções, intervalos fundamentais, origens e ressalvas.
 2. Selecione a versão desejada em **Versão em revisão**, use **Aprovar revisão experimental** e confirme. Se necessário revalide antes as fontes para editar/aprovar.
 3. Pressione **Guardar histórico local** e aguarde a confirmação de gravação. Exportar JSON não substitui este passo. Um backup aberto somente para estudo, sem os registros originais no banco local, não é suficiente para aplicar.
 4. Escolha **Aplicar experimentalmente e abrir Afinador**. O programa confere a versão local, integridade, base musical, mapa e fontes acústicas exatas, inclusive se foram descartadas do modelo. Reproduz o cálculo e compara objetivo, correções, auditoria intervalar, diagnóstico e disposição. Se a reprodução divergir, gere nova prévia; não tente contornar os validadores.
@@ -910,7 +992,7 @@ As preferências de otimização se destinam a novos cálculos. A apresentação
 | --- | --- | --- |
 | Objetivo | Fidelidade ao temperamento | Fidelidade ou Otimização acústica |
 | Estilo | Equilibrado | Conservador, Equilibrado, Acústico |
-| Fonte de parciais | Automática conservadora | Automática, Modelo B, Parciais medidos |
+| Fonte de parciais | Automática conservadora | Automática, Modelo B, Parciais medidos, Parciais empíricos — independente de B (experimental) |
 | Preferir proteção central | Sim | Preferência de proteção estrita no contexto aplicável |
 
 ### Pesos dos intervalos (recolhido)
@@ -939,7 +1021,7 @@ Os multiplicadores variam em passos de 0,1. Eles modificam o peso das relações
 | Exibir sensibilidade | Sim | Barras quando disponíveis |
 | Curva total relativa ao temperamento igual | Não | Referência visual alternativa em disposição cromática compatível |
 
-A interpolação é confirmada na área de geração, não autorizada genericamente nas configurações. Restaurar padrões não desfaz revisões nem exclui históricos. O limite de correção ±30 cents, a âncora obrigatória, a proibição de extrapolação e as verificações de segurança continuam ativos.
+Nas fontes anteriores, a interpolação é confirmada na área de geração, não autorizada genericamente nas configurações. A fonte empírica independente proíbe interpolação mesmo com região homogênea declarada. Restaurar padrões não desfaz revisões nem exclui históricos. O limite de correção ±30 cents, a âncora obrigatória, a proibição de extrapolação e as verificações de segurança continuam ativos.
 
 <a name="ts-4"></a>
 ## 4.7. Troubleshooting — Curvas de afinação
@@ -947,14 +1029,15 @@ A interpolação é confirmada na área de geração, não autorizada genericame
 | Sintoma | O que verificar |
 | --- | --- |
 | Perfil não aparece | Atualize a lista; crie/importe um perfil em Perfis ou abra backup compatível sem importar. |
-| Família não suportada | Curvas são implementadas para Piano, Fortepiano e Cravo. Outro não é elegível, mesmo com B consistente. |
+| Família não suportada | Outro exige Série harmônica ou Corda rígida e seleção explícita da fonte empírica independente. Exploratório e Componentes não harmônicos não geram curvas. |
+| Existe descrição empírica, mas a curva não usa a sessão | Confira fonte escolhida, critérios de referência, tecla e identificação física, isolamento quando exigido e suporte na ordem 1 e pelo menos outra superior. |
 | Registro do cravo ausente | Informe o registro único representado e use fontes da mesma altura soante; não misture registros. |
 | Não há âncora/teclas candidatas | Confira sessões elegíveis, identidade da tecla, corda isolada, mapa e referência musical. |
 | Dados insuficientes | Examine as fontes recusadas e meça novas teclas/cordas. Não autorize interpolações sem justificativa física. |
 | Sessões parecem consistentes mas não são usadas | Verifique os parâmetros acústicos personalizados, família, modelo, confirmação da tecla e coerência das fontes. |
 | Mais de uma corda medida | Selecione fonte representativa quando possível ou deixe a tecla sem correção. Não some cordas diferentes como se fossem uma. |
 | Não permite gerar prévia | Confirme ordem física, âncora e perfil elegíveis; veja restrições e mensagens. |
-| Interpolação não aparece | Confirme região efetivamente homogênea e limites válidos; são necessários dados de suporte. Extrapolação não é permitida. |
+| Interpolação não aparece | Na fonte empírica independente é proibida. Nas demais, confirme região efetivamente homogênea e limites válidos; são necessários dados de suporte. Extrapolação não é permitida. |
 | Gráfico tem lacunas ou pontos vazios | Indicam ausência de correção suportada ou filtro de apresentação; leia origens e tabelas. |
 | Curva relativa ao igual indisponível | A disposição não permite aquela comparação cromática com A4; use referência ao temperamento base. |
 | Correção manual recusada | Revise limite ±30, âncora, evidência da tecla e conflitos com proteções. |
@@ -1027,7 +1110,7 @@ Selecione Lá3 ou outra nota confortável. Mantenha quantidade e queda iguais; o
 <a name="reconstrucao"></a>
 ## 5.4. Reconstruir um espectro medido
 
-O aplicativo utiliza observações de uma execução, não gravações WAV e não uma média que apague as características da execução.
+O aplicativo utiliza observações de uma execução ou, por escolha explícita, estatísticas empíricas de uma sessão multiataque arquivada. Não reproduz gravações WAV. A execução individual continua disponível para preservar suas características próprias.
 
 1. Obtenha uma captura em [Parciais](#cap-2) ou abra uma sessão em [Perfis](#cap-3).
 2. No Emissor, selecione **Espectro medido**. Em Parciais, também é possível usar **Ouvir no Emissor** quando o resultado estiver disponível.
@@ -1038,13 +1121,25 @@ O aplicativo utiliza observações de uma execução, não gravações WAV e nã
 
 | Reconstrução | Frequências emitidas | Uso |
 | --- | --- | --- |
-| Original · frequências observadas | Frequências registradas da execução | Ouvir uma aproximação do espectro tal como medido; mudar a nota selecionada não transpõe o original |
+| Original · frequências observadas | Frequências registradas da execução ou reconstruídas a partir da referência e razões medianas do consolidado | Ouvir uma aproximação do espectro tal como medido; mudar a nota selecionada não transpõe o original |
 | Transposta · preservar relações | Frequências escaladas para a nota escolhida, mantendo proporções da fonte | Comparar estrutura em outro registro; sem fundamental atribuída, selecione pico de referência quando requerido |
 | Harmônica equivalente | Componentes com ordem válida reorganizadas segundo múltiplos inteiros da mesma base | Comparar a estrutura harmônica ideal com o padrão observado/transposto compatível |
 
 A versão harmônica equivalente só está disponível quando a fonte possui informação harmônica adequada. Para uma comparação controlada, o programa considera a mesma base, amplitudes e componentes reproduzíveis nos dois planos compatíveis; não se deve inventar uma fundamental ou ordens para um sino. Para séries harmônicas, a síntese seleciona parciais aceitos; em espectros modais/exploratórios, usa picos resolvidos provisoriamente, sem lhes atribuir ordens físicas. Parciais excluídos da revisão do perfil ficam de fora. Quando há mais de 32 componentes, o motor seleciona os de maior amplitude, respeitando a faixa reproduzível. O número de componentes também respeita limites de síntese e Nyquist.
 
 A reconstrução não recupera fase original, ruído, ataque, modulações ou decaimentos reais. Um timbre reconstruído diferente do instrumento gravado não é necessariamente erro: o conjunto de frequências e magnitudes não determina toda a evolução temporal do som. Compare com o espectro sintético e não use a semelhança auditiva como prova do modelo físico.
+
+<a name="sintese-empirica"></a>
+### Consolidado empírico · síntese descritiva
+
+1. Salve em Perfis uma sessão de Série harmônica ou Corda rígida, com múltiplos ataques da mesma fonte.
+2. No Emissor, escolha **Espectro medido → Origem da medição → Perfil instrumental salvo** e carregue as medições.
+3. Selecione instrumento e sessão; no seletor **Execução**, escolha **Consolidado empírico · síntese descritiva**, quando disponível.
+4. Escolha o modo de reconstrução, inspecione as componentes e emita em volume moderado.
+
+O consolidado requer a ordem 1 e pelo menos uma superior com três observações ou mais e 60% de cobertura, conforme os filtros da caracterização. Utiliza razões e amplitudes relativas medianas dessas ordens, com referência na mediana dos primeiros parciais medidos admitidos. O modo Original reconstrói frequências a partir dessa referência; Transposta preserva as razões em relação ao alvo escolhido; Harmônica equivalente reorganiza as ordens em múltiplos inteiros quando compatível.
+
+Não é preciso satisfazer todos os requisitos de curva nem possuir B válido. Essa origem não fornece B para **Usar B da medição selecionada**. Uma ordem ausente ou excluída não é inventada. O resultado descreve estatisticamente a estrutura espectral; não é uma gravação de um ataque real nem uma representação de toda a evolução temporal do som. Para ouvir uma execução específica, escolha-a diretamente no seletor.
 
 <a name="personalizado"></a>
 ## 5.5. Construir um espectro personalizado
@@ -1108,6 +1203,7 @@ Use os controles diretamente no Emissor para alterações de uso frequente. Salv
 | Nota extrema não aparece | Confira extensão ampliada, catálogo e layout atual; Nyquist e limites do motor ainda se aplicam. |
 | B não pode ser usado | A fonte pode não possuir B elegível ou o valor pode estar fora dos limites de síntese. Escolha experiência manual, sem atribuí-la à medição. |
 | Perfil/sessão não carrega | Confira banco, compatibilidade e integridade. Se necessário, selecione último resultado exibido em Parciais. |
+| Consolidado empírico indisponível | Escolha uma sessão harmônica ou de corda rígida em perfil salvo, com a ordem 1 e pelo menos outra ordem com três ataques e cobertura de 60%. A captura individual não oferece esse consolidado. |
 | Nenhuma execução com componentes utilizáveis | Revise aceitação dos parciais e condições da captura. Faça nova medição se necessário. |
 | Harmônica equivalente indisponível | A fonte não possui atribuições harmônicas compatíveis. Use Original ou Transposta, conforme as opções disponíveis. |
 | Transposição exige referência | Escolha um pico medido de referência, se a interface solicitar. Não invente fundamental. |
@@ -1145,6 +1241,10 @@ Use os controles diretamente no Emissor para alterações de uso frequente. Salv
 | Harmônico | Componente correspondente a múltiplo inteiro da fundamental no modelo ideal |
 | Histerese | Regra de estabilidade que evita mudanças de estado pouco sustentadas |
 | Huber | Perda robusta que reduz a influência de grandes erros de previsão |
+| Caracterização empírica | Descrição de razões e desvios por ordem medidos e consolidados, sem pressupor uma equação física de corda rígida |
+| Cobertura por ordem | Fração dos ataques elegíveis e incluídos que forneceram observação admitida para uma ordem |
+| MAD | Desvio absoluto mediano em relação à mediana; medida robusta de dispersão |
+| RMS empírico | Raiz da média quadrática dos desvios medianos das ordens superiores com cobertura suficiente |
 | Inarmonicidade | Desvio em relação a uma série ideal de múltiplos inteiros |
 | Interpolação | Estimativa entre pontos com evidência, condicionada à homogeneidade da região |
 | Janela | Trecho de áudio analisado; uma função de ponderação como Hann/Blackman modifica a distribuição espectral |
@@ -1176,7 +1276,7 @@ Antes de limpar armazenamento, atualizar o arquivo local ou trocar de aparelho, 
 Ao abrir um [relato de problema no GitHub](https://github.com/mv-pereira/Afinador/issues), inclua:
 
 - Versão/arquivo HTML utilizado, ferramenta, navegador, sistema operacional e tipo de dispositivo (quando conhecido).
-- Família, modelo acústico e condição do instrumento, nota, temperamento, frequência de referência e forma de produção do som, quando afetarem o resultado.
+- Família, modelo acústico e condição do instrumento, identidade física da fonte, nota, temperamento, frequência de referência e forma de produção do som, quando afetarem o resultado. Para curvas, informe também a fonte de parciais escolhida e a política de otimização.
 - Passos para reproduzir, comportamento esperado, resultado observado e mensagem apresentada.
 - Preferências diferentes do padrão, possibilidade de reproduzir após restaurá-las e efeito de mudar somente um parâmetro.
 - Evidência apropriada: diagnóstico ZIP para problemas do detector convencional; JSON de análise/sessão para problemas de parciais/B; backup de perfil ou histórico para falhas de organização ou curva; parâmetros e lista de componentes para síntese. Um screenshot real da interface também pode ajudar a explicar o problema.
