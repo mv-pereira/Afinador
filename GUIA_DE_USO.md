@@ -14,7 +14,7 @@ Este guia em português do Brasil abrange as cinco ferramentas do Afinador · Of
 - [Capítulo 1 — Afinador](#cap-1): [afinar uma nota](#afinar), [correção instrumental](#correcao-afinador), [detectores](#detectores), [FFT](#fft), [temperamentos](#temperamentos), [cilindro e edição](#cilindro), [teclados e EDO](#teclados), [biblioteca](#biblioteca), [configurações](#cfg-1), [diagnóstico](#diagnostico), [solução de problemas](#ts-1).
 - [Capítulo 2 — Parciais e inarmonicidade](#cap-2): [modelos](#modelos), [captura individual](#captura-individual), [multiataque](#multiataque), [revisão histórica e comparação](#revisao-historica), [interpretar parciais](#interpretar-parciais), [coeficiente B](#coeficiente-b), [consolidação](#consolidacao), [caracterização empírica](#empirica), [configurações](#cfg-2), [solução de problemas](#ts-2).
 - [Capítulo 3 — Perfis instrumentais](#cap-3): [criar perfil](#criar-perfil), [salvar sessões](#salvar-sessoes), [mapa e histórico](#comparar-sessoes), [backup](#backup-perfil), [configurações](#cfg-3), [solução de problemas](#ts-3).
-- [Capítulo 4 — Curvas de afinação](#cap-4): [pré-requisitos](#pre-curva), [gerar prévia](#gerar-curva), [fonte empírica independente](#curva-empirica), [interpretação](#ler-curva), [revisões](#revisar-curva), [histórico](#historico-curva), [aplicação experimental](#aplicar-curva), [configurações](#cfg-4), [solução de problemas](#ts-4).
+- [Capítulo 4 — Curvas de afinação](#cap-4): [pré-requisitos](#pre-curva), [gerar curva](#gerar-curva), [fonte empírica independente](#curva-empirica), [interpretação](#ler-curva), [revisões](#revisar-curva), [histórico](#historico-curva), [aplicação experimental](#aplicar-curva), [configurações](#cfg-4), [solução de problemas](#ts-4).
 - [Capítulo 5 — Emissor de notas](#cap-5): [emitir](#emitir), [síntese aditiva](#sintese), [espectro medido](#reconstrucao), [síntese consolidada](#sintese-empirica), [espectro personalizado](#personalizado), [configurações](#cfg-5), [solução de problemas](#ts-5).
 - [Apêndice A — Glossário](#glossario) · [Apêndice B — Relatar problemas e preservar dados](#relatos).
 
@@ -30,7 +30,7 @@ Escolha a ferramenta no menu **Ferramentas**. Não é necessário criar um perfi
 | Guardar medições | Salvar no perfil → escolha ou crie o instrumento em Perfis instrumentais → Salvar sessão neste perfil → exporte AFP. [Detalhes](#salvar-sessoes) |
 | Abrir um instrumento salvo | Perfis instrumentais → Importar arquivo → selecione AFP → selecione o instrumento. Para gráficos, abra Parciais → Medições armazenadas → Abrir revisão. [Detalhes](#revisao-historica) |
 | Comparar medições | Em Parciais, abra uma revisão, selecione outra sessão compatível e use Comparar com a sessão exibida. [Detalhes](#revisao-historica) |
-| Estudar correções | Curvas de afinação → escolha perfil, objetivo e referência física → Gerar prévia. Uma prévia não altera a afinação. [Detalhes](#gerar-curva) |
+| Estudar correções | Curvas de afinação → escolher perfil e objetivo → Gerar curva → Aplicar ao Afinador. Gerar não altera a afinação. [Detalhes](#gerar-curva) |
 | Ouvir uma nota | Emissor → escolha nota, tipo de som e volume → Emitir nota → Parar som. [Detalhes](#emitir) |
 
 **Avançado** reúne controles complementares; **Configurações** define preferências persistentes; **Ajuda** explica os controles e as limitações. Para navegar, use o menu superior. Salvar no perfil encaminha a sessão ao gerenciador de perfis. Ao selecionar um instrumento, as ferramentas podem aproveitar essa seleção sem mudar automaticamente o temperamento, a referência ou a correção instrumental.
@@ -63,10 +63,10 @@ Não é necessário atravessar todas as ferramentas. Para afinar um violão, por
 | Estudo de um temperamento histórico | Afinador → preset → cilindro/matriz → biblioteca → Emissor |
 | Investigar um timbre | Parciais → captura individual ou multiataque → inspeção → Emissor (opcional) |
 | Investigar repetibilidade de uma corda | Parciais → multiataque → identificar a corda, confirmar tecla se conhecida → revisar → guardar em Perfis → comparar em Parciais |
-| Estudo de curva de piano, fortepiano ou cravo | Preparar referência, registro e mapa → medir cordas isoladas → guardar perfis → Curvas → gerar prévia → revisar e exportar |
+| Estudo de curva de piano, fortepiano ou cravo | Preparar referência, registro e mapa → medir cordas isoladas → guardar perfis → Curvas → Gerar curva → revisar e exportar, ou Aplicar ao Afinador |
 | Caracterização empírica sem modelo de corda rígida | Parciais → Outro → Série harmônica → multiataque → pausar/finalizar → caracterização empírica → Perfis |
 | Estudo de curva empírica independente | Medir fontes físicas identificadas → guardar sessões → Curvas → escolher fonte empírica independente → verificar elegibilidade → gerar e revisar prévia |
-| Aplicar uma curva experimental | Curvas → aprovar revisão → guardar histórico local → aplicar experimentalmente → confirmar → abrir Afinador pelo menu; desligar quando necessário |
+| Aplicar uma curva experimental | Curvas → gerar a curva → Aplicar ao Afinador (aprovação, gravação e verificações internas em um clique) → conferir estado ativo; desligar quando necessário |
 
 ### O que é compartilhado e o que é independente
 
@@ -835,7 +835,7 @@ Use **Salvar alterações** para conservar as preferências. **Restaurar padrõe
 
 Esta ferramenta investiga correções instrumentais para **piano, fortepiano e cravo**. **Outro**, com Automático que identificou ordens, Série harmônica ou Corda rígida, também pode ser estudado pela fonte empírica independente de B, explicitamente selecionada e sujeita a condições adicionais. Parciais de uma fonte real podem desviar da série ideal, e as relações entre parciais de teclas diferentes podem sugerir correções nas frequências de afinação, tanto por um modelo físico quanto por razões medidas repetíveis. O objetivo é permitir o estudo dessas relações com evidência rastreável e restrições explícitas, não produzir uma receita universal de estiramento de oitavas.
 
-> **Todas as curvas instrumentais são experimentais e não homologadas fisicamente.** Gerar, aprovar ou guardar uma revisão não modifica a afinação por si só. A aplicação experimental é uma operação distinta, reversível, que exige fontes locais verificadas, recálculo coincidente e confirmação explícita. Consulte [4.5](#aplicar-curva).
+> **Todas as curvas instrumentais são experimentais e não homologadas fisicamente.** Gerar uma curva não altera a afinação. O botão **Aplicar ao Afinador** registra a aprovação experimental, guarda a revisão e exige a revalidação das fontes e o recálculo coincidente antes de ativar a correção. O clique é a autorização explícita, sem janelas adicionais de confirmação do navegador. Consulte [4.5](#aplicar-curva).
 
 <a name="pre-curva"></a>
 ## 4.1. Pré-requisitos e preparação do perfil
@@ -855,9 +855,9 @@ A frequência musical teórica de uma tecla é `fₜ`. Uma correção instrument
 Ao escolher uma âncora, a correção desta tecla permanece zero. As demais são calculadas relativamente a ela. O limite de correção é ±30 cents; não se pode deslocar a âncora ou usar esse intervalo para contornar exigências de cobertura e proteção.
 
 <a name="gerar-curva"></a>
-## 4.2. Gerar uma prévia
+## 4.2. Gerar uma curva
 
-Em **Ferramentas → Curvas de afinação**, siga a sequência numerada da interface.
+Em **Ferramentas → Curvas de afinação**, o fluxo principal tem duas ações: **Gerar curva** e **Aplicar ao Afinador**. O detalhamento matemático e o gerenciamento de versões estão recolhidos em **Avançado**.
 
 ### 1. Escolha o instrumento
 
@@ -872,9 +872,11 @@ Examine o quadro de disponibilidade e escolha, quando solicitadas, as fontes de 
 | Fidelidade ao temperamento (recomendado) | Procura preservar os desvios intervalares assinados da receita musical, conciliando-os com as propriedades acústicas e as proteções escolhidas. Não busca zerar indiscriminadamente todos os batimentos. |
 | Otimização acústica | Busca coincidência das componentes intervalares consideradas; pode alterar intencionalmente relações do temperamento. Deve ser comparada com a base musical. |
 
-Escolha uma **Tecla fixa de referência** entre as opções elegíveis. No cravo, preencha **Registro / conjunto representado** (obrigatório); no fortepiano, identifique o conjunto quando pertinente. Confirme explicitamente a ordem física das teclas e, para instrumentos históricos, que as fontes representam o mesmo registro/conjunto e altura soante. A âncora é obrigatória e permanece na frequência teórica.
+O aplicativo preseleciona uma **Tecla fixa de referência** (preferencialmente Lá4 quando disponível). Para alterá-la, abra **Avançado · cálculo e referência**. No cravo, o campo **Registro / conjunto representado** continua obrigatório e pode ser preenchido a partir da identificação instrumental existente; confirme-o quando necessário.
 
-### Avançado — cálculo (opcional)
+Não há uma caixa extra de confirmação da ordem física. A sequência de teclas é a do mapa armazenado no perfil. Antes de medir e salvar, confira que o mapa está correto e que as fontes pertencem ao mesmo registro/conjunto, têm técnica comparável e representam as alturas realmente soantes. Num cravo, não misture cordas 8′ e 4′ como se pertencessem a uma mesma série. Os validadores continuam verificando metadados e evidências; não podem inferir todos os fatos físicos a partir de números.
+
+### Avançado · cálculo e referência (opcional)
 
 | Campo | Uso |
 | --- | --- |
@@ -899,7 +901,7 @@ O estilo Equilibrado e a fonte Automática conservadora são pontos de partida. 
 
 Os pesos são distribuídos pelas relações disponíveis de cada família; relações desativadas ou sem evidência não fornecem termos acústicos. No piano há ainda uma ênfase experimental de registro (certos parciais mais altos no grave e mais baixos no agudo). O Modelo B usa previsões de componentes do modelo de corda rígida quando elegível; Parciais medidos usa observações compatíveis, mas ainda requer B consolidado elegível. Na fonte empírica independente, somente razões de ordens observadas com suporte são utilizadas. Em Automática conservadora, Modelo B e Parciais medidos, por padrão não há interpolação ou suavização entre teclas sem confirmação de uma região homogênea; a fonte empírica independente não permite interpolação em nenhuma hipótese. **Extrapolação é proibida**: não se deve prolongar uma tendência além da evidência disponível.
 
-Pressione **Gerar prévia**. Aguarde a conclusão; **Cancelar cálculo** interrompe a operação. Se a base musical mudar durante o cálculo, a operação pode ser invalidada. Se houver dados insuficientes, preserve as orientações e retorne à coleta em vez de forçar a geração. A prévia inicial não altera as frequências ativas do Afinador.
+Pressione **Gerar curva**. Aguarde a conclusão; **Cancelar cálculo** interrompe a operação. Se a base musical mudar durante o cálculo, a operação pode ser invalidada. Se houver dados insuficientes, preserve as orientações e retorne à coleta em vez de forçar a geração. A prévia inicial não altera as frequências ativas do Afinador.
 
 <a name="curva-empirica"></a>
 ### Fonte empírica independente de B (experimental)
@@ -916,8 +918,8 @@ A quarta opção de fonte não substitui o caminho usual. Ela permite estudar co
 #### Preparar e verificar a evidência
 
 1. No perfil, reúna sessões de várias teclas, com parâmetros de referência, tecla confirmada e fonte física identificada. Não combine fontes diferentes como se fossem uma única observação. Consulte a [caracterização empírica](#empirica) de cada sessão.
-2. Abra **Ferramentas → Curvas de afinação** e selecione o perfil. Nas **Avançado — cálculo**, escolha **Parciais empíricos — independente de B (experimental)**. Em Outro essa escolha é obrigatória; não existe seleção automática dessa fonte.
-3. Examine a disponibilidade de teclas, escolha as fontes representativas quando solicitado, confirme a ordem física e selecione a âncora. Configure objetivo e proteções como no procedimento anterior. Deixe a declaração de região homogênea desmarcada.
+2. Abra **Ferramentas → Curvas de afinação** e selecione o perfil. Em **Avançado · cálculo e referência**, confira **Parciais empíricos — independente de B (experimental)**. Em Outro essa fonte é preselecionada; o usuário pode conferir e alterá-la quando o modelo e a política permitirem.
+3. Examine a disponibilidade de teclas e escolha as fontes representativas quando solicitado. Confira o mapa físico em Perfis instrumentais e, se necessário, ajuste a âncora em Avançado. Configure objetivo e proteções como no procedimento anterior. Deixe a declaração de região homogênea desmarcada.
 4. Gere a prévia somente quando houver evidência suficiente. Revise as origens, as relações efetivamente usadas e a cobertura. Se houver lacunas ou sessões conflitantes, faça novas medições ou reveja as fontes. Não complete a curva artificialmente.
 
 | Critério de suporte por ordem | Exigência experimental |
@@ -984,8 +986,8 @@ A prévia deve existir antes de começar uma revisão nova. Em **Versão em revi
 | Revalidar fontes para editar | Tenta verificar as fontes, reproduzir o cálculo e habilitar edição de uma versão. Se não reproduzir o resultado, mantenha o histórico em leitura e gere nova prévia a partir do perfil. |
 | Desfazer / versão anterior | Retorna à versão anterior disponível para inspeção |
 | Restaurar prévia original | Retorna à raiz da prévia original, preservando a distinção entre versões |
-| Aprovar revisão experimental | Registra uma revisão completa e auditável após confirmação; não aplica os alvos |
-| Aplicar curva experimentalmente | Revalida a revisão aprovada e guardada localmente, reproduz o cálculo e solicita confirmação explícita antes de aplicar |
+| Aprovar revisão (opcional, Avançado) | Registra uma revisão experimental sem aplicar. No fluxo principal, essa operação é feita internamente ao pressionar Aplicar ao Afinador. |
+| Aplicar ao Afinador | Botão principal abaixo do gráfico: aprova, guarda, revalida e aplica em uma operação, quando tudo estiver elegível. |
 
 ### Editar correções e proteções (Avançado — revisão)
 
@@ -1003,7 +1005,7 @@ Não altere muitos pesos e correções simultaneamente durante um estudo. Regist
 
 | Controle | Uso |
 | --- | --- |
-| Guardar histórico local | Armazena as versões no navegador; aguarde a confirmação da transação |
+| Guardar histórico local (Avançado) | Operação opcional de gerenciamento; Aplicar ao Afinador já a executa automaticamente. |
 | Abrir histórico local | Recupera versões guardadas |
 | Abrir backup de versões (Avançado — histórico e armazenamento) | Carrega histórico AFC ou JSON validado |
 | Exportar histórico (.afc) | Backup binário das versões e evidências de auditoria, sem áudio |
@@ -1016,18 +1018,18 @@ O histórico possui limites de 128 versões e 32 MiB. Não presuma que novas rev
 A receita, a referência, o mapa físico e as fontes formam parte do contexto do cálculo. Alterá-los pode tornar versões incompatíveis com nova edição ou comparação. Recupere a configuração musical original e verifique as fontes. O histórico ainda pode servir como documentação de estudo em modo de leitura.
 
 <a name="aplicar-curva"></a>
-### Aplicar experimentalmente uma revisão ao Afinador
+### Aplicar experimentalmente uma curva ao Afinador
 
-1. Gere uma prévia completa elegível: Piano, Fortepiano ou Cravo por uma fonte compatível, ou qualquer das quatro famílias pela fonte empírica independente de B, respeitando as condições de modelo e fonte física. Revise correções, intervalos, origens e ressalvas.
-2. Selecione a versão desejada em **Versão em revisão**, use **Aprovar revisão experimental** e confirme. Se necessário revalide antes as fontes para editar/aprovar.
-3. Pressione **Guardar histórico local** e aguarde a confirmação de gravação. Exportar AFC ou JSON não substitui este passo. Um backup aberto somente para estudo, sem os registros originais no banco local, não é suficiente para aplicar.
-4. Escolha **Aplicar curva experimentalmente**. O programa confere a versão local, integridade, base musical, mapa e fontes acústicas exatas, inclusive se foram descartadas do modelo. Reproduz o cálculo e compara objetivo, correções, auditoria intervalar, diagnóstico e disposição. Se a reprodução divergir, gere nova prévia; não tente contornar os validadores.
-5. Leia a confirmação **APLICAÇÃO EXPERIMENTAL — SEM HOMOLOGAÇÃO FÍSICA**. Verifique instrumento, versão, registro, base musical, intervalos modificados e cobertura; confirme somente se quiser ativar aqueles alvos. Cancelar não ativa a nova curva.
-6. Abra Afinador pelo menu superior (a aplicação não troca de ferramenta). No Afinador, confira o painel de correção aplicada, compare alvos teórico e instrumental e examine os intervalos afetados. **Desligar correção** retorna à referência teórica.
+1. Abra **Curvas de afinação**, confira o instrumento, o objetivo e, quando necessário, o registro/conjunto representado. Escolha **Gerar curva** e aguarde o gráfico aparecer. Dados insuficientes mantêm a aplicação indisponível.
+2. Examine a forma geral da curva. Se desejar analisar cada intervalo, ajuste manual, resíduo ou versão, abra **Avançado · revisão, análise, histórico e exportação**.
+3. Pressione **Aplicar ao Afinador**, logo abaixo do gráfico. O programa executa em sequência a aprovação da revisão experimental, a gravação no histórico local, a verificação de hashes e compatibilidade, a recuperação das fontes originais e a reprodução do cálculo. **Não aparecem janelas adicionais de confirmação.** Se houver problema, a curva não é ativada; leia a mensagem próxima ao botão.
+4. Quando concluir, deverá aparecer **Curva ativa no Afinador** na própria ferramenta Curvas. Pelo menu, abra **Afinação** e confira **Correção instrumental EXPERIMENTAL**. Para voltar aos alvos teóricos, pressione **Desligar correção** em qualquer uma dessas ferramentas.
+
+**Gerar curva não equivale a aplicar.** A ativação só acontece depois de todas as verificações terem sido concluídas. Não é necessário aprovar e guardar manualmente para usar o fluxo principal. Para usuários avançados, essas operações continuam disponíveis separadamente em Avançado, assim como histórico AFC, exportação JSON, comparação de objetivos e revisões manuais.
 
 A versão aplicada fica congelada: editar outra revisão não a substitui automaticamente. A aplicação é temporária, não volta ao reiniciar e pode ser invalidada por mudanças de base musical ou alterações nos dados de perfis/curvas. Teclas sem suporte, sem ligação à âncora ou fora do mapa permanecem teóricas. O Emissor começa com referência teórica mesmo quando a curva está aplicada; habilite **Seguir correção instrumental** ali somente se desejar (ver [5.1](#emitir)).
 
-O recálculo tem limite de 60 segundos e pode ser cancelado ou invalidado por mudança de contexto. Não havendo confirmação de sucesso, confira o estado do Afinador antes de usar qualquer alvo. O aplicativo não emite recibo de homologação, e os campos científicos permanecem experimentais (`physicalValidation: pending`, `curveEligible: false`); não são uma autorização que possa ser obtida editando o JSON. A aplicação permite investigar as hipóteses do modelo de forma reversível, não certificar a afinação ou os limites seguros de tensão do instrumento.
+O recálculo tem limite de 60 segundos e pode ser cancelado ou invalidado por mudança de contexto. Se não surgir a indicação de **Curva ativa no Afinador**, a aplicação não foi confirmada; confira o motivo ao lado do botão antes de utilizar qualquer alvo. O aplicativo não emite recibo de homologação, e os campos científicos permanecem experimentais (`physicalValidation: pending`, `curveEligible: false`); não são uma autorização que possa ser obtida editando o JSON. A aplicação permite investigar as hipóteses do modelo de forma reversível, não certificar a afinação ou os limites seguros de tensão do instrumento.
 
 <a name="cfg-4"></a>
 ## 4.6. Configurações de Curvas de afinação
@@ -1084,7 +1086,7 @@ Em Automática conservadora, Modelo B e Parciais medidos, a interpolação é co
 | Dados insuficientes | Examine as fontes recusadas e meça novas teclas/cordas. Não autorize interpolações sem justificativa física. |
 | Sessões parecem consistentes mas não são usadas | Verifique os parâmetros acústicos personalizados, família, modelo, confirmação da tecla e coerência das fontes. |
 | Mais de uma corda medida | Selecione fonte representativa quando possível ou deixe a tecla sem correção. Não some cordas diferentes como se fossem uma. |
-| Não permite gerar prévia | Confirme ordem física, âncora e perfil elegíveis; veja restrições e mensagens. |
+| Não permite gerar curva | Confira se há mapa físico, tecla de referência válida, perfil elegível e fontes compatíveis; veja as mensagens e Avançado. |
 | Interpolação não aparece | Na fonte empírica independente é proibida. Nas demais, confirme região efetivamente homogênea e limites válidos; são necessários dados de suporte. Extrapolação não é permitida. |
 | Gráfico tem lacunas ou pontos vazios | Indicam ausência de correção suportada ou filtro de apresentação; leia origens e tabelas. |
 | Curva relativa ao igual indisponível | A disposição não permite aquela comparação cromática com A4; use referência ao temperamento base. |
@@ -1092,9 +1094,9 @@ Em Automática conservadora, Modelo B e Parciais medidos, a interpolação é co
 | Revisão não recalcula | Verifique base musical, compatibilidade das fontes e restrições; aguarde/cancele cálculo ativo. |
 | Backup abre apenas para leitura | Revalide as fontes. Se a reprodução não coincidir, preserve o histórico e gere nova prévia. |
 | Não consegue aprovar | A revisão precisa ser completa, válida e auditável. Examine problemas da geração. |
-| Aprovou mas o Afinador não mudou | Esperado: aprovação não aplica. Guarde o histórico local e use Aplicar curva experimentalmente. |
-| Aplicação recusada | Confira versão aprovada e salva, fontes locais intactas, base musical e mapa; gere nova prévia se o recálculo divergir. |
-| Curva não reaparece ao reabrir | Esperado: a aplicação não persiste; selecione revisão local, revalide e confirme novamente quando necessário. |
+| Cliquei em Gerar curva e o Afinador não mudou | Esperado: a geração apenas calcula. Pressione Aplicar ao Afinador abaixo do gráfico. |
+| Aplicação recusada | Confira a mensagem sob Aplicar ao Afinador, as fontes locais, a base musical e o mapa; gere outra curva se o recálculo divergir. |
+| Curva não reaparece ao reabrir | Esperado: a aplicação não persiste; gere ou carregue uma revisão compatível e pressione Aplicar ao Afinador novamente. |
 | Limite de espaço ou versões | Exporte histórico, verifique cópia e organize trabalhos menores; não apague a única evidência. |
 
 [Voltar ao sumário](#sumario)
