@@ -484,7 +484,7 @@ Não mude de nota, corda, posição do microfone, família, modelo acústico ou 
 <a name="revisao-historica"></a>
 ### Revisar medições armazenadas e comparar sessões
 
-1. Em **Perfis instrumentais**, selecione o instrumento, uma tecla e uma sessão no Histórico, usando **Selecionar medição**. Abra **Parciais e inarmonicidade** pelo menu superior. Também é possível selecionar diretamente nessa ferramenta.
+1. Em **Perfis instrumentais**, selecione o instrumento desejado. Abra **Parciais e inarmonicidade** pelo menu superior. A tecla e a sessão são escolhidas diretamente nessa ferramenta, em **Medições armazenadas**.
 2. Em **Medições armazenadas**, confira o instrumento, a tecla (ou grupo de registros sem tecla) e a sessão. Pressione **Abrir revisão**.
 3. Explore o espectro, tabelas de parciais, execuções, gráficos de resíduos, consolidação, caracterização empírica e **Proveniência e parâmetros originais**, conforme as evidências disponíveis. Os gráficos reutilizam a interface científica da aquisição. Use os seletores de execução e os botões de navegação. A revisão é somente leitura: não capta áudio, não recalcula B nem altera as evidências armazenadas.
 4. Escolha uma segunda sessão e pressione **Comparar com a sessão exibida**. Para comparar uma aquisição nova com uma armazenada, finalize a aquisição e selecione uma sessão compatível. Prefira a mesma fonte física, família, modelo, condições de captação e configuração de análise e base musical. Sem tecla confirmada em ambas, a fonte física deve estar identificada de maneira correspondente.
@@ -740,7 +740,7 @@ Um perfil instrumental é um prontuário acústico do instrumento: identificaç�
 5. Pressione **Criar e salvar perfil** e confira a confirmação de sucesso. Se desistir, use **Cancelar**.
 6. Abra **Avançado → Informações do instrumento e disposição física**. Se a ordem inicial não corresponder à disposição real, selecione uma tecla e use **Mover antes / Mover depois**. Antes de calcular uma curva, a ordem deve estar correta.
 
-Na lista **Instrumento**, selecione o perfil de interesse. Em **Avançado**, **Renomear** muda sua identificação; **Duplicar perfil** cria uma cópia; **Excluir perfil** remove o registro escolhido do armazenamento local. Faça backup antes de operações destrutivas. Não use a exclusão para esconder uma medição desfavorável.
+Na barra **Gerenciar instrumentos**, escolha o perfil na lista **Instrumento**. **Novo perfil**, **Importar arquivo**, **Renomear** e **Excluir perfil** ficam juntos. Renomear muda sua identificação; Excluir perfil remove o instrumento e suas sessões do armazenamento local. Os dois controles ficam indisponíveis quando não há perfil aberto. O bloco **Instrumento aberto** destaca o conteúdo carregado. Em **Avançado**, **Duplicar perfil** cria uma cópia. Faça backup antes de operações destrutivas. Não use a exclusão para esconder uma medição desfavorável.
 
 ### Tecla, corda e contexto
 
@@ -762,7 +762,7 @@ O histórico mantém a referência e as frequências originais da sessão. O apl
 
 Selecione o instrumento. O **Mapa de teclas** mostra a cobertura das medições e permite abrir o **Histórico** de cada tecla. **Medições sem tecla / fora do mapa** aparece quando há registros nessa situação. Em **Avançado**, ordene o histórico por mais recentes, mais antigas ou qualidade provisória; qualidade provisória é triagem, não classificação metrológica.
 
-- **Selecionar medição** compartilha os identificadores da sessão e tecla, sem abrir automaticamente outra ferramenta. Use Parciais pelo menu e **Medições armazenadas → Abrir revisão** para explorar gráficos, execuções, parâmetros originais e caracterização empírica.
+- Para visualizar uma medição, use Parciais pelo menu; em **Medições armazenadas**, escolha a tecla e a sessão e pressione **Abrir revisão** para explorar gráficos, execuções, parâmetros originais e caracterização empírica.
 - Para comparar, use [revisão histórica e comparação em Parciais](#revisao-historica), não o gerenciador de perfis.
 - Para medir novamente, abra Parciais pelo menu, confira a identidade da fonte, escolha nota e condição pertinentes e comece uma nova aquisição. Preserve a sessão de trabalho anterior antes de descartá-la.
 - Cada registro possui ações recolhidas em **Avançado**, incluindo exportação individual AFS e gerenciamento. Excluir requer cuidado e confirmação; exporte antes de remover a única evidência.
@@ -820,7 +820,7 @@ Use **Salvar alterações** para conservar as preferências. **Restaurar padrõe
 | Não há sessão pronta | Finalize a coleta, aguarde o cálculo, pressione Salvar no perfil em Parciais. |
 | Registro já salvo ou duplicado | Consulte a sessão existente ou sua revisão. Não duplique uma mesma execução como se fosse nova observação de outra corda. |
 | Tecla não aparece no mapa | Abra Medições sem tecla / fora do mapa; reveja layout e identidade física. |
-| Não consigo revisar uma sessão | Selecione a medição, abra Parciais pelo menu e use Medições armazenadas → Abrir revisão. |
+| Não consigo revisar uma sessão | Selecione o instrumento, abra Parciais pelo menu e escolha a tecla e a sessão em Medições armazenadas → Abrir revisão. |
 | Resultados inconclusivos não aparecem | Confira o filtro de apresentação; restaurar padrões não recupera arquivos realmente excluídos. |
 | Comparação física recusada/limitada | Confira identidade, modelo, procedimento, configuração e condição de áudio; examine as sessões separadamente. |
 | Importação recusada | Verifique tipo de arquivo, integridade, tamanho e mensagem da validação. Use o backup original; não contorne o validador. |
