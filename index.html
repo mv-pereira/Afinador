@@ -2200,7 +2200,7 @@ html[data-theme="dark"] #areaPerfis3 #p3Toolbar{background:#283D40;border-color:
 <p><strong>Correção instrumental:</strong> sua aplicação experimental inicia exclusivamente em Ferramentas → Curvas de afinação. Uma prévia ou aprovação experimental não altera os alvos. Após aplicar uma curva, o Afinador mostrará somente o objetivo musical e o seletor Sem correção / Correção ativa. Desligar pelo seletor volta aos alvos teóricos; religar solicita nova verificação das fontes. Se a referência musical, a disposição física ou os dados forem alterados, a aplicação é invalidada, o painel desaparece e um aviso informa por que a curva foi desativada. A curva não retorna automaticamente ao recuperar a configuração anterior. Para consultar os intervalos musicais alterados, expanda Intervalos afetados na ferramenta Curvas de afinação. Nenhuma curva está homologada fisicamente. A correção aplicada é experimental e vale apenas durante a visita atual.</p>
 
 </div></details><details class="ajuda-capitulo"><summary>B. Métodos de detecção</summary><div>
-<p><strong>YIN + FFT (padrão):</strong> YIN mede a periodicidade no tempo por CMNDF; a FFT verifica harmônicos, pode corrigir erros de oitava e refina a estimativa quando há evidência suficiente. A etapa adaptativa refina frequências abaixo de 350 Hz; a estratégia conservadora anterior permanece a partir de 350 Hz. <strong>Não existe modo YIN puro/vanilla nem opção para desativar a FFT.</strong></p>
+<p><strong>YIN + FFT (padrão):</strong> YIN mede a periodicidade no tempo por CMNDF; a FFT verifica harmônicos, pode corrigir erros de oitava e refina a estimativa quando há evidência suficiente. O refinamento FFT agora adota uma política única para todas as frequências: avalia resolução dos picos, fundamental independente, concordância entre parciais e qualidade do YIN para decidir quando refinar ou preservar a estimativa temporal. A confirmação espectral e os bloqueios de ambiguidade continuam ativos. <strong>Não existe modo YIN puro/vanilla nem opção para desativar a FFT.</strong></p>
 <p><strong>pYIN:</strong> utiliza candidatos de periodicidade, uma distribuição Beta (padrão α=2, β=18, com 100 limiares) e acompanhamento temporal Viterbi causal. Pode sustentar a estabilidade em notas contínuas, mas uma grande mudança de altura pode demandar confirmação.</p>
 <p><strong>SWIPE':</strong> usa saliência harmônica e janelas FFT múltiplas. É mais exigente em processamento e depende da disponibilidade do motor PFFFT/WebAssembly; a indisponibilidade é informada em vez de simular uma análise equivalente.</p>
 <p><strong>Pico:</strong> indica o componente espectral mais intenso, que pode ser um harmônico. O aviso em vermelho claro lembra que <strong>pico não é sinônimo de fundamental</strong>.</p>
@@ -2976,6 +2976,188 @@ html[data-theme="dark"] #areaPerfis3 #p3Toolbar{background:#283D40;border-color:
     return Object.freeze(c);
   }
 
+
+  // E7-02: ancoragem de oitava baseada no conteúdo PCM local (sem FFT externa).
+  // Aplicada apenas quando uma suboitava domina a distribuição pYIN e existe
+  // uma concorrente em 2f com probabilidade relevante. Nunca cria candidatos.
+  // A ausência de energia nos harmônicos ímpares é evidência contra f/2,
+  // mas não prova identidade física quando a fundamental está ausente.
+  function corroborarOitavaEspectral(amostras, comprimento, taxa, candidatos) {
+    if (candidatos.length < 2) return;
+    let baixa = null;
+    for (let k = 0; k < candidatos.length; k++) {
+      if (!baixa || candidatos[k].probability > baixa.probability) baixa = candidatos[k];
+    }
+    if (!baixa || baixa.probability < 0.35 || baixa.periodicity >= 0.995) return;
+    // Periodicidade quase perfeita na suboitava é forte evidência para
+    // preservá-la, sobretudo em instrumentos graves de fundamental fraca.
+    let alta = null;
+    for (let k = 0; k < candidatos.length; k++) {
+      const c = candidatos[k];
+      if (c === baixa || c.probability < 0.0002) continue;
+      if (Math.abs(1200 * Math.log2(c.frequencyHz / (2 * baixa.frequencyHz))) > 38) continue;
+      if (!alta || c.probability > alta.probability) alta = c;
+    }
+    if (!alta || alta.frequencyHz * 3 >= 0.46 * taxa) return;
+    const size = Math.min(comprimento, Math.floor(taxa * 0.42));
+    if (size < Math.round(taxa * 0.28)) return; // resolução insuficiente para graves
+    const offset = comprimento - size;
+    // Hann usada somente na janela de confirmação, nunca na CMNDF original.
+    let janela = corroborarOitavaEspectral.janela;
+    if (!janela || janela.length !== size) {
+      janela = new Float32Array(size);
+      for (let i = 0; i < size; i++) janela[i] = 0.5 - 0.5 * Math.cos(2*Math.PI*i/(size-1));
+      corroborarOitavaEspectral.janela = janela;
+    }
+    function magnitude(hz) {
+      const w = 2 * Math.PI * hz / taxa;
+      const co = Math.cos(w), si = Math.sin(w), coeff = 2 * co;
+      let s1 = 0, s2 = 0;
+      for (let i = 0; i < size; i++) {
+        const s = amostras[offset+i]*janela[i] + coeff*s1 - s2;
+        s2 = s1; s1 = s;
+      }
+      return Math.hypot(s1 - co*s2, si*s2);
+    }
+    const f = baixa.frequencyHz;
+    const e1=magnitude(f),e2=magnitude(2*f),e3=magnitude(3*f),
+          e4=magnitude(4*f),e5=magnitude(5*f),e6=magnitude(6*f);
+    const totalPar=e2+e4+e6;
+    // O candidato de oitava superior deve possuir uma série realmente
+    // sustentada, não apenas um pico isolado de fundamental.
+    if (!(e2>1e-8 && e6>=0.23*e2 && totalPar>1e-8)) return;
+    // Evidência robusta de que a série observada é predominantemente par
+    // relativamente à candidata inferior; margens deixam 55 Hz reais em paz.
+    if ((e3+e5) >= 0.045*totalPar) return;
+    if (e1 >= 0.075*e2) {
+      // Uma interferência em f+3..8 Hz também projeta energia em f por
+      // vazamento espectral. Separar duas senoides locais, antes de declarar
+      // que a fundamental inferior está ausente. Isso protege uma 55 Hz
+      // realmente existente mesmo quando sua fundamental é muito fraca.
+      if (e1 >= 0.38*e2) return; // forte suporte da fundamental inferior
+      let vizinhaHz = null, vizinhaMaior = 0;
+      for (let delta = -9; delta <= 9; delta++) {
+        if (Math.abs(delta) < 2 || f+delta<=0) continue;
+        const energia = magnitude(f+delta);
+        if (energia > vizinhaMaior) {vizinhaMaior = energia;vizinhaHz=f+delta;}
+      }
+      if (vizinhaHz === null || vizinhaMaior < 1.35*e1) return;
+      const base = amplitudeSeparada(f,vizinhaHz);
+      const fundamentalInferior = base === null ? Infinity : base;
+      const somaJanela = 0.5 * (size-1);
+      const fundamentalSuperior = e2*2/somaJanela;
+      if (fundamentalInferior >= 0.045*fundamentalSuperior) return;
+    }
+    // Ajuste local de duas componentes próximas via mínimos quadrados
+    // ponderados. A matriz 4x4 evita interpretar o lóbulo da interferência
+    // como uma nota inferior real; singularidade implica abstenção.
+    function amplitudeSeparada(f1, f2) {
+      const t1=2*Math.PI*f1/taxa, t2=2*Math.PI*f2/taxa;
+      const c1=Math.cos(t1),s1=Math.sin(t1),c2=Math.cos(t2),s2=Math.sin(t2);
+      let a=1,b=0,d=1,e=0;
+      const gram=Array.from({length:4},()=>new Float64Array(5));
+      for(let i=0;i<size;i++){
+        const w=janela[i],v=amostras[offset+i];
+        const x=[a,b,d,e];
+        for(let j=0;j<4;j++){
+          gram[j][4]+=w*x[j]*v;
+          for(let k=0;k<4;k++)gram[j][k]+=w*x[j]*x[k];
+        }
+        const aa=a*c1-b*s1; b=b*c1+a*s1; a=aa;
+        const dd=d*c2-e*s2; e=e*c2+d*s2; d=dd;
+      }
+      for(let j=0;j<4;j++){
+        let pivot=j;
+        for(let k=j+1;k<4;k++)if(Math.abs(gram[k][j])>Math.abs(gram[pivot][j]))pivot=k;
+        if(Math.abs(gram[pivot][j])<1e-10)return null;
+        if(pivot!==j){const tmp=gram[j];gram[j]=gram[pivot];gram[pivot]=tmp;}
+        const div=gram[j][j];for(let k=j;k<5;k++)gram[j][k]/=div;
+        for(let k=0;k<4;k++)if(k!==j){const v=gram[k][j];for(let m=j;m<5;m++)gram[k][m]-=v*gram[j][m];}
+      }
+      return Math.hypot(gram[0][4],gram[1][4]);
+    }
+    // Redistribuição limitada e conservativa da massa entre hipóteses de
+    // oitava já propostas pelo pYIN. A soma e a massa não vozeada persistem.
+    if (alta.probability < 0.10 || alta.probability < 0.20 * baixa.probability)
+      return 'ambigua'; // evidência física conflitante, sem candidato pYIN credível
+    const deslocada = baixa.probability * 0.78;
+    baixa.probability -= deslocada;
+    alta.probability += deslocada;
+    return 'corroborada';
+  }
+
+  // E7-02B — Auditor conservador de ambiguidades sub-harmônicas (n = 3..5).
+  // Não promove frequências nem cria candidatas: evita um falso resultado
+  // confiante quando o espectro é compatível com fontes superpostas.
+  // Este teste NÃO pode determinar a origem física em sinais PCM idênticos.
+  function auditarSubharmonicos(amostras, comprimento, taxa, candidatos) {
+    if (candidatos.length < 2) return;
+    let baixa = candidatos[0];
+    for (let i = 1; i < candidatos.length; i++)
+      if (candidatos[i].probability > baixa.probability) baixa = candidatos[i];
+    if (!baixa || baixa.probability < 0.30 || baixa.frequencyHz < 16) return;
+
+    // O disparo é restrito a pares realmente presentes no pYIN.
+    // A proteção E7-02 existente continua responsável pelas oitavas 2:1.
+    let alta = null, razao = 0;
+    for (let i = 0; i < candidatos.length; i++) {
+      const c = candidatos[i];
+      if (c === baixa || c.probability < 0.025 ||
+          c.probability < 0.035 * baixa.probability) continue;
+      for (let n = 3; n <= 5; n++) {
+        if (Math.abs(1200 * Math.log2(c.frequencyHz / (n * baixa.frequencyHz))) > 48) continue;
+        if (!alta || c.probability > alta.probability) { alta = c; razao = n; }
+      }
+    }
+    if (!alta || alta.frequencyHz * 3 >= 0.46 * taxa) return;
+
+    // Uma curta avaliação espectral condicional; a CMNDF e o Viterbi
+    // não são recalculados. A janela PCM já foi reduzida pelo pYIN.
+    const size = Math.min(comprimento, Math.floor(taxa * 0.42));
+    if (size < Math.round(taxa * 0.28)) return;
+    const offset = comprimento - size;
+    let janela = auditarSubharmonicos.janela;
+    if (!janela || janela.length !== size) {
+      janela = new Float32Array(size);
+      for (let i = 0; i < size; i++)
+        janela[i] = 0.5 - 0.5 * Math.cos(2 * Math.PI * i / (size - 1));
+      auditarSubharmonicos.janela = janela;
+    }
+    function magnitude(hz) {
+      if (!(hz > 0 && hz < taxa * 0.46)) return 0;
+      const w = 2 * Math.PI * hz / taxa;
+      const co = Math.cos(w), si = Math.sin(w), coeff = 2 * co;
+      let s1 = 0, s2 = 0;
+      for (let i = 0; i < size; i++) {
+        const s = amostras[offset + i] * janela[i] + coeff * s1 - s2;
+        s2 = s1; s1 = s;
+      }
+      return Math.hypot(s1 - co * s2, si * s2);
+    }
+    const h1 = magnitude(alta.frequencyHz);
+    const h2 = magnitude(2 * alta.frequencyHz);
+    const h3 = magnitude(3 * alta.frequencyHz);
+    const pico = Math.max(h1, h2, h3);
+    if (!(pico > 1e-6 && h1 > 0.12 * pico && h2 > 0.12 * pico && h3 > 0.12 * pico)) return;
+
+    // Fundamental inferior presente é evidência para PRESERVAR a nota grave.
+    // Um conjunto de vários parciais exclusivos também a favorece.
+    if (magnitude(baixa.frequencyHz) >= 0.035 * pico) return;
+    let exclusivos = 0;
+    for (let k = 2; k <= 8; k++) {
+      if (k % razao === 0 || k * baixa.frequencyHz >= 0.46 * taxa) continue;
+      if (magnitude(k * baixa.frequencyHz) >= 0.085 * pico) {
+        exclusivos++;
+        if (exclusivos >= 2) return;
+      }
+    }
+    // Uma relação 3:1, 4:1 ou 5:1 é possível tanto com um instrumento
+    // grave de fundamental ausente quanto com duas fontes independentes.
+    // Evitar qualquer reatribuição automática; nenhum valor deve chegar ao
+    // visor como se estivesse identificado de forma inequívoca.
+    return 'ambigua';
+  }
+
   function criarProcessador(configuracao = {}) {
     const cfg = validarConfig(configuracao);
     const pesos = pesosLimiaresBeta(cfg.numeroLimiares, cfg.betaAlfa, cfg.betaBeta);
@@ -3115,6 +3297,20 @@ html[data-theme="dark"] #areaPerfis3 #p3Toolbar{background:#283D40;border-color:
         candidatos.push({frequencyHz: hz, probability: m.massa,
           periodicity: limitar(1 - b, 0, 1), periodoAmostras: periodo});
       }
+      // E7-02 — corroborar exclusivamente a disputa de suboitava. A CMNDF
+      // pontua períodos múltiplos como válidos: uma interferência quase periódica
+      // pode dar ao período duplo mais massa que ao período da nota real.
+      // Esta verificação não substitui o modelo Beta/Viterbi nem decide em
+      // sinais sem evidência harmônica separável.
+      const revisaoOitava = corroborarOitavaEspectral(reduzido, n, taxa, candidatos);
+      if (revisaoOitava === 'ambigua')
+        return resultadoVazio('inconclusivo', 'oitava_sem_suporte_espectral', {...meta, revisaoOitava});
+      // E7-02B — uma fonte extra pode criar períodos 3x, 4x ou 5x.
+      // Abster quando a identidade da nota não é inferível com segurança.
+      const ambiguidadeSubharmonica = auditarSubharmonicos(reduzido, n, taxa, candidatos);
+      if (ambiguidadeSubharmonica === 'ambigua')
+        return resultadoVazio('inconclusivo', 'subharmonico_multifonte_ambiguo',
+          {...meta, auditorSubharmonico: 'abstencao'});
       candidatos.sort((a, b) => b.probability - a.probability || a.periodoAmostras - b.periodoAmostras);
       if (candidatos.length > cfg.maxCandidatos) {
         for (let k = cfg.maxCandidatos; k < candidatos.length; k++) naoVozeado += candidatos[k].probability;
@@ -3880,6 +4076,188 @@ function encontrarFundamentalProvavel(formaOnda, sampleRateYin, espectroDb, samp
     return Object.freeze(c);
   }
 
+
+  // E7-02: ancoragem de oitava baseada no conteúdo PCM local (sem FFT externa).
+  // Aplicada apenas quando uma suboitava domina a distribuição pYIN e existe
+  // uma concorrente em 2f com probabilidade relevante. Nunca cria candidatos.
+  // A ausência de energia nos harmônicos ímpares é evidência contra f/2,
+  // mas não prova identidade física quando a fundamental está ausente.
+  function corroborarOitavaEspectral(amostras, comprimento, taxa, candidatos) {
+    if (candidatos.length < 2) return;
+    let baixa = null;
+    for (let k = 0; k < candidatos.length; k++) {
+      if (!baixa || candidatos[k].probability > baixa.probability) baixa = candidatos[k];
+    }
+    if (!baixa || baixa.probability < 0.35 || baixa.periodicity >= 0.995) return;
+    // Periodicidade quase perfeita na suboitava é forte evidência para
+    // preservá-la, sobretudo em instrumentos graves de fundamental fraca.
+    let alta = null;
+    for (let k = 0; k < candidatos.length; k++) {
+      const c = candidatos[k];
+      if (c === baixa || c.probability < 0.0002) continue;
+      if (Math.abs(1200 * Math.log2(c.frequencyHz / (2 * baixa.frequencyHz))) > 38) continue;
+      if (!alta || c.probability > alta.probability) alta = c;
+    }
+    if (!alta || alta.frequencyHz * 3 >= 0.46 * taxa) return;
+    const size = Math.min(comprimento, Math.floor(taxa * 0.42));
+    if (size < Math.round(taxa * 0.28)) return; // resolução insuficiente para graves
+    const offset = comprimento - size;
+    // Hann usada somente na janela de confirmação, nunca na CMNDF original.
+    let janela = corroborarOitavaEspectral.janela;
+    if (!janela || janela.length !== size) {
+      janela = new Float32Array(size);
+      for (let i = 0; i < size; i++) janela[i] = 0.5 - 0.5 * Math.cos(2*Math.PI*i/(size-1));
+      corroborarOitavaEspectral.janela = janela;
+    }
+    function magnitude(hz) {
+      const w = 2 * Math.PI * hz / taxa;
+      const co = Math.cos(w), si = Math.sin(w), coeff = 2 * co;
+      let s1 = 0, s2 = 0;
+      for (let i = 0; i < size; i++) {
+        const s = amostras[offset+i]*janela[i] + coeff*s1 - s2;
+        s2 = s1; s1 = s;
+      }
+      return Math.hypot(s1 - co*s2, si*s2);
+    }
+    const f = baixa.frequencyHz;
+    const e1=magnitude(f),e2=magnitude(2*f),e3=magnitude(3*f),
+          e4=magnitude(4*f),e5=magnitude(5*f),e6=magnitude(6*f);
+    const totalPar=e2+e4+e6;
+    // O candidato de oitava superior deve possuir uma série realmente
+    // sustentada, não apenas um pico isolado de fundamental.
+    if (!(e2>1e-8 && e6>=0.23*e2 && totalPar>1e-8)) return;
+    // Evidência robusta de que a série observada é predominantemente par
+    // relativamente à candidata inferior; margens deixam 55 Hz reais em paz.
+    if ((e3+e5) >= 0.045*totalPar) return;
+    if (e1 >= 0.075*e2) {
+      // Uma interferência em f+3..8 Hz também projeta energia em f por
+      // vazamento espectral. Separar duas senoides locais, antes de declarar
+      // que a fundamental inferior está ausente. Isso protege uma 55 Hz
+      // realmente existente mesmo quando sua fundamental é muito fraca.
+      if (e1 >= 0.38*e2) return; // forte suporte da fundamental inferior
+      let vizinhaHz = null, vizinhaMaior = 0;
+      for (let delta = -9; delta <= 9; delta++) {
+        if (Math.abs(delta) < 2 || f+delta<=0) continue;
+        const energia = magnitude(f+delta);
+        if (energia > vizinhaMaior) {vizinhaMaior = energia;vizinhaHz=f+delta;}
+      }
+      if (vizinhaHz === null || vizinhaMaior < 1.35*e1) return;
+      const base = amplitudeSeparada(f,vizinhaHz);
+      const fundamentalInferior = base === null ? Infinity : base;
+      const somaJanela = 0.5 * (size-1);
+      const fundamentalSuperior = e2*2/somaJanela;
+      if (fundamentalInferior >= 0.045*fundamentalSuperior) return;
+    }
+    // Ajuste local de duas componentes próximas via mínimos quadrados
+    // ponderados. A matriz 4x4 evita interpretar o lóbulo da interferência
+    // como uma nota inferior real; singularidade implica abstenção.
+    function amplitudeSeparada(f1, f2) {
+      const t1=2*Math.PI*f1/taxa, t2=2*Math.PI*f2/taxa;
+      const c1=Math.cos(t1),s1=Math.sin(t1),c2=Math.cos(t2),s2=Math.sin(t2);
+      let a=1,b=0,d=1,e=0;
+      const gram=Array.from({length:4},()=>new Float64Array(5));
+      for(let i=0;i<size;i++){
+        const w=janela[i],v=amostras[offset+i];
+        const x=[a,b,d,e];
+        for(let j=0;j<4;j++){
+          gram[j][4]+=w*x[j]*v;
+          for(let k=0;k<4;k++)gram[j][k]+=w*x[j]*x[k];
+        }
+        const aa=a*c1-b*s1; b=b*c1+a*s1; a=aa;
+        const dd=d*c2-e*s2; e=e*c2+d*s2; d=dd;
+      }
+      for(let j=0;j<4;j++){
+        let pivot=j;
+        for(let k=j+1;k<4;k++)if(Math.abs(gram[k][j])>Math.abs(gram[pivot][j]))pivot=k;
+        if(Math.abs(gram[pivot][j])<1e-10)return null;
+        if(pivot!==j){const tmp=gram[j];gram[j]=gram[pivot];gram[pivot]=tmp;}
+        const div=gram[j][j];for(let k=j;k<5;k++)gram[j][k]/=div;
+        for(let k=0;k<4;k++)if(k!==j){const v=gram[k][j];for(let m=j;m<5;m++)gram[k][m]-=v*gram[j][m];}
+      }
+      return Math.hypot(gram[0][4],gram[1][4]);
+    }
+    // Redistribuição limitada e conservativa da massa entre hipóteses de
+    // oitava já propostas pelo pYIN. A soma e a massa não vozeada persistem.
+    if (alta.probability < 0.10 || alta.probability < 0.20 * baixa.probability)
+      return 'ambigua'; // evidência física conflitante, sem candidato pYIN credível
+    const deslocada = baixa.probability * 0.78;
+    baixa.probability -= deslocada;
+    alta.probability += deslocada;
+    return 'corroborada';
+  }
+
+  // E7-02B — Auditor conservador de ambiguidades sub-harmônicas (n = 3..5).
+  // Não promove frequências nem cria candidatas: evita um falso resultado
+  // confiante quando o espectro é compatível com fontes superpostas.
+  // Este teste NÃO pode determinar a origem física em sinais PCM idênticos.
+  function auditarSubharmonicos(amostras, comprimento, taxa, candidatos) {
+    if (candidatos.length < 2) return;
+    let baixa = candidatos[0];
+    for (let i = 1; i < candidatos.length; i++)
+      if (candidatos[i].probability > baixa.probability) baixa = candidatos[i];
+    if (!baixa || baixa.probability < 0.30 || baixa.frequencyHz < 16) return;
+
+    // O disparo é restrito a pares realmente presentes no pYIN.
+    // A proteção E7-02 existente continua responsável pelas oitavas 2:1.
+    let alta = null, razao = 0;
+    for (let i = 0; i < candidatos.length; i++) {
+      const c = candidatos[i];
+      if (c === baixa || c.probability < 0.025 ||
+          c.probability < 0.035 * baixa.probability) continue;
+      for (let n = 3; n <= 5; n++) {
+        if (Math.abs(1200 * Math.log2(c.frequencyHz / (n * baixa.frequencyHz))) > 48) continue;
+        if (!alta || c.probability > alta.probability) { alta = c; razao = n; }
+      }
+    }
+    if (!alta || alta.frequencyHz * 3 >= 0.46 * taxa) return;
+
+    // Uma curta avaliação espectral condicional; a CMNDF e o Viterbi
+    // não são recalculados. A janela PCM já foi reduzida pelo pYIN.
+    const size = Math.min(comprimento, Math.floor(taxa * 0.42));
+    if (size < Math.round(taxa * 0.28)) return;
+    const offset = comprimento - size;
+    let janela = auditarSubharmonicos.janela;
+    if (!janela || janela.length !== size) {
+      janela = new Float32Array(size);
+      for (let i = 0; i < size; i++)
+        janela[i] = 0.5 - 0.5 * Math.cos(2 * Math.PI * i / (size - 1));
+      auditarSubharmonicos.janela = janela;
+    }
+    function magnitude(hz) {
+      if (!(hz > 0 && hz < taxa * 0.46)) return 0;
+      const w = 2 * Math.PI * hz / taxa;
+      const co = Math.cos(w), si = Math.sin(w), coeff = 2 * co;
+      let s1 = 0, s2 = 0;
+      for (let i = 0; i < size; i++) {
+        const s = amostras[offset + i] * janela[i] + coeff * s1 - s2;
+        s2 = s1; s1 = s;
+      }
+      return Math.hypot(s1 - co * s2, si * s2);
+    }
+    const h1 = magnitude(alta.frequencyHz);
+    const h2 = magnitude(2 * alta.frequencyHz);
+    const h3 = magnitude(3 * alta.frequencyHz);
+    const pico = Math.max(h1, h2, h3);
+    if (!(pico > 1e-6 && h1 > 0.12 * pico && h2 > 0.12 * pico && h3 > 0.12 * pico)) return;
+
+    // Fundamental inferior presente é evidência para PRESERVAR a nota grave.
+    // Um conjunto de vários parciais exclusivos também a favorece.
+    if (magnitude(baixa.frequencyHz) >= 0.035 * pico) return;
+    let exclusivos = 0;
+    for (let k = 2; k <= 8; k++) {
+      if (k % razao === 0 || k * baixa.frequencyHz >= 0.46 * taxa) continue;
+      if (magnitude(k * baixa.frequencyHz) >= 0.085 * pico) {
+        exclusivos++;
+        if (exclusivos >= 2) return;
+      }
+    }
+    // Uma relação 3:1, 4:1 ou 5:1 é possível tanto com um instrumento
+    // grave de fundamental ausente quanto com duas fontes independentes.
+    // Evitar qualquer reatribuição automática; nenhum valor deve chegar ao
+    // visor como se estivesse identificado de forma inequívoca.
+    return 'ambigua';
+  }
+
   function criarProcessador(configuracao = {}) {
     const cfg = validarConfig(configuracao);
     const pesos = pesosLimiaresBeta(cfg.numeroLimiares, cfg.betaAlfa, cfg.betaBeta);
@@ -4019,6 +4397,20 @@ function encontrarFundamentalProvavel(formaOnda, sampleRateYin, espectroDb, samp
         candidatos.push({frequencyHz: hz, probability: m.massa,
           periodicity: limitar(1 - b, 0, 1), periodoAmostras: periodo});
       }
+      // E7-02 — corroborar exclusivamente a disputa de suboitava. A CMNDF
+      // pontua períodos múltiplos como válidos: uma interferência quase periódica
+      // pode dar ao período duplo mais massa que ao período da nota real.
+      // Esta verificação não substitui o modelo Beta/Viterbi nem decide em
+      // sinais sem evidência harmônica separável.
+      const revisaoOitava = corroborarOitavaEspectral(reduzido, n, taxa, candidatos);
+      if (revisaoOitava === 'ambigua')
+        return resultadoVazio('inconclusivo', 'oitava_sem_suporte_espectral', {...meta, revisaoOitava});
+      // E7-02B — uma fonte extra pode criar períodos 3x, 4x ou 5x.
+      // Abster quando a identidade da nota não é inferível com segurança.
+      const ambiguidadeSubharmonica = auditarSubharmonicos(reduzido, n, taxa, candidatos);
+      if (ambiguidadeSubharmonica === 'ambigua')
+        return resultadoVazio('inconclusivo', 'subharmonico_multifonte_ambiguo',
+          {...meta, auditorSubharmonico: 'abstencao'});
       candidatos.sort((a, b) => b.probability - a.probability || a.periodoAmostras - b.periodoAmostras);
       if (candidatos.length > cfg.maxCandidatos) {
         for (let k = cfg.maxCandidatos; k < candidatos.length; k++) naoVozeado += candidatos[k].probability;
@@ -4352,6 +4744,9 @@ self.postMessage({tipo:'pyin-teste-pronto',etapa:3,modo:'experimental-controlado
  * - Etapa 5: reutiliza buffers de magnitude e saliência; só mantém cache
  *   temporal de STFTs quando toda a janela já foi capturada (sem zero futuro).
  *   Não altera a FFT, os candidatos, as janelas ou as equações do SWIPE'.
+ * - E7-03: refinamento espectral conservador da fundamental identificada,
+ *   somente quando há pico F1 isolado e estabilidade temporal; não substitui
+ *   o SWIPE' por YIN nem inventa F1 ausente.
  * A saída causal, especialmente nas bordas e início da nota, NÃO é bit a bit
  * equivalente à execução offline original e precisa de testes em celulares.
  */
@@ -4538,6 +4933,68 @@ function createSWIPE(fft, opcoes={}){
   }
   return false;
  }
+// SWIPE' spectra retain their own prime-harmonic salience and candidacy.
+// Only refine the selected frequency when a resolved, temporally stable
+// fundamental partial is independently evidenced by the input spectrum.
+function refinarPicoSWIPE(s, amostras, n, fAlvo, maxCents, nomeBuffer) {
+  if (amostras.length < n || !fft.supportsSize(n)) return null;
+  const nome = nomeBuffer || 'anchor';
+  if(!s[nome] || s[nome].length < n/2) s[nome] = new Float32Array(n/2);
+  const a = s[nome], passo = s.sr/n;
+  fft.runMagnitudeInto(amostras,{size:n,window:'hann'},a);
+  const min = fAlvo * Math.pow(2,-maxCents/1200);
+  const max = fAlvo * Math.pow(2,maxCents/1200);
+  const lo=Math.max(3,Math.floor(min/passo)-1), hi=Math.min(a.length-3,Math.ceil(max/passo)+1);
+  if(lo>hi)return null;
+  let kMax=-1,forca=-1;
+  for(let k=lo;k<=hi;k++){
+    if(a[k]>=a[k-1] && a[k]>a[k+1] && a[k]>forca){forca=a[k];kMax=k;}
+  }
+  if(kMax<0 || !(forca>0)) return null;
+  let global=0;
+  for(let k=2;k<a.length-2;k++)if(a[k]>global)global=a[k];
+  if(forca<0.13*global)return null;
+  let lateral=0;
+  for(let d=4;d<=12;d++){
+    if(kMax-d>=2)lateral=Math.max(lateral,a[kMax-d]);
+    if(kMax+d<a.length-2)lateral=Math.max(lateral,a[kMax+d]);
+  }
+  if(!(forca>2.5*lateral))return null;
+  const p0=Math.log(Math.max(1e-30,a[kMax-1]));
+  const p1=Math.log(forca), p2=Math.log(Math.max(1e-30,a[kMax+1]));
+  const denom=p0-2*p1+p2;
+  if(!(denom < -0.0001))return null;
+  const sub=Math.max(-.5,Math.min(.5,.5*(p0-p2)/denom));
+  const hz=(kMax+sub)*passo;
+  if(!(hz>0) || Math.abs(1200*Math.log2(hz/fAlvo))>maxCents)return null;
+  return hz;
+}
+function refinarFundamentalSWIPE(s,tempo,fOriginal){
+  if(!(fOriginal>=70&&fOriginal<=4600) || typeof fft.runMagnitudeInto!=='function')return null;
+  const n=Math.min(tempo.length, fOriginal<200?32768:fOriginal<650?16384:8192);
+  const ancora=refinarPicoSWIPE(s,tempo,n,fOriginal,65,'ancoraEspectral');
+  if(ancora===null){s.historicoAncora=[];return null;}
+  // Evaluate two consecutive *short* windows to avoid lagging vibrato and
+  // glissando with the longer high-resolution window.
+  const corto=fOriginal<220?8192:4096;
+  const x0=tempo.subarray(tempo.length-2*corto,tempo.length-corto);
+  const x1=tempo.subarray(tempo.length-corto);
+  const antigo=refinarPicoSWIPE(s,x0,corto,fOriginal,65,'ancoraCurta');
+  const recente=refinarPicoSWIPE(s,x1,corto,fOriginal,65,'ancoraCurta');
+  if(antigo===null||recente===null ||
+     Math.abs(1200*Math.log2(antigo/recente))>4 ||
+     Math.abs(1200*Math.log2(recente/ancora))>6){
+    s.historicoAncora=[];return null;
+  }
+  const h=s.historicoAncora||(s.historicoAncora=[]);
+  h.push(ancora);if(h.length>4)h.shift();
+  if(h.length<3)return null;
+  let lo=Infinity,hi=-Infinity;
+  for(const f of h){lo=Math.min(lo,f);hi=Math.max(hi,f);}
+  if(Math.abs(1200*Math.log2(hi/lo))>2.5)return null;
+  return ancora;
+}
+
  function process(tempo,sampleRate,ctx={}){
   if(!(tempo instanceof Float32Array)||!Number.isFinite(sampleRate)||tempo.length<1024)return {estado:'inconclusivo',detectado:null};
   const identity=JSON.stringify([ctx.sessionId,ctx.generationId,sampleRate]);
@@ -4587,7 +5044,14 @@ function createSWIPE(fft, opcoes={}){
    }
    f=fi;
   }
-  return {estado:'valido',detectado:{frequency:f,confianca:'SWIPE\' (saliência não calibrada)',saliencia:best},saliencia:best,janelaMax:s.ws[0],janelas:s.ws.length,fftMultijanelaComputadas:computed,fftMultijanelaReusadas:reused};
+  // E7-03: a saliência SWIPE' decide a candidata; uma fundamental
+  // espectral estável pode refinar apenas a frequência dessa candidata.
+  const frequenciaOriginalSWIPE=f;
+  const frequenciaRefinadaSWIPE=refinarFundamentalSWIPE(s,tempo,f);
+  if(frequenciaRefinadaSWIPE!==null)f=frequenciaRefinadaSWIPE;
+  return {estado:'valido',detectado:{frequency:f,confianca:'SWIPE\' (saliência não calibrada)',saliencia:best},
+   saliencia:best,janelaMax:s.ws[0],janelas:s.ws.length,fftMultijanelaComputadas:computed,fftMultijanelaReusadas:reused,
+   ...(frequenciaRefinadaSWIPE!==null?{refinamentoEspectral:{metodo:'fundamental_estavel',antesHz:frequenciaOriginalSWIPE,depoisHz:f}}:{})};
  }
  return Object.freeze({process,reset,status:()=>state?{janelas:state.ws,frequencias:state.candidates.length,erbBins:state.fe.length,amostrasHistorico:state.used,fs:state.fs}:null});
 }
@@ -4691,6 +5155,26 @@ function prepararAmostrasYin(buffer, sampleRate) {
         }
         return {amostras: saida, sampleRate: sampleRate / fator};
       }
+
+// E7-01 — YIN completo, sem decimacao em capturas <= 48 kHz.
+// Capturas de taxa superior usam apenas a reducao minima necessaria para
+// manter a carga da CMNDF compatível com dispositivos móveis.
+// Não modifica pYIN, SWIPE' ou o sinal entregue à FFT.
+function prepararAmostrasYinTaxaPlena(buffer, sampleRate) {
+  if (!(sampleRate > 0) || !Number.isFinite(sampleRate)) return {amostras:buffer,sampleRate};
+  const fator = Math.max(1, Math.ceil(sampleRate / 48000));
+  if (fator === 1) return {amostras:buffer,sampleRate};
+  const tamanho = Math.floor(buffer.length / fator);
+  const saida = new Float32Array(tamanho);
+  const deslocamento = buffer.length - tamanho * fator;
+  for (let i = 0; i < tamanho; i++) {
+    let soma = 0;
+    const base = deslocamento + i * fator;
+    for (let j = 0; j < fator; j++) soma += buffer[base + j];
+    saida[i] = soma / fator;
+  }
+  return {amostras:saida,sampleRate:sampleRate/fator};
+}
 
 function selecionarJanelaYin(freqAnterior, sampleRateYin) {
         // A primeira leitura usa janela intermediária e pesquisa TODAS as notas;
@@ -4860,74 +5344,122 @@ function conferirCoerenciaPicos(freq, espectroDb, sampleRate, fftSize, estatisti
           coerente: !(picos >= 2 && compativeis < 2 && incompativeis >= 1)};
       }
 
-// Refinamento FFT adaptativo fixo para frequências < 350 Hz.
-// Identifica picos independentes de harmônicos, estima f0 por pico/h,
-// exige concordância espectral e não altera a detecção de oitava ou os gates finais.
-function refinarYinFFTAdaptativo(yin, espectroDb, sampleRateFFT, fftSize, estatisticasFFT) {
-  const f0=yin.frequency, binHz=sampleRateFFT/fftSize;
-  const piso=estatisticasFFT.pisoDb, maximo=estatisticasFFT.maxDb;
-  if (!(f0>=FREQ_MIN_YIN && f0<350 && binHz>0)) return;
-  const estimativas=[];
-  let fundamentalForte=null;
-  for(let h=1;h<=8;h++){
-    const prevista=f0*h, bin=prevista/binHz;
-    if(bin<3 || bin>=espectroDb.length-3) break;
-    const centro=Math.round(bin);
-    let k=centro;
-    for(let j=Math.max(3,centro-2);j<=Math.min(espectroDb.length-4,centro+2);j++)
-      if(espectroDb[j]>espectroDb[k]) k=j;
-    const db=espectroDb[k];
-    if (!(db>=piso+16 && db>=maximo-30 && db>espectroDb[k-1] && db>=espectroDb[k+1] &&
-          db>Math.max(espectroDb[k-2],espectroDb[k+2])+0.75)) continue;
-    const fPico=refinarIndicePico(espectroDb,k)*binHz;
-    if (!(fPico>0 && Number.isFinite(fPico))) continue;
-    const estimada=fPico/h;
-    const distancia=Math.abs(1200*Math.log2(estimada/f0));
-    if (distancia>30) continue;
-    if(h===1 && db>=maximo-8 && db>=piso+18 &&
-       db>Math.max(espectroDb[k-2],espectroDb[k+2])+1.2 && f0/binHz>=4) {
-      fundamentalForte=estimada;
+// E7-01C: refino FFT unificado, orientado pela qualidade da evidencia.
+// O YIN continua a escolher o periodo; a FFT so o desloca quando um pico
+// fundamental bem resolvido OU multiplos parciais independentes o corroboram.
+// Nao existe frequencia absoluta de comutacao (antes 350 Hz).
+function refinarYinFFTUnificado(yin, espectroDb, sampleRateFFT, fftSize, estatisticasFFT, diag = null) {
+  const fYin = yin.frequency, binHz = sampleRateFFT / fftSize;
+  if (!(fYin >= FREQ_MIN_YIN && Number.isFinite(fYin) && binHz > 0)) return;
+  const piso = estatisticasFFT.pisoDb, maiorDb = estatisticasFFT.maxDb;
+  const parciais = [];
+  const maxH = Math.min(8, Math.floor((sampleRateFFT / 2 - 3 * binHz) / fYin));
+  for (let h = 1; h <= maxH; h++) {
+    const centroPrevisto = fYin * h / binHz;
+    if (centroPrevisto < 3 || centroPrevisto >= espectroDb.length - 3) continue;
+    const centro = Math.round(centroPrevisto);
+    // A tolerancia em bins acompanha a tolerancia musical em cents:
+    // nos agudos, ate 20 cents podem representar muitos bins de FFT.
+    const raio = Math.max(2, Math.min(12, Math.ceil(centroPrevisto * 0.012)));
+    let k = centro;
+    for (let j = Math.max(3, centro - raio); j <= Math.min(espectroDb.length - 4, centro + raio); j++) {
+      if (espectroDb[j] > espectroDb[k]) k = j;
     }
-    // Harmônicos mais altos fornecem menor erro em Hz sobre a fundamental,
-    // mas seus pesos são limitados para evitar dominar via inarmonicidade.
-    const potencia=Math.min(1.6,Math.max(0.3,(db-piso-12)/30));
-    const peso=potencia * Math.min(3,Math.sqrt(h));
-    estimativas.push({h,estimada,peso});
+    const nivel = espectroDb[k];
+    if (!(nivel >= piso + 16 && nivel >= maiorDb - 32 &&
+      nivel > espectroDb[k - 1] && nivel >= espectroDb[k + 1] &&
+      nivel > Math.max(espectroDb[k - 2], espectroDb[k + 2]) + 0.8)) continue;
+    const fParcial = refinarIndicePico(espectroDb, k) * binHz;
+    const estimativa = fParcial / h;
+    if (!(estimativa > 0 && Number.isFinite(estimativa))) continue;
+    const delta = 1200 * Math.log2(estimativa / fYin);
+    if (Math.abs(delta) > (h === 1 ? 30 : 25)) continue;
+    // Se o pico e menor que 4 bins, a posicao sub-bin pode estar contaminada
+    // pelo DC/por outro parcial; nao usar para alterar a estimativa temporal.
+    if (k < 4) continue;
+    const destaque = Math.min(1, Math.max(0, (nivel - piso - 13) / 25));
+    const amplitude = Math.min(1, Math.max(0, (nivel - maiorDb + 34) / 24));
+    const peso = Math.max(0.1, destaque * amplitude) * Math.min(2, Math.sqrt(h));
+    // Uma senoide estacionaria sob janela Blackman tem cauda muito fraca
+    // tres bins alem do maximo. Vibrato, ataques e picos complexos alargam-na.
+    const picoEstreito = k >= 6 && k < espectroDb.length-6 &&
+      Math.max(espectroDb[k-3], espectroDb[k+3]) < nivel - 25;
+    parciais.push({h, f: estimativa, delta, peso, picoEstreito});
   }
-  if(!estimativas.length) return;
-  // Caso especialmente útil em cordas ligeiramente inarmônicas:
-  // uma fundamental isolada e forte pode ser melhor estimador que o YIN,
-  // mas só intervém quando o desvio é significativo (não deteriora senoides).
-  if(fundamentalForte !== null && yin.erroYin<=0.20){
-    const delta=1200*Math.log2(fundamentalForte/f0);
-    if(Math.abs(delta)>=5 && Math.abs(delta)<=29){
-      yin.frequency=Math.exp(0.15*Math.log(f0)+0.85*Math.log(fundamentalForte));
-      return;
+  if (!parciais.length) return;
+  const fundamental = parciais.find(p => p.h === 1);
+  const harmonicos = parciais.filter(p => p.h > 1);
+  const usar = [];
+  let basePeso = 0, motivo = 'insufficient_evidence';
+  if (harmonicos.length >= 2) {
+    // O conjunto de harmonicos independentes nao pode depender da fundamental
+    // contaminada por batimento. Exige consenso entre dois ou mais parciais.
+    const ordenados = harmonicos.slice().sort((a,b) => a.delta-b.delta);
+    const soma = ordenados.reduce((s,x) => s+x.peso,0);
+    let acum = 0, med = ordenados[0].delta;
+    for (const p of ordenados) {acum += p.peso; if(acum >= soma/2) {med=p.delta;break;}}
+    const concordantes = harmonicos.filter(p => Math.abs(p.delta-med) <= 5);
+    if (concordantes.length >= 2 && concordantes.filter(p=>p.picoEstreito).length >= 2) {
+      const dispersao = Math.max(...concordantes.map(p=>p.delta)) - Math.min(...concordantes.map(p=>p.delta));
+      if(dispersao <= 7) {
+        usar.push(...concordantes);
+        // Diminuir a influencia de parciais altos levemente inarmonicos.
+        basePeso = Math.max(0.25, Math.min(0.82, 0.74 - Math.max(0, dispersao-1)*0.055));
+        motivo = 'harmonic_consensus';
+      }
     }
   }
-  // Mediana ponderada resiste a um harmônico espúrio.
-  estimativas.sort((a,b)=>a.estimada-b.estimada);
-  const somaPesos=estimativas.reduce((s,x)=>s+x.peso,0);
-  let acum=0,central=estimativas[0].estimada;
-  for(const e of estimativas){acum+=e.peso;if(acum>=somaPesos/2){central=e.estimada;break;}}
-  const coerentes=estimativas.filter(e=>Math.abs(1200*Math.log2(e.estimada/central))<=11);
-  if(coerentes.length<2){
-    // Uma fundamental isolada só é aceita quando o pico é muito bem resolvido.
-    if(coerentes.length!==1 || coerentes[0].h!==1 || f0/binHz<16 ||
-       yin.erroYin>0.07) return;
+  // Na inarmonicidade leve, os harmônicos superiores sao sistematicamente
+  // mais agudos que h*f0: uma fundamental nítida e concordante e a ancora
+  // mais fiel. Em batimentos a propria fundamental difere dos harmônicos.
+  if (usar.length && fundamental && fundamental.picoEstreito &&
+      Math.abs(fundamental.delta - (usar.reduce((s,x)=>s+x.peso*x.delta,0)/usar.reduce((s,x)=>s+x.peso,0))) <= 4.0 &&
+      fYin/binHz >= 8) {
+    // Comprimir a contribuicao de parciais superiores sem os descartar.
+    usar.push({...fundamental, peso:usar.reduce((s,x)=>s+x.peso,0)*4});
+    motivo = 'fundamental_harmonic_agreement';
+    basePeso = Math.max(basePeso, 0.91);
   }
-  const pesoCoerente=coerentes.reduce((s,x)=>s+x.peso,0);
-  if(coerentes.length>=2 && pesoCoerente/somaPesos<0.67) return;
-  // Média geométrica ponderada: mantém a métrica em cents.
-  const logF=coerentes.reduce((s,x)=>s+x.peso*Math.log(x.estimada),0)/pesoCoerente;
-  const fFFT=Math.exp(logF);
-  const diffCents=Math.abs(1200*Math.log2(fFFT/f0));
-  if(diffCents>22 || yin.erroYin>0.20) return;
-  let mistura=coerentes.length>=3?0.75:coerentes.length===2?0.6:0.45;
-  // Ruído ou periodicidade incerta enfraquecem a intervenção espectral.
-  if(yin.erroYin>0.10) mistura*=0.7;
-  yin.frequency = Math.exp(Math.log(f0)*(1-mistura)+Math.log(fFFT)*mistura);
+  // Uma fundamental estreita pode ser decisiva em cordas inarmonicas:
+  // os parciais h>=2 nao coincidem exatamente com h*f0.
+  const fundamentalResolvida = fundamental && fundamental.picoEstreito &&
+    fundamental.peso > 0.12;
+  if (fundamentalResolvida && yin.erroYin >= 0.003 &&
+      (!usar.length || Math.abs(fundamental.delta -
+        usar.reduce((s,x)=>s+x.peso*x.delta,0)/usar.reduce((s,x)=>s+x.peso,0)) > 2)) {
+    usar.length = 0;
+    usar.push(fundamental);
+    // O pico da verdadeira fundamental tem menos vies de inarmonicidade.
+    basePeso = yin.erroYin >= 0.004 ? 0.86 : 0.65;
+    motivo = 'inharmonic_fundamental';
+  }
+  if (!usar.length && fundamental && fundamentalResolvida) {
+    // Um unico pico tem precisao diferente dependendo de quantos bins FFT
+    // representam cada periodo. A mudanca de peso e continua, sem 350 Hz.
+    const binsPorFundamental = fYin/binHz;
+    const resolucao = Math.max(0, Math.min(1, (binsPorFundamental - 20)/58));
+    const suavizado = resolucao * resolucao * (3 - 2*resolucao);
+    basePeso = 0.97 * suavizado;
+    // Um unico pico alargado nao mede precisamente a altura instantanea
+    // em vibrato/ataque. O YIN temporal continua dono da estimativa.
+    if (!fundamental.picoEstreito) basePeso = 0;
+    if (yin.erroYin > 0.12) basePeso *= 0.6;
+    if (basePeso > 0.04) {usar.push(fundamental);motivo='resolved_fundamental';}
+  }
+  if (!usar.length) return;
+  const pesos = usar.reduce((s,p)=>s+p.peso,0);
+  const logF = usar.reduce((s,p)=>s+p.peso*Math.log(p.f),0)/pesos;
+  const fFft = Math.exp(logF);
+  const deltaCents = 1200 * Math.log2(fFft / fYin);
+  if (Math.abs(deltaCents) > (motivo === 'inharmonic_fundamental' ? 30 : 22) || yin.erroYin > 0.20) return;
+  // Nao fundir uma hipotese espectral discordante com YIN temporal fragil.
+  if (Math.abs(deltaCents) > 15 && yin.erroYin > 0.09) return;
+  const peso = Math.max(0, Math.min(0.97, basePeso));
+  if (peso <= 0.04) return;
+  yin.frequency = Math.exp((1-peso)*Math.log(fYin) + peso*logF);
+  if(diag){diag.unifiedRefinement = motivo;diag.unifiedSpectralWeight = peso;diag.unifiedHarmonics = usar.map(p=>p.h);}
 }
+
 
 function encontrarFundamentalProvavel(formaOnda, sampleRateYin, espectroDb, sampleRateFFT, fftSize, frequenciaAnterior = null, frequenciaJanelaYin = frequenciaAnterior, configuracao = null, diag = null) {
         const yin = estimarFundamentalYIN(formaOnda, sampleRateYin, frequenciaAnterior, frequenciaJanelaYin, configuracao);
@@ -4957,29 +5489,30 @@ function encontrarFundamentalProvavel(formaOnda, sampleRateYin, espectroDb, samp
         // Refinamento espectral somente quando a fundamental é forte e isolada.
         // Reduz o viés de interpolação temporal dos timbres muito brilhantes.
         if(diag)diag.beforeRefinementHz=yin.frequency;
-        const utilizarLegado350 = yin.frequency >= 350;
-        if (!utilizarLegado350) {
-          refinarYinFFTAdaptativo(yin, espectroDb, sampleRateFFT, fftSize, estatisticasFFT);
+        refinarYinFFTUnificado(yin, espectroDb, sampleRateFFT, fftSize, estatisticasFFT, diag);
+        if(diag){diag.afterRefinementHz=yin.frequency;diag.fftRefinementApplied=Math.abs(yin.frequency-diag.beforeRefinementHz)>1e-7;diag.refinementStrategy=diag.unifiedRefinement||'unified_no_refinement';}
+        // E7-01 — A estimativa de periodicidade isolada não confirma altura
+        // aguda se a FFT da própria janela não encontra suporte harmônico.
+        // No YIN original esse caso era aceito como "média" por uma exceção
+        // concebida para notas graves.
+        if (yin.frequency >= 2500 && suporte.harmonicos === 0) {
+          if(diag)diag.reason='yin_high_without_fft_support';
+          return null;
         }
-        if (utilizarLegado350) {
-          const largura = sampleRateFFT / fftSize;
-          const indice = Math.round(yin.frequency / largura);
-          if (indice > 1 && indice < espectroDb.length - 1) {
-            let pico = indice;
-            for (let i = Math.max(2, indice - 2); i <= Math.min(espectroDb.length - 2, indice + 2); i++) {
-              if (espectroDb[i] > espectroDb[pico]) pico = i;
-            }
-            const piso = estatisticasFFT.pisoDb;
-            const maiorDb = estatisticasFFT.maxDb;
-            const frequenciaFft = refinarIndicePico(espectroDb, pico) * largura;
-            if (espectroDb[pico] > piso + 16 &&
-                espectroDb[pico] > maiorDb - 11 &&
-                Math.abs(1200 * Math.log2(frequenciaFft / yin.frequency)) <= 20) {
-              yin.frequency = frequenciaFft;
-            }
+        // E7-01: na faixa em que a CMNDF pode escolher o dobro do período
+        // de uma nota muito aguda, harmônicos superiores não bastam para
+        // confirmar a identidade da fundamental. Exigir algum suporte
+        // independente no componente f (não apenas em 2f/3f/4f).
+        // Na ausência real desse componente, a leitura é ambígua e deve
+        // permanecer inconclusiva; não multiplicar automaticamente f por 2.
+        const binYinE701=sampleRateFFT/fftSize;
+        if (yin.frequency>=1500 && yin.frequency<=2300 && binYinE701>0) {
+          const fDb=obterPicoDbProximo(espectroDb,yin.frequency/binYinE701,1);
+          if (fDb < estatisticasFFT.pisoDb+15) {
+            if(diag)diag.reason='yin_high_fundamental_absent';
+            return null;
           }
         }
-        if(diag){diag.afterRefinementHz=yin.frequency;diag.fftRefinementApplied=Math.abs(yin.frequency-diag.beforeRefinementHz)>1e-7;diag.refinementStrategy=utilizarLegado350?'legacy_above_350hz':'adaptive_below_350hz';}
         // Ruído aleatório e ataques sem periodicidade não devem virar notas.
         // Senoides puras podem ter só um pico; sons ricos podem ter vários.
         const muitoPeriodico = yin.erroYin <= 0.085;
@@ -5003,6 +5536,7 @@ function encontrarFundamentalProvavel(formaOnda, sampleRateYin, espectroDb, samp
     encontrarPicoDominante,
     refinarIndicePico,
     prepararAmostrasYin,
+    prepararAmostrasYinTaxaPlena,
     selecionarJanelaYin,
     estimarFundamentalYIN,
     obterPicoDbProximo,
@@ -5135,6 +5669,188 @@ function encontrarFundamentalProvavel(formaOnda, sampleRateYin, espectroDb, samp
       throw new RangeError('probMinCandidato inválida');
     // Calculado uma única vez por instância, não em cada quadro.
     return Object.freeze(c);
+  }
+
+
+  // E7-02: ancoragem de oitava baseada no conteúdo PCM local (sem FFT externa).
+  // Aplicada apenas quando uma suboitava domina a distribuição pYIN e existe
+  // uma concorrente em 2f com probabilidade relevante. Nunca cria candidatos.
+  // A ausência de energia nos harmônicos ímpares é evidência contra f/2,
+  // mas não prova identidade física quando a fundamental está ausente.
+  function corroborarOitavaEspectral(amostras, comprimento, taxa, candidatos) {
+    if (candidatos.length < 2) return;
+    let baixa = null;
+    for (let k = 0; k < candidatos.length; k++) {
+      if (!baixa || candidatos[k].probability > baixa.probability) baixa = candidatos[k];
+    }
+    if (!baixa || baixa.probability < 0.35 || baixa.periodicity >= 0.995) return;
+    // Periodicidade quase perfeita na suboitava é forte evidência para
+    // preservá-la, sobretudo em instrumentos graves de fundamental fraca.
+    let alta = null;
+    for (let k = 0; k < candidatos.length; k++) {
+      const c = candidatos[k];
+      if (c === baixa || c.probability < 0.0002) continue;
+      if (Math.abs(1200 * Math.log2(c.frequencyHz / (2 * baixa.frequencyHz))) > 38) continue;
+      if (!alta || c.probability > alta.probability) alta = c;
+    }
+    if (!alta || alta.frequencyHz * 3 >= 0.46 * taxa) return;
+    const size = Math.min(comprimento, Math.floor(taxa * 0.42));
+    if (size < Math.round(taxa * 0.28)) return; // resolução insuficiente para graves
+    const offset = comprimento - size;
+    // Hann usada somente na janela de confirmação, nunca na CMNDF original.
+    let janela = corroborarOitavaEspectral.janela;
+    if (!janela || janela.length !== size) {
+      janela = new Float32Array(size);
+      for (let i = 0; i < size; i++) janela[i] = 0.5 - 0.5 * Math.cos(2*Math.PI*i/(size-1));
+      corroborarOitavaEspectral.janela = janela;
+    }
+    function magnitude(hz) {
+      const w = 2 * Math.PI * hz / taxa;
+      const co = Math.cos(w), si = Math.sin(w), coeff = 2 * co;
+      let s1 = 0, s2 = 0;
+      for (let i = 0; i < size; i++) {
+        const s = amostras[offset+i]*janela[i] + coeff*s1 - s2;
+        s2 = s1; s1 = s;
+      }
+      return Math.hypot(s1 - co*s2, si*s2);
+    }
+    const f = baixa.frequencyHz;
+    const e1=magnitude(f),e2=magnitude(2*f),e3=magnitude(3*f),
+          e4=magnitude(4*f),e5=magnitude(5*f),e6=magnitude(6*f);
+    const totalPar=e2+e4+e6;
+    // O candidato de oitava superior deve possuir uma série realmente
+    // sustentada, não apenas um pico isolado de fundamental.
+    if (!(e2>1e-8 && e6>=0.23*e2 && totalPar>1e-8)) return;
+    // Evidência robusta de que a série observada é predominantemente par
+    // relativamente à candidata inferior; margens deixam 55 Hz reais em paz.
+    if ((e3+e5) >= 0.045*totalPar) return;
+    if (e1 >= 0.075*e2) {
+      // Uma interferência em f+3..8 Hz também projeta energia em f por
+      // vazamento espectral. Separar duas senoides locais, antes de declarar
+      // que a fundamental inferior está ausente. Isso protege uma 55 Hz
+      // realmente existente mesmo quando sua fundamental é muito fraca.
+      if (e1 >= 0.38*e2) return; // forte suporte da fundamental inferior
+      let vizinhaHz = null, vizinhaMaior = 0;
+      for (let delta = -9; delta <= 9; delta++) {
+        if (Math.abs(delta) < 2 || f+delta<=0) continue;
+        const energia = magnitude(f+delta);
+        if (energia > vizinhaMaior) {vizinhaMaior = energia;vizinhaHz=f+delta;}
+      }
+      if (vizinhaHz === null || vizinhaMaior < 1.35*e1) return;
+      const base = amplitudeSeparada(f,vizinhaHz);
+      const fundamentalInferior = base === null ? Infinity : base;
+      const somaJanela = 0.5 * (size-1);
+      const fundamentalSuperior = e2*2/somaJanela;
+      if (fundamentalInferior >= 0.045*fundamentalSuperior) return;
+    }
+    // Ajuste local de duas componentes próximas via mínimos quadrados
+    // ponderados. A matriz 4x4 evita interpretar o lóbulo da interferência
+    // como uma nota inferior real; singularidade implica abstenção.
+    function amplitudeSeparada(f1, f2) {
+      const t1=2*Math.PI*f1/taxa, t2=2*Math.PI*f2/taxa;
+      const c1=Math.cos(t1),s1=Math.sin(t1),c2=Math.cos(t2),s2=Math.sin(t2);
+      let a=1,b=0,d=1,e=0;
+      const gram=Array.from({length:4},()=>new Float64Array(5));
+      for(let i=0;i<size;i++){
+        const w=janela[i],v=amostras[offset+i];
+        const x=[a,b,d,e];
+        for(let j=0;j<4;j++){
+          gram[j][4]+=w*x[j]*v;
+          for(let k=0;k<4;k++)gram[j][k]+=w*x[j]*x[k];
+        }
+        const aa=a*c1-b*s1; b=b*c1+a*s1; a=aa;
+        const dd=d*c2-e*s2; e=e*c2+d*s2; d=dd;
+      }
+      for(let j=0;j<4;j++){
+        let pivot=j;
+        for(let k=j+1;k<4;k++)if(Math.abs(gram[k][j])>Math.abs(gram[pivot][j]))pivot=k;
+        if(Math.abs(gram[pivot][j])<1e-10)return null;
+        if(pivot!==j){const tmp=gram[j];gram[j]=gram[pivot];gram[pivot]=tmp;}
+        const div=gram[j][j];for(let k=j;k<5;k++)gram[j][k]/=div;
+        for(let k=0;k<4;k++)if(k!==j){const v=gram[k][j];for(let m=j;m<5;m++)gram[k][m]-=v*gram[j][m];}
+      }
+      return Math.hypot(gram[0][4],gram[1][4]);
+    }
+    // Redistribuição limitada e conservativa da massa entre hipóteses de
+    // oitava já propostas pelo pYIN. A soma e a massa não vozeada persistem.
+    if (alta.probability < 0.10 || alta.probability < 0.20 * baixa.probability)
+      return 'ambigua'; // evidência física conflitante, sem candidato pYIN credível
+    const deslocada = baixa.probability * 0.78;
+    baixa.probability -= deslocada;
+    alta.probability += deslocada;
+    return 'corroborada';
+  }
+
+  // E7-02B — Auditor conservador de ambiguidades sub-harmônicas (n = 3..5).
+  // Não promove frequências nem cria candidatas: evita um falso resultado
+  // confiante quando o espectro é compatível com fontes superpostas.
+  // Este teste NÃO pode determinar a origem física em sinais PCM idênticos.
+  function auditarSubharmonicos(amostras, comprimento, taxa, candidatos) {
+    if (candidatos.length < 2) return;
+    let baixa = candidatos[0];
+    for (let i = 1; i < candidatos.length; i++)
+      if (candidatos[i].probability > baixa.probability) baixa = candidatos[i];
+    if (!baixa || baixa.probability < 0.30 || baixa.frequencyHz < 16) return;
+
+    // O disparo é restrito a pares realmente presentes no pYIN.
+    // A proteção E7-02 existente continua responsável pelas oitavas 2:1.
+    let alta = null, razao = 0;
+    for (let i = 0; i < candidatos.length; i++) {
+      const c = candidatos[i];
+      if (c === baixa || c.probability < 0.025 ||
+          c.probability < 0.035 * baixa.probability) continue;
+      for (let n = 3; n <= 5; n++) {
+        if (Math.abs(1200 * Math.log2(c.frequencyHz / (n * baixa.frequencyHz))) > 48) continue;
+        if (!alta || c.probability > alta.probability) { alta = c; razao = n; }
+      }
+    }
+    if (!alta || alta.frequencyHz * 3 >= 0.46 * taxa) return;
+
+    // Uma curta avaliação espectral condicional; a CMNDF e o Viterbi
+    // não são recalculados. A janela PCM já foi reduzida pelo pYIN.
+    const size = Math.min(comprimento, Math.floor(taxa * 0.42));
+    if (size < Math.round(taxa * 0.28)) return;
+    const offset = comprimento - size;
+    let janela = auditarSubharmonicos.janela;
+    if (!janela || janela.length !== size) {
+      janela = new Float32Array(size);
+      for (let i = 0; i < size; i++)
+        janela[i] = 0.5 - 0.5 * Math.cos(2 * Math.PI * i / (size - 1));
+      auditarSubharmonicos.janela = janela;
+    }
+    function magnitude(hz) {
+      if (!(hz > 0 && hz < taxa * 0.46)) return 0;
+      const w = 2 * Math.PI * hz / taxa;
+      const co = Math.cos(w), si = Math.sin(w), coeff = 2 * co;
+      let s1 = 0, s2 = 0;
+      for (let i = 0; i < size; i++) {
+        const s = amostras[offset + i] * janela[i] + coeff * s1 - s2;
+        s2 = s1; s1 = s;
+      }
+      return Math.hypot(s1 - co * s2, si * s2);
+    }
+    const h1 = magnitude(alta.frequencyHz);
+    const h2 = magnitude(2 * alta.frequencyHz);
+    const h3 = magnitude(3 * alta.frequencyHz);
+    const pico = Math.max(h1, h2, h3);
+    if (!(pico > 1e-6 && h1 > 0.12 * pico && h2 > 0.12 * pico && h3 > 0.12 * pico)) return;
+
+    // Fundamental inferior presente é evidência para PRESERVAR a nota grave.
+    // Um conjunto de vários parciais exclusivos também a favorece.
+    if (magnitude(baixa.frequencyHz) >= 0.035 * pico) return;
+    let exclusivos = 0;
+    for (let k = 2; k <= 8; k++) {
+      if (k % razao === 0 || k * baixa.frequencyHz >= 0.46 * taxa) continue;
+      if (magnitude(k * baixa.frequencyHz) >= 0.085 * pico) {
+        exclusivos++;
+        if (exclusivos >= 2) return;
+      }
+    }
+    // Uma relação 3:1, 4:1 ou 5:1 é possível tanto com um instrumento
+    // grave de fundamental ausente quanto com duas fontes independentes.
+    // Evitar qualquer reatribuição automática; nenhum valor deve chegar ao
+    // visor como se estivesse identificado de forma inequívoca.
+    return 'ambigua';
   }
 
   function criarProcessador(configuracao = {}) {
@@ -5276,6 +5992,20 @@ function encontrarFundamentalProvavel(formaOnda, sampleRateYin, espectroDb, samp
         candidatos.push({frequencyHz: hz, probability: m.massa,
           periodicity: limitar(1 - b, 0, 1), periodoAmostras: periodo});
       }
+      // E7-02 — corroborar exclusivamente a disputa de suboitava. A CMNDF
+      // pontua períodos múltiplos como válidos: uma interferência quase periódica
+      // pode dar ao período duplo mais massa que ao período da nota real.
+      // Esta verificação não substitui o modelo Beta/Viterbi nem decide em
+      // sinais sem evidência harmônica separável.
+      const revisaoOitava = corroborarOitavaEspectral(reduzido, n, taxa, candidatos);
+      if (revisaoOitava === 'ambigua')
+        return resultadoVazio('inconclusivo', 'oitava_sem_suporte_espectral', {...meta, revisaoOitava});
+      // E7-02B — uma fonte extra pode criar períodos 3x, 4x ou 5x.
+      // Abster quando a identidade da nota não é inferível com segurança.
+      const ambiguidadeSubharmonica = auditarSubharmonicos(reduzido, n, taxa, candidatos);
+      if (ambiguidadeSubharmonica === 'ambigua')
+        return resultadoVazio('inconclusivo', 'subharmonico_multifonte_ambiguo',
+          {...meta, auditorSubharmonico: 'abstencao'});
       candidatos.sort((a, b) => b.probability - a.probability || a.periodoAmostras - b.periodoAmostras);
       if (candidatos.length > cfg.maxCandidatos) {
         for (let k = cfg.maxCandidatos; k < candidatos.length; k++) naoVozeado += candidatos[k].probability;
@@ -5753,7 +6483,7 @@ self.onmessage = function (event) {
       // mínimo de silêncio; os critérios próprios não são alterados.
       if (rms > RMS_SILENCIO_RECENTE) {
         if (modoDeteccao === 'fundamental') {
-          const preparo = DSP.prepararAmostrasYin(tempo, sampleRate);
+          const preparo = DSP.prepararAmostrasYinTaxaPlena(tempo, sampleRate);
           detectado = DSP.encontrarFundamentalProvavel(preparo.amostras, preparo.sampleRate,
             fftDb, sampleRate, fftSize, frequenciaAnterior, frequenciaJanelaYin, configuracaoTecnicaWorker, diagnosticoYin);
         } else {
