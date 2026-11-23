@@ -1,0 +1,134 @@
+{
+  "profileName": "Perfil sintético",
+  "sourceManifest": [],
+  "schema": "afinador.tuning-curve-revision",
+  "schemaVersion": 1,
+  "versionId": "fixture-curve-v1",
+  "curveId": "fixture-curve",
+  "versionNumber": 1,
+  "parentVersionId": null,
+  "parentHash": null,
+  "createdAt": "2026-01-01T00:00:00.000Z",
+  "reviewStatus": "draft",
+  "action": "fixture",
+  "reason": "Exemplo sintético sem correção",
+  "curve": {
+    "schema": "afinador.tuning-curve",
+    "schemaVersion": 1,
+    "algorithmVersion": "17-1.0-experimental",
+    "status": "incomplete",
+    "curveEligible": false,
+    "physicalValidation": "pending",
+    "profileId": "fixture-profile",
+    "baseSnapshotHash": "40ce6e461568288e0034814d792f44a2184b170602e42f919a30b52e8984b049",
+    "baseSnapshot": {
+      "schemaVersion": 1,
+      "temperament": "fixture",
+      "definition": {},
+      "quintas": [],
+      "layout": {
+        "layoutId": "fixture",
+        "baseLayoutId": "fixture",
+        "extensionFifths": {},
+        "extraPitchOffsets": {}
+      },
+      "edo": null,
+      "referenceA4Hz": 440,
+      "compensatoryIndex": 0,
+      "targets": [
+        {
+          "targetId": "[\"a\",4]",
+          "keyId": "a",
+          "pitchId": "a",
+          "soundId": "a",
+          "octave": 4,
+          "name": "Lá4",
+          "scientific": "A4",
+          "frequency": 440
+        }
+      ]
+    },
+    "physicalLayout": {
+      "layoutId": "fixture",
+      "orderSource": "fixture",
+      "baseSnapshotHash": "40ce6e461568288e0034814d792f44a2184b170602e42f919a30b52e8984b049",
+      "keys": [
+        {
+          "keyId": "a",
+          "pitchId": "a",
+          "octave": 4,
+          "label": "Lá4"
+        }
+      ]
+    },
+    "objective": {
+      "priorityMode": "fidelity",
+      "style": "conservative",
+      "sourcePolicy": "fixture",
+      "anchorPolicy": {
+        "keyId": "a",
+        "octave": 4,
+        "deltaCents": 0
+      },
+      "fundamentalIntervalConstraints": [],
+      "options": {
+        "mode": "fidelity",
+        "style": "conservative",
+        "source": "fixture",
+        "anchor": "[\"a\",4]",
+        "protect": false,
+        "instrumentFamily": "Cravo",
+        "thirds": false,
+        "protectThirds": false,
+        "registration": "8′"
+      },
+      "weightVersion": "17-family-weights-experimental-1"
+    },
+    "corrections": [
+      {
+        "keyId": "a",
+        "pitchId": "a",
+        "octave": 4,
+        "label": "Lá4",
+        "soundId": "a",
+        "frequencyHz": 440,
+        "deltaCents": 0,
+        "proposedFrequencyHz": 440,
+        "source": "theoretical_fallback"
+      }
+    ],
+    "intervalAudit": {
+      "pairs": [],
+      "status": "experimental"
+    },
+    "diagnostics": {
+      "measuredKeys": 0,
+      "uncoveredKeys": [
+        "[\"a\",4]"
+      ]
+    },
+    "instrumentLayoutHash": "1b001c0c7596bf83fbbaa17978571513a3cf79869495357857eb89028dfd4682",
+    "curveId": "fixture-curve",
+    "curveVersion": 1,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "compatibilityHash": "5adf2e45f4d82362d33e892ef86d843a67b45794b6218cc054ea61d3aeddb404"
+  },
+  "fundamentalAudit": {
+    "columns": [
+      "lowerIndex",
+      "upperIndex",
+      "temperamentCents",
+      "finalCents",
+      "shiftCents"
+    ],
+    "totalPairs": 0,
+    "changedCount": 0,
+    "changed": [],
+    "omittedPolicy": "abs(shift)<=1e-8 cents; derive every unchanged pair from corrections"
+  },
+  "changeFromParent": null,
+  "integrity": {
+    "algorithm": "SHA-256/JCS",
+    "sha256": "8bc83760bc5e7bd06c835461573506397d55963cbbc0aa504c4e93285e9bb7e3"
+  }
+}

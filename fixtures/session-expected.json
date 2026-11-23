@@ -1,0 +1,77 @@
+{
+  "format": "afinador.acquisition-session",
+  "schemaVersion": 1,
+  "sessionId": "fixture-session",
+  "createdAt": "2026-01-01T00:00:00.000Z",
+  "instrument": "Cravo",
+  "sourceCondition": "isolated",
+  "acousticContext": {
+    "schemaVersion": 2,
+    "family": "Cravo",
+    "sourceCondition": "isolated",
+    "acousticModelId": "stiff_string",
+    "procedure": {
+      "exploratory": false,
+      "requestedModel": null,
+      "sourceLabel": "",
+      "technique": ""
+    },
+    "physicalValidation": "pending",
+    "curveEligible": false
+  },
+  "musicalSnapshot": {
+    "schemaVersion": 1,
+    "temperament": "fixture",
+    "definition": {},
+    "quintas": [],
+    "layout": {
+      "layoutId": "fixture",
+      "baseLayoutId": "fixture",
+      "extensionFifths": {},
+      "extraPitchOffsets": {}
+    },
+    "edo": null,
+    "referenceA4Hz": 440,
+    "compensatoryIndex": 0,
+    "targets": [
+      {
+        "targetId": "[\"a\",4]",
+        "keyId": "a",
+        "pitchId": "a",
+        "soundId": "a",
+        "octave": 4,
+        "name": "Lá4",
+        "scientific": "A4",
+        "frequency": 440
+      }
+    ]
+  },
+  "snapshotHash": "6befe33e43ef4fe61dfa9b98d5e7aab00efd9605aa515f000df48b2a44a5c72b",
+  "sampleRateHz": 48000,
+  "binding": {
+    "noteBindingStatus": "unresolved"
+  },
+  "executions": [
+    {
+      "ordinal": 1,
+      "sampleRateHz": 48000,
+      "reasonCodes": [
+        "fixture_no_measurement"
+      ],
+      "result": null,
+      "executionId": "fixture-execution",
+      "segmentId": "fixture-segment",
+      "eligible": false,
+      "includedInAggregate": false,
+      "noteBindingAtCapture": {
+        "noteBindingStatus": "unresolved"
+      }
+    }
+  ],
+  "segments": [
+    {
+      "id": "fixture-segment"
+    }
+  ],
+  "revisions": []
+}

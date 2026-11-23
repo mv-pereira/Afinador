@@ -1,0 +1,19 @@
+{
+  "spectrumGrid202": {
+    "version": 1,
+    "values": [
+      -1600,
+      -1,
+      0
+    ]
+  },
+  "unicode": "Lá ♯ 𝄞",
+  "zeroNegative": -0.0,
+  "subnormal": 5e-324,
+  "safeInteger": 9007199254740991,
+  "nullValue": null,
+  "nested": [
+    false,
+    true
+  ]
+}

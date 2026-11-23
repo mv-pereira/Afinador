@@ -1,0 +1,118 @@
+{
+  "profile": {
+    "profileId": "fixture-profile",
+    "displayName": "Perfil sintético",
+    "instrumentFamily": "Cravo",
+    "acousticModelId": "stiff_string",
+    "instrumentSubtype": "",
+    "notes": "Sem medição física",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "instrumentLayout": {
+      "layoutId": "fixture",
+      "orderSource": "fixture",
+      "baseSnapshotHash": "40ce6e461568288e0034814d792f44a2184b170602e42f919a30b52e8984b049",
+      "keys": [
+        {
+          "keyId": "a",
+          "pitchId": "a",
+          "octave": 4,
+          "label": "Lá4"
+        }
+      ]
+    },
+    "auditEvents": []
+  },
+  "recordHeader": {
+    "sessionHash": "14bf344289e4f970c8c397f0314d8685fed7e88a09f33532e7822c52fddd590d",
+    "baseSnapshotHash": "40ce6e461568288e0034814d792f44a2184b170602e42f919a30b52e8984b049",
+    "physicalKey": null,
+    "stringId": null,
+    "stringLabel": "",
+    "sourceCondition": "isolated",
+    "profileId": "fixture-profile",
+    "observationStatus": "inconclusive",
+    "curveEligible": false,
+    "recordedAt": "2026-01-01T00:00:00.000Z",
+    "discardedFromModeling": false,
+    "note": "",
+    "recordId": "4f042fcd5b8a2e5885041f5498f655fbd871f6e3348a98dfb60c998e3fa17456",
+    "recordSchemaVersion": 1
+  },
+  "session": {
+    "format": "afinador.acquisition-session",
+    "schemaVersion": 1,
+    "sessionId": "fixture-session",
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "instrument": "Cravo",
+    "sourceCondition": "isolated",
+    "acousticContext": {
+      "schemaVersion": 2,
+      "family": "Cravo",
+      "sourceCondition": "isolated",
+      "acousticModelId": "stiff_string",
+      "procedure": {
+        "exploratory": false,
+        "requestedModel": null,
+        "sourceLabel": "",
+        "technique": ""
+      },
+      "physicalValidation": "pending",
+      "curveEligible": false
+    },
+    "musicalSnapshot": {
+      "schemaVersion": 1,
+      "temperament": "fixture",
+      "definition": {},
+      "quintas": [],
+      "layout": {
+        "layoutId": "fixture",
+        "baseLayoutId": "fixture",
+        "extensionFifths": {},
+        "extraPitchOffsets": {}
+      },
+      "edo": null,
+      "referenceA4Hz": 440,
+      "compensatoryIndex": 0,
+      "targets": [
+        {
+          "targetId": "[\"a\",4]",
+          "keyId": "a",
+          "pitchId": "a",
+          "soundId": "a",
+          "octave": 4,
+          "name": "Lá4",
+          "scientific": "A4",
+          "frequency": 440
+        }
+      ]
+    },
+    "snapshotHash": "6befe33e43ef4fe61dfa9b98d5e7aab00efd9605aa515f000df48b2a44a5c72b",
+    "sampleRateHz": 48000,
+    "binding": {
+      "noteBindingStatus": "unresolved"
+    },
+    "executions": [
+      {
+        "ordinal": 1,
+        "sampleRateHz": 48000,
+        "reasonCodes": [
+          "fixture_no_measurement"
+        ],
+        "result": null,
+        "executionId": "fixture-execution",
+        "segmentId": "fixture-segment",
+        "eligible": false,
+        "includedInAggregate": false,
+        "noteBindingAtCapture": {
+          "noteBindingStatus": "unresolved"
+        }
+      }
+    ],
+    "segments": [
+      {
+        "id": "fixture-segment"
+      }
+    ],
+    "revisions": []
+  }
+}
