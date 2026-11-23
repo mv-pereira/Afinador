@@ -1,0 +1,5 @@
+# Python >=3.10 (testado: 3.13.5). Nenhuma dependência pip.
+# Dependência de sistema para --codec zstd: libzstd 1.5.7 (versão testada).
+# ctypes.util.find_library('zstd') deve localizar o binário da plataforma.
+# libzstd não é distribuída neste pacote. STORE/GZIP usam stdlib.
+# Para teste opcional de interoperabilidade: Node.js moderno e HTML atual confiável do Afinador.
