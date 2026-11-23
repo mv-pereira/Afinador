@@ -1,0 +1,13 @@
+; Representação lógica da estrutura AFB. O header físico NÃO é CBOR.
+; Normativo para bytes: tabela de offsets em FORMATO.md.
+root-envelope-logical = {
+ "magic": h'4146424c4f434b0a',
+ "major": 1, "minor": 0,
+ "kind": 1..6, "codec": 0..2, "flags": 0,
+ "rawLength": 1..33554432, "payloadLength": 1..35651584,
+ "chunkCount": 1..16, "reserved": 0,
+ "rawSHA256": bstr .size 32, "payloadSHA256": bstr .size 32,
+ "headerSHA256": bstr .size 32,
+ "chunks": [1*16 chunk]
+}
+chunk = {"rawChunkLength": 1..2097152, "storedChunkLength": 1..2162688, "storedBytes": bstr .size (1..2162688)}

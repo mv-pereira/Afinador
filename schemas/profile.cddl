@@ -1,0 +1,3 @@
+; Raízes kind 2 e 3 (record header não inclui session).
+root-profile = profile-map
+root-record-header = record-header-map

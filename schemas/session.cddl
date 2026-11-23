@@ -1,0 +1,2 @@
+; Raiz kind 1. Anexar common.cddl e legacy-maps.cddl para validação.
+root-session = session-map

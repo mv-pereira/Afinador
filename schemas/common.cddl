@@ -1,0 +1,15 @@
+; Afinador AFB 1.0 — incluir por concatenação com o arquivo de raiz primeiro.
+; CDDL não substitui preflight nem validadores semânticos. Ver SCHEMA.md.
+safe-int = -9007199254740991..9007199254740991
+safe-uint = 0..9007199254740991
+number64 = safe-int / float64
+nullable-number = number64 / null
+text-value = tstr .size (0..400000)
+nonempty = tstr .size (1..400000)
+hex256 = tstr .size 64 ; validar regex [0-9a-f]{64} fora da CDDL
+value = null / bool / number64 / text-value / [* value] / {* tstr => value} / grid-i16
+object-value = {* tstr => value}
+grid-i16 = #6.73(bstr .size (2..8192)) / #6.77(bstr .size (2..8192))
+grid-values = [1*4096 (-1600..0)] / grid-i16
+source-condition = "unknown" / "isolated" / "unison"
+identity = tstr .size (1..400000)

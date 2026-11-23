@@ -1,0 +1,22 @@
+; Raízes kind 5 e 6. Incluir common.cddl.
+root-manifest = profile-manifest / curve-manifest
+profile-manifest = {
+  "schema": "afinador.binary-profile-manifest",
+  "schemaVersion": 1,
+  "profileId": identity,
+  "entries": [1*4001 manifest-entry]
+}
+curve-manifest = {
+  "schema": "afinador.binary-curve-manifest",
+  "schemaVersion": 1,
+  "entries": [0*128 manifest-entry]
+}
+manifest-entry = {
+  "path": tstr .size (1..64),
+  "kind": 1..4,
+  "id": identity,
+  "bytes": 137..35651712,
+  "rawBytes": 1..33554432,
+  "sha256": hex256
+}
+; path, order, kind, id, hash, size, relationships enforced by FORMATO.md.

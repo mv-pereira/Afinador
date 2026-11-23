@@ -1,0 +1,779 @@
+; Mapas fechados de SECURITY13. Predicados adicionais obrigatórios.
+
+; integridade
+integrity-map = {
+  "algorithm": "SHA-256/JCS",
+  "sha256": hex256
+}
+
+; mapa físico
+layout-map = {
+  "layoutId": identity,
+  "orderSource": nonempty,
+  "baseSnapshotHash": hex256,
+  "keys": [1*1000 key-map]
+}
+
+; tecla
+key-map = {
+  "keyId": identity,
+  "pitchId": identity,
+  "octave": -20..20,
+  "label": nonempty
+}
+
+; snapshot
+snapshot-map = {
+  "schemaVersion": 1,
+  "temperament": nonempty,
+  "definition": object-value,
+  "quintas": [0*12 value],
+  "layout": object-value,
+  "edo": object-value / null,
+  "referenceA4Hz": number64,
+  "compensatoryIndex": value,
+  "targets": [1*1000 target-map]
+}
+
+; alvo
+target-map = {
+  "targetId": identity,
+  "keyId": identity,
+  "pitchId": identity,
+  "soundId": identity,
+  "octave": -20..20,
+  "name": nonempty,
+  "scientific": nonempty,
+  "frequency": number64
+}
+
+; vínculo
+binding-map = {
+  "noteBindingStatus": "confirmed" / "unresolved",
+  ? "keyId": value,
+  ? "pitchId": value,
+  ? "octave": value,
+  ? "soundIdAtCapture": value,
+  ? "targetId": value,
+  ? "frequencyHz": value,
+  ? "snapshotHash": value,
+  ? "confirmedAt": value
+}
+
+; perfil
+profile-map = {
+  "profileId": identity,
+  "displayName": nonempty,
+  "instrumentFamily": nonempty,
+  ? "acousticModelId": value,
+  "instrumentSubtype": text-value,
+  "notes": text-value,
+  "createdAt": identity,
+  ? "updatedAt": value,
+  "instrumentLayout": layout-map,
+  "auditEvents": [0*20000 value]
+}
+
+; registro
+record-map = {
+  "session": session-map,
+  "sessionHash": hex256,
+  "baseSnapshotHash": hex256,
+  "physicalKey": physical-key-map / null,
+  "stringId": text-value / null,
+  "stringLabel": text-value,
+  "sourceCondition": source-condition,
+  "profileId": identity,
+  "observationStatus": "experimental" / "inconclusive",
+  "curveEligible": false,
+  "recordedAt": identity,
+  "discardedFromModeling": bool,
+  "note": text-value,
+  "recordId": hex256,
+  "recordSchemaVersion": 1
+}
+
+; vínculo físico
+physical-key-map = {
+  "keyId": identity,
+  "pitchId": identity,
+  "octave": -20..20
+}
+
+; avaliação de janela
+window-assessment-map = {
+  "decayDb": number64,
+  "yinError": nullable-number,
+  "firstAgreementCents": nullable-number,
+  "driftCents": nullable-number
+}
+
+; metrologia
+metrology-map = {
+  "version": value,
+  "identificationHz": value,
+  "measuredHz": value,
+  "yinHz": value,
+  "model": metrology-model-map / null,
+  "referenceKind": value,
+  "referenceHz": value,
+  "anchorOrder": value,
+  "comparisons": value,
+  "curveEligible": bool
+}
+
+; razão de parciais
+relative-ratio-map = {
+  "order": value,
+  "relativeCents": value
+}
+
+; modelo metrológico
+metrology-model-map = {
+  "frequencyHz": value,
+  "B": nullable-number,
+  "profileB": value,
+  "fundamentalSensitivityHz": value,
+  "method": value,
+  "residuals": value
+}
+
+; resíduo
+residual-map = {
+  "order": value,
+  "cents": value
+}
+
+; estabilidade 20.8
+stability-map = {
+  "version": value,
+  "reference": value,
+  "p1Status": value,
+  "cohortOrders": value,
+  "rows": [0*256 stability-row-map]
+}
+
+; estabilidade de parcial
+stability-row-map = {
+  "order": value,
+  "absoluteCents": value,
+  "relativeP1Cents": value,
+  "relativeCohortCents": value,
+  "effectiveRelativeCents": value,
+  "relativeReference": value,
+  "status": text-value
+}
+
+; picos fortes 20.8
+strong-peaks-map = {
+  "version": value,
+  "strongCount": value,
+  "unmatchedCount": value,
+  "referenceHz": value,
+  "stretch": value,
+  "rows": value
+}
+
+; coerência 20.9
+coherence-map = {
+  "version": value,
+  "fitOrderLimit": value,
+  "verificationOrderLimit": value,
+  "ceilingHz": value,
+  "resolutionHz": value,
+  "referenceHz": value,
+  "B": nullable-number,
+  "profileB": value,
+  "fundamentalSensitivityHz": value,
+  "strongCount": value,
+  "unmatchedCount": value,
+  "coherentCount": value,
+  "unresolvedCount": value,
+  "priorVeto": value,
+  "usedToLiftVeto": value,
+  "rows": [0*96 coherence-row-map]
+}
+
+; pico de verificação
+coherence-row-map = {
+  "frequencyHz": value,
+  "snrDb": value,
+  "levelDb": value,
+  "order": value,
+  "predictedHz": value,
+  "residualCents": value,
+  "toleranceCents": value,
+  "predictionSensitivityHz": value,
+  "classification": value,
+  "reason": value
+}
+
+; referência 20.7
+reference207-map = {
+  "version": value,
+  "status": text-value,
+  "yinCents": value,
+  "autocorrelationCents": value,
+  "shapeCents": value,
+  "absoluteStabilityCents": value
+}
+
+; atribuição 20.7
+assignment-map = {
+  "version": value,
+  "initialHz": value,
+  "initialStretch": value,
+  "referenceHz": value,
+  "stretch": value,
+  "initialScore": value,
+  "score": value,
+  "orders": value
+}
+
+; coorte temporal
+temporal-cohort-map = {
+  "version": value,
+  "cohortDriftCents": value,
+  "cohortOrders": value,
+  "rows": value
+}
+
+; resultado espectral
+spectral-map = {
+  ? "schema": nonempty,
+  "schemaVersion": value,
+  ? "engineVersion": nonempty,
+  "status": "experimental" / "inconclusive",
+  "reasonCodes": [0*256 nonempty],
+  ? "noteBindingStatus": value,
+  ? "keyId": identity / null,
+  ? "pitchId": identity / null,
+  ? "soundIdAtCapture": value,
+  ? "octave": -20..20 / null,
+  "sampleRateHz": number64,
+  ? "capturedSamples": value,
+  ? "capturedDurationMs": value,
+  ? "rms": value,
+  ? "clippedSamples": value,
+  ? "firstPartialMeasuredHz": value,
+  ? "fundamentalEstimateHz": value,
+  "partials": [0*256 partial-map],
+  "candidates": [0*10000 candidate-map],
+  ? "peakCount": value,
+  ? "windowType": value,
+  ? "windowSamples": value,
+  ? "zeroPaddingLength": value,
+  ? "effectiveDurationMs": value,
+  ? "interpolation": value,
+  ? "sampleStartIndex": value,
+  ? "workletFrameStart": value,
+  ? "nominalQuality": value,
+  ? "fftEngine": value,
+  "spectrum": [0*200000 [number64, number64]],
+  ? "fundamentalMethod": value,
+  ? "temporalEvidence": value,
+  ? "inharmonicity": individual-fit-map / null,
+  ? "familyAnalysis": family-analysis-map / null,
+  ? "analysisSettings15": value,
+  ? "analysis20": analysis20-map / null,
+  ? "peakDiagnostics20": peak-diagnostics-map,
+  ? "spectrumGrid202": grid-map,
+  ? "fundamental203": fundamental-map,
+  ? "metrology205": metrology-map,
+  ? "windowAssessment205": window-assessment-map / null,
+  ? "assignment207": assignment-map / null,
+  ? "reference207": reference207-map / null,
+  ? "physicalCurveSafe207": value,
+  ? "temporal207": temporal-cohort-map / null,
+  ? "refit207": value,
+  ? "stability208": stability-map / null
+}
+
+; grade espectral
+grid-map = {
+  "version": 1,
+  "values": grid-values
+}
+
+; hipóteses de fundamental
+fundamental-map = {
+  "version": value,
+  "yin": yin-map,
+  "autocorrelation": value,
+  "expectedHz": value,
+  "selectedHz": value,
+  "origin": value,
+  "margin": value,
+  "considered": value,
+  "hypotheses": [* hypothesis-map],
+  "unassigned": [* unassigned-peak-map],
+  "missingOrders": value
+}
+
+; YIN auxiliar
+yin-map = {
+  "frequencyHz": value,
+  "temporalHz": value,
+  "cmndfError": value,
+  "confidence": value,
+  "reason": value
+}
+
+; hipótese
+hypothesis-map = {
+  "frequencyHz": value,
+  "assignmentStretch": value,
+  "score": value,
+  "coverage": value,
+  "residualCents": value,
+  "orders": value,
+  "divisor": value,
+  "yinSupport": value,
+  "autocorrelationSupport": value,
+  "expectedSupport": value,
+  "reasonCodes": [0*256 nonempty]
+}
+
+; pico não atribuído
+unassigned-peak-map = {
+  "frequencyHz": value,
+  "snrDb": value,
+  "levelDb": value
+}
+
+; parcial
+partial-map = {
+  "partialOrder": 1..256,
+  "measuredHz": number64,
+  "idealHarmonicHz": number64,
+  ? "differenceHz": value,
+  "deviationCents": number64,
+  "amplitudeDbRelative": number64,
+  ? "localSNRDb": value,
+  ? "frequencyStabilityCents": value,
+  ? "candidateConfidence": value,
+  "status": "accepted" / "candidate" / "rejected",
+  ? "reasonCodes": [0*256 nonempty],
+  ? "bin": value,
+  ? "temporalFrequenciesHz": value,
+  ? "relativeStabilityCents": value
+}
+
+; candidato
+candidate-map = {
+  "measuredHz": number64,
+  "localSNRDb": value,
+  "amplitudeDbRelative": number64
+}
+
+; diagnóstico espectral
+peak-diagnostics-map = {
+  "localMaxima": value,
+  "belowNumericalFloor": value,
+  "belowSNR": value,
+  "suppressedNearby": value,
+  "limited": value,
+  "rejected": [* rejected-peak-map],
+  "groups": [* spectral-group-map]
+}
+
+; agrupamento espectral
+spectral-group-map = {
+  "lowerHz": value,
+  "upperHz": value,
+  "observedMaxima": value,
+  "nominalIsolationHz": value
+}
+
+; pico rejeitado
+rejected-peak-map = {
+  "measuredHz": value,
+  "localSNRDb": value,
+  "amplitudeDbRelative": value,
+  "reason": value
+}
+
+; reanálise
+analysis20-map = {
+  "version": value,
+  "requestedModel": value,
+  "usedModel": value,
+  "selectedWindowSamples": value,
+  "attempts": [* attempt-map]
+}
+
+; tentativa
+attempt-map = {
+  "model": value,
+  "windowSamples": value,
+  "status": text-value,
+  "accepted": value,
+  "reasonCodes": [0*256 nonempty],
+  ? "firstMeasuredHz": value,
+  ? "firstSNRDb": value,
+  ? "selectedHz": value,
+  ? "firstOrigin": value,
+  ? "assessment": window-assessment-map / null,
+  ? "physicalFit207": individual-fit-map / null,
+  ? "reference207": reference207-map / null,
+  ? "refit207": value
+}
+
+; ajuste individual
+individual-fit-map = {
+  "schema": nonempty,
+  "schemaVersion": value,
+  "engineVersion": nonempty,
+  "model": value,
+  "status": text-value,
+  "B": nullable-number,
+  ? "modelFundamentalHz": value,
+  ? "FHz": value,
+  "reasonCodes": [0*256 nonempty],
+  ? "sourceContext": value,
+  ? "calibration": value,
+  ? "parameters": value,
+  "partials": value,
+  ? "excludedPartials": value,
+  ? "physicalEligibility": value,
+  ? "uncertainty": value,
+  "curveEligible": bool,
+  ? "qualityPolicyVersion": value,
+  ? "medianLocalSNRDb": value,
+  ? "usedOrders": value,
+  ? "firstPartialMeasuredHz": value,
+  ? "diagnostics": value,
+  ? "fundamentalOrigin": value,
+  ? "assignment": value,
+  ? "stability208": stability-map / null,
+  ? "strongPeakDiagnostics208": strong-peaks-map / null,
+  ? "coherence209": coherence-map / null
+}
+
+; modelo de família
+family-analysis-map = {
+  "schemaVersion": value,
+  "engineVersion": nonempty,
+  "acousticModelId": value,
+  "status": text-value,
+  "physicalValidation": text-value,
+  "B": nullable-number,
+  "curveEligible": bool,
+  ? "peaks": [0*48 modal-peak-map],
+  "reasonCodes": [0*256 nonempty],
+  ? "baseHz": value,
+  ? "firstPartialMeasuredHz": value,
+  ? "harmonicResidualRmsCents": value,
+  ? "acceptedOrders": value,
+  ? "stableOrders": value
+}
+
+; pico modal
+modal-peak-map = {
+  "measuredHz": value,
+  "amplitudeDbRelative": value,
+  "localSNRDb": value,
+  ? "frequencyStabilityCents": value,
+  "peakId": value,
+  "status": text-value,
+  ? "reasonCodes": [0*256 nonempty]
+}
+
+; sessão
+session-map = {
+  "format": "afinador.acquisition-session",
+  "schemaVersion": 1,
+  ? "engineVersion": nonempty,
+  ? "individualModelVersion": value,
+  "sessionId": identity,
+  "createdAt": identity,
+  "instrument": nonempty,
+  "sourceCondition": source-condition,
+  ? "acousticContext": value,
+  ? "stringLabel": text-value / null,
+  ? "triggerMode": value,
+  ? "musicRevision": value,
+  "musicalSnapshot": snapshot-map,
+  "snapshotHash": hex256,
+  ? "snapshotHashAlgorithm": value,
+  "sampleRateHz": number64,
+  ? "trackSettings": value,
+  "binding": binding-map,
+  ? "referenceHz": value,
+  ? "usefulSamples": value,
+  "executions": [1*2000 execution-map],
+  "segments": [0*2000 value],
+  "revisions": [0*20000 value],
+  ? "blocked": value,
+  ? "needsConfirmation": value,
+  ? "aggregate": aggregate-map / null,
+  ? "aggregationRevision": value,
+  ? "aggregationRevisions": [0*20000 value],
+  ? "exportedAt": value,
+  ? "sessionState": value,
+  ? "convergenceStatus": value,
+  ? "B": nullable-number,
+  ? "aggregationStatus": value,
+  ? "aggregationEngineVersion": value,
+  ? "validationEngineVersion": value,
+  ? "curveEligible": false,
+  ? "partialReviews": value,
+  ? "aggregationMemoryLimited": value,
+  ? "analysisSettings15": value,
+  ? "collectionSettings15": collection-settings-map
+}
+
+; meta de aquisição
+collection-settings-map = {
+  "target": 1..64,
+  "autoStop": bool,
+  "bindingMode": "auto" / "manual"
+}
+
+; execução
+execution-map = {
+  "ordinal": 1..9007199254740991,
+  ? "triggerMode": value,
+  ? "startIndex": value,
+  ? "endIndex": value,
+  ? "segmentEndReason": value,
+  ? "usefulSamples": value,
+  "sampleRateHz": number64,
+  ? "peakRms": value,
+  ? "onsetFlux": value,
+  ? "clippedSamples": value,
+  "reasonCodes": [0*256 nonempty],
+  "result": spectral-map / null,
+  "executionId": identity,
+  "segmentId": identity,
+  ? "observedAt": value,
+  "eligible": bool,
+  "includedInAggregate": bool,
+  "noteBindingAtCapture": binding-map,
+  ? "excludedPartialOrders": value
+}
+
+; consolidado
+aggregate-map = {
+  "schema": nonempty,
+  "schemaVersion": value,
+  ? "engineVersion": nonempty,
+  ? "individualModelVersion": value,
+  "sessionId": identity,
+  ? "aggregationRevision": value,
+  "snapshotHash": hex256,
+  ? "binding": value,
+  ? "model": value,
+  "status": text-value,
+  "B": nullable-number,
+  "curveEligible": false,
+  ? "calibration": value,
+  ? "parameters": value,
+  "includedExecutionIds": [0*2000 identity],
+  ? "excludedExecutions": value,
+  ? "reasonCodes": [0*256 nonempty],
+  "executions": [0*2000 value],
+  ? "reviewedExecutions": value,
+  ? "uncertainty": value,
+  ? "weightPolicy": value,
+  ? "diagnostics": value,
+  ? "validation": value
+}
+
+; revisão de curva
+revision-map = {
+  "profileName": value,
+  "sourceManifest": [0*512 source-map],
+  "schema": "afinador.tuning-curve-revision",
+  "schemaVersion": 1,
+  "versionId": identity,
+  "curveId": identity,
+  "versionNumber": 1..9007199254740991,
+  "parentVersionId": identity / null,
+  "parentHash": hex256 / null,
+  "createdAt": identity,
+  "reviewStatus": "draft" / "approved_experimental",
+  "action": value,
+  "reason": value,
+  "curve": curve-map,
+  "fundamentalAudit": fundamental-audit-map,
+  "changeFromParent": value,
+  "integrity": integrity-map
+}
+
+; fonte
+source-map = {
+  "recordId": hex256,
+  "sessionHash": hex256
+}
+
+; curva
+curve-map = {
+  "schema": nonempty,
+  "schemaVersion": value,
+  "algorithmVersion": value,
+  "status": text-value,
+  "curveEligible": false,
+  "physicalValidation": "pending",
+  "profileId": identity,
+  "baseSnapshotHash": hex256,
+  "baseSnapshot": snapshot-map,
+  "physicalLayout": layout-map,
+  "objective": objective-map,
+  "corrections": [1*256 correction-map],
+  "intervalAudit": interval-audit-map,
+  "diagnostics": curve-diagnostics-map,
+  "instrumentLayoutHash": hex256,
+  "compatibilityHash": hex256,
+  "curveId": identity,
+  "curveVersion": value,
+  "createdAt": identity
+}
+
+; correção
+correction-map = {
+  "keyId": identity,
+  "pitchId": identity,
+  "octave": -20..20,
+  "label": value,
+  "soundId": identity,
+  "frequencyHz": value,
+  "deltaCents": value,
+  "proposedFrequencyHz": value,
+  "source": value,
+  ? "evidence": value,
+  ? "uncertaintyCents": value,
+  ? "exploratorySensitivityCents": value,
+  ? "uncertaintyStatus": value
+}
+
+; objetivo
+objective-map = {
+  "priorityMode": value,
+  ? "targetPolicyDefault": value,
+  "style": value,
+  ? "sourcePolicy": value,
+  "anchorPolicy": value,
+  "fundamentalIntervalConstraints": value,
+  ? "regularization": value,
+  "options": objective-options-map,
+  ? "weightVersion": value,
+  ? "maximumCorrectionCents": value
+}
+
+; opções
+objective-options-map = {
+  "mode": value,
+  "style": value,
+  "source": value,
+  "anchor": value,
+  "protect": value,
+  ? "region": value,
+  ? "strings": value,
+  ? "manualPoints": value,
+  ? "manualPairs": value,
+  ? "familyWeights": value,
+  ? "instrumentFamily": value,
+  ? "thirds": value,
+  ? "protectThirds": value,
+  ? "registration": value
+}
+
+; diagnóstico
+curve-diagnostics-map = {
+  ? "failure": value,
+  "measuredKeys": value,
+  ? "interpolatedKeys": value,
+  ? "optimizedKeys": value,
+  ? "excludedRecords": value,
+  ? "stringChoices": value,
+  ? "disconnectedKeys": value,
+  ? "problems": value,
+  "uncoveredKeys": value,
+  ? "weightedRmsBeforeCents": value,
+  ? "weightedRmsAfterCents": value,
+  ? "protectedConflictCount": value,
+  ? "uncertainty": value,
+  ? "sensitivityMethod": value,
+  ? "notes": value
+}
+
+; auditoria
+interval-audit-map = {
+  "pairs": [* interval-pair-map],
+  "status": text-value
+}
+
+; relação intervalar
+interval-pair-map = {
+  ? "i": value,
+  ? "j": value,
+  "partialLower": value,
+  "partialUpper": value,
+  ? "temperamentIntervalCents": value,
+  ? "referencePartialDetuningCents": value,
+  ? "targetDetuningCents": value,
+  ? "targetPolicy": value,
+  ? "s0": value,
+  ? "gLower": value,
+  ? "gUpper": value,
+  ? "inputSensitivityCents": value,
+  ? "rawWeight": value,
+  ? "confidence": value,
+  ? "reason": value,
+  ? "family": value,
+  ? "familyIndex": value,
+  ? "register": value,
+  ? "weight": value,
+  "lowerTarget": value,
+  "upperTarget": value,
+  "lowerLabel": value,
+  "upperLabel": value,
+  ? "baseSnapshotHash": hex256,
+  ? "modelVersion": value,
+  ? "predictedLowerPartialHz": value,
+  ? "predictedUpperPartialHz": value,
+  ? "initialPartialDifferenceHz": value,
+  ? "predictedPartialDifferenceHz": value,
+  ? "predictedPartialDetuningCents": value,
+  ? "residualCents": value,
+  ? "initialResidualCents": value,
+  ? "fundamentalIntervalShiftCents": value,
+  ? "finalFundamentalIntervalCents": value,
+  ? "qualityStatus": value
+}
+
+; auditoria fundamental
+fundamental-audit-map = {
+  "columns": value,
+  "totalPairs": value,
+  "changedCount": value,
+  "changed": value,
+  "omittedPolicy": value
+}
+
+; arquivo de histórico
+history-map = {
+  "schema": "afinador.tuning-curve-history",
+  "schemaVersion": 1,
+  "versions": [0*128 revision-map],
+  "integrity": integrity-map
+}
+
+; cabeçalho do registro (projeção)
+record-header-map = {
+  "sessionHash": hex256,
+  "baseSnapshotHash": hex256,
+  "physicalKey": physical-key-map / null,
+  "stringId": text-value / null,
+  "stringLabel": text-value,
+  "sourceCondition": source-condition,
+  "profileId": identity,
+  "observationStatus": "experimental" / "inconclusive",
+  "curveEligible": false,
+  "recordedAt": identity,
+  "discardedFromModeling": bool,
+  "note": text-value,
+  "recordId": hex256,
+  "recordSchemaVersion": 1
+}
