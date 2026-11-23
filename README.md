@@ -8,7 +8,7 @@ Aplicativo web de afinação musical, estudo de temperamentos e investigação a
 
 Desenvolvido para computadores e dispositivos móveis, com interface em português do Brasil. O processamento ocorre localmente no navegador, sem necessidade de conta, servidor de análise ou instalação de aplicativo.
 
-**Estado do projeto:** desenvolvimento experimental — Etapa 18. A análise física de inarmonicidade e a otimização instrumental ainda não foram homologadas. A aplicação de curvas está disponível em caráter experimental, sob condições explícitas de verificação e confirmação.
+**Estado do projeto:** experimental. A análise física de inarmonicidade e a otimização instrumental ainda não foram homologadas. A aplicação de curvas está disponível em caráter experimental, sob condições explícitas de verificação e confirmação.
 
 ## Objetivos
 
@@ -22,10 +22,10 @@ Desenvolvido para computadores e dispositivos móveis, com interface em portugu�
 
 | Ferramenta | Finalidade e recursos |
 | --- | --- |
-| **Afinador** | Detecção de altura, afinação automática e por nota fixa, frequência em Hz, desvio em cents, espectro FFT em escala linear ou logarítmica, zoom espectral e representação dos temperamentos. |
-| **Parciais e inarmonicidade** | Capturas individuais e multiataque, inspeção de picos e parciais, comparação de execuções, ajuste experimental de inarmonicidade e avaliação de repetibilidade. |
-| **Perfis instrumentais** | Organização das medições por instrumento, tecla e corda; mapa físico, histórico, comparação de sessões, armazenamento e backups JSON. |
-| **Curvas de afinação** | Otimização experimental para piano, fortepiano e cravo; análise de relações intervalares, edição de restrições, auditoria, histórico de versões e aplicação reversível de correções instrumentais. |
+| **Afinador** | Detecção de altura, afinação automática e por nota fixa, frequência em Hz, desvio em cents, espectro FFT com alternância entre escala logarítmica (padrão) e linear por toque ou clique no gráfico, zoom espectral e representação dos temperamentos. |
+| **Parciais e inarmonicidade** | Capturas individuais e multiataque, inspeção de picos e parciais, comparação de execuções, ajuste experimental de inarmonicidade, gráficos de desvios e painel navegável de estabilidade. |
+| **Perfis instrumentais** | Organização das medições por instrumento, tecla e corda; mapa físico, histórico, comparação de sessões, armazenamento local e backups AFP/AFS ou JSON. |
+| **Curvas de afinação** | Otimização experimental para piano, fortepiano e cravo, além da fonte empírica independente de B para instrumentos elegíveis da família Outro; análise de relações intervalares, edição de restrições, auditoria, histórico de versões e aplicação reversível de correções instrumentais. |
 | **Emissor de notas** | Geração de referências sonoras, formas de onda periódicas, séries inarmônicas, reconstrução aditiva de espectros medidos e síntese de componentes personalizados. |
 
 As ferramentas compartilham o contexto musical, mas possuem motores e configurações próprios. A interface adota informação progressiva: resultados essenciais permanecem acessíveis, enquanto evidências, parâmetros avançados e explicações detalhadas são apresentados sob demanda. O [guia de uso](GUIA_DE_USO.md) documenta os procedimentos, os controles, seus valores de referência e a interpretação dos resultados.
@@ -53,13 +53,13 @@ A referência musical é ajustável; o estado de fábrica utiliza o sistema Pita
 | Método | Princípio |
 | --- | --- |
 | YIN + FFT | Estimativa temporal de periodicidade por função de diferença cumulativa normalizada (CMNDF), com validação harmônica e refinamento espectral. |
-| pYIN | Avaliação probabilística de candidatos e acompanhamento temporal por Viterbi causal, incluindo tratamento de transições de oitava. |
-| SWIPE′ | Estimativa de saliência em múltiplas janelas espectrais, com kernels associados à fundamental e aos harmônicos de ordem prima. |
+| pYIN | Avaliação probabilística de candidatos e acompanhamento temporal por Viterbi causal, com proteção de oitava, auditoria espectral e passo de cálculo CMNDF configurável (padrão 4; opções 1, 2, 4 e 8). |
+| SWIPE′ | Estimativa de saliência em múltiplas janelas espectrais, com kernels associados à fundamental e aos harmônicos de ordem prima e ancoragem espectral seletiva. |
 | Pico | Identificação da componente espectral predominante, que não necessariamente corresponde à fundamental. |
 
 A faixa nominal de detecção de altura é de 16–4.600 Hz. A representação espectral e a busca de picos acústicos respeitam o limite de 24 kHz e a frequência de Nyquist. O espaçamento entre bins da FFT não equivale à precisão final de um estimador de frequência.
 
-O detector opera principalmente sobre sons monofônicos. Acompanhamento temporal, histerese e filtragem da apresentação são tratados separadamente da edição da referência musical e da análise acústica instrumental.
+O detector opera principalmente sobre sons monofônicos. Se o Worker DSP deixa de responder, o aplicativo tenta recuperá-lo uma vez e encerra a captura com aviso se a recuperação falhar. Acompanhamento temporal, histerese e filtragem da apresentação são tratados separadamente da edição da referência musical e da análise acústica instrumental.
 
 ## Análise acústica e inarmonicidade
 
@@ -67,7 +67,8 @@ A ferramenta de Parciais e inarmonicidade separa a família do instrumento da hi
 
 | Modelo acústico | Representação |
 | --- | --- |
-| Exploratório | Picos espectrais sem imposição de fundamental ou ordem harmônica. É o padrão de Outro. |
+| Automático | Investiga ordens harmônicas; se insuficientes, apresenta picos sem atribuição. É o padrão de Outro. |
+| Exploratório | Picos espectrais sem imposição de fundamental ou ordem harmônica. |
 | Série harmônica | Frequência-base inferida, atribuição de ordens e desvios em relação à série. |
 | Corda rígida | Estimativa experimental do coeficiente B em condições elegíveis de corda isolada. |
 | Componentes não harmônicos | Inspeção de componentes sem obrigatoriedade de uma série de múltiplos inteiros. |
@@ -76,17 +77,21 @@ O modelo de corda rígida utiliza a relação `fₙ = n F √(1 + B n²)`, em qu
 
 Na consolidação multiataque, o motor estima um B comum, permitindo uma escala F própria por execução. A repetibilidade é investigada por reamostragem de ataques independentes (bootstrap), análise de resíduos e influência das execuções. Um bom ajuste não comprova, isoladamente, que os componentes pertençam à mesma corda, nem constitui uma determinação metrológica de B.
 
-Os perfis mantêm o contexto acústico, a identificação física, os parâmetros utilizados, os resultados e suas revisões. Medições da família Outro não são fontes elegíveis para geração de curvas, ainda que apresentem B consistente.
+Os perfis mantêm o contexto acústico, a identificação física, os parâmetros utilizados, os resultados e suas revisões. Uma discrepância superior a 45 cents entre a fundamental estimada e a tecla escolhida exige confirmação da identidade física; é possível manter a identificação em aberto sem perder as observações. A autorização excepcional fica vinculada ao contexto e às evidências da sessão, não dispensa os demais critérios de elegibilidade e não modifica as frequências medidas.
+
+Mudanças da disposição física preservam o histórico das teclas e das sessões arquivadas; a decisão manual de descarte é mantida separadamente da inelegibilidade técnica. O descarte de uma sessão em trabalho fica bloqueado enquanto seu salvamento está em curso.
+
+A revisão oferece os gráficos **Desvios da série harmônica ideal**, **Desvios em relação ao n-ésimo parcial** (referência dinâmica) e **Desvios em relação ao modelo físico**, quando há dados pertinentes. O painel **Estabilidade das medições** permite alternar entre o consolidado e cada análise, em quatro métricas temporais. Informações técnicas ficam acessíveis sob demanda; valores ausentes não são tratados como zero ou como instabilidade.
 
 ## Curvas de afinação
 
-O otimizador experimental é específico para **piano, fortepiano e cravo**, com políticas de ponderação intervalar próprias. A análise considera relações entre parciais de teclas diferentes, a base musical, a disponibilidade e qualidade das fontes, e restrições de preservação intervalar.
+O otimizador experimental contempla **piano, fortepiano e cravo**, com políticas de ponderação intervalar próprias. **Outro** pode participar exclusivamente pela fonte **Parciais empíricos — independente de B (experimental)**, quando o modelo é Automático com ordens identificadas, Série harmônica ou Corda rígida e os demais critérios são satisfeitos. Exploratório e Componentes não harmônicos não fornecem evidência elegível para curvas. A análise considera relações entre parciais de teclas diferentes, a base musical, a disponibilidade e qualidade das fontes, e restrições de preservação intervalar.
 
 Há dois objetivos distintos: **fidelidade ao temperamento**, que procura conservar as características intervalares da receita, e **otimização acústica**, que privilegia a coincidência das componentes consideradas. O modelo contempla oitavas, duplas oitavas, quintas, quartas, duodécimas e, quando habilitadas, terças maiores e menores. Os pesos são hipóteses experimentais de projeto, não prescrições históricas universalmente válidas.
 
-A frequência instrumental é composta com a referência teórica segundo `f_curva = f_teórica × 2^(δ/1200)`, onde δ representa a correção em cents. O motor mantém uma âncora fixa, limita as correções a ±30 cents e proíbe extrapolação. Interpolações dependem de suporte acústico e declaração de homogeneidade física.
+A frequência instrumental é composta com a referência teórica segundo `f_curva = f_teórica × 2^(δ/1200)`, onde δ representa a correção em cents. O motor mantém uma âncora fixa, limita as correções a ±30 cents e proíbe extrapolação. Interpolações dependem de suporte acústico e declaração de homogeneidade física; a fonte empírica independente não interpola teclas nem prevê ordens ausentes.
 
-As versões são auditáveis e podem ser comparadas e revisadas. A geração ou aprovação de uma revisão não modifica a afinação automaticamente. A aplicação experimental exige histórico local, fontes verificáveis, reprodução coerente do cálculo e confirmação explícita; pode ser invalidada por mudanças da base musical ou dos dados. Não é restaurada ao reiniciar a página.
+O cálculo e a edição de curvas dispõem de prazos máximos de execução e cancelamento; respostas tardias não substituem a operação vigente. As revisões são auditáveis e podem ser comparadas e editadas. A geração ou aprovação de uma revisão não modifica a afinação automaticamente. A aplicação experimental exige histórico local, fontes verificáveis, reprodução coerente do cálculo e confirmação explícita; pode ser invalidada por mudanças da base musical ou dos dados. Não é restaurada ao reiniciar a página.
 
 Por padrão, o Afinador funciona com a referência teórica. Quando há uma curva aplicada, os alvos instrumentais são identificados na interface; teclas sem evidência suficiente conservam os alvos teóricos. O Emissor pode seguir opcionalmente a correção instrumental, sem modificar as frequências originais de uma reconstrução espectral. O cilindro e as tabelas de temperamento permanecem representações teóricas.
 
@@ -102,7 +107,7 @@ O aplicativo é distribuído como um único arquivo HTML autocontido, com CSS, J
 | Análise instrumental | Motor separado de aquisição e análise multiataque, FFT radix-2 em JavaScript, janela Hann, interpolação de picos, ajuste robusto e consolidação estatística. |
 | Motor musical | Catálogo canônico de frequências, motor racional de temperamentos e representação de teclas e graus. |
 | Otimização | Construção de curvas, restrições, auditoria dos intervalos e verificação de consistência das versões. |
-| Persistência | `localStorage` para preferências e biblioteca; IndexedDB para perfis instrumentais e históricos de curvas. |
+| Persistência | `localStorage` para preferências e biblioteca; IndexedDB para perfis instrumentais e históricos de curvas; formatos binários AFP, AFS e AFC, com CBOR-X incorporado, e intercâmbio JSON compatível. |
 | Segurança | CSP, validação de importações e WebCrypto/SHA-256 para verificações de integridade. |
 
 O porte de SWIPE′ realiza análise causal de buffers incrementais, em vez de processamento de arquivos de áudio completos. O caminho acústico de Parciais é independente do detector de altura e não passa a executar continuamente durante a afinação convencional.
@@ -111,13 +116,13 @@ O porte de SWIPE′ realiza análise causal de buffers incrementais, em vez de p
 
 O projeto requer navegador moderno com JavaScript habilitado. A aquisição depende de permissão de microfone e contexto seguro (HTTPS ou `localhost`). Web Workers, AudioWorklet, WebAssembly, WebCrypto e armazenamento local são necessários conforme os recursos utilizados. SIMD128 não é indispensável quando a variante escalar é suportada.
 
-A distribuição publicada é hospedada no GitHub Pages. O HTML não exige etapa de compilação para ser servido; a abertura direta por `file://` pode restringir APIs e não garante funcionamento integral. A compatibilidade varia entre navegadores e dispositivos; o funcionamento offline depende de uma cópia local acessível.
+A distribuição web é hospedada no GitHub Pages. Não é necessário instalar uma PWA para utilizá-la. O HTML não exige etapa de compilação para ser servido; a abertura direta por `file://` pode restringir APIs e não garante funcionamento integral. A compatibilidade varia entre navegadores e dispositivos; o funcionamento offline depende de uma cópia local acessível.
 
 ## Privacidade, dados e segurança
 
-O áudio é captado por autorização explícita e processado no dispositivo. Não há transmissão automática das amostras, medições ou perfis para um serviço remoto de análise. O armazenamento é local à origem do site e ao navegador, sem sincronização por conta.
+O áudio é captado por autorização explícita e processado no dispositivo. Não há transmissão automática das amostras, medições ou perfis para um serviço remoto de análise. O armazenamento é local à origem do site e ao navegador, sem sincronização por conta. Utilize o aplicativo em uma única aba ou janela por vez. Ao ocultar a página ou sair dela, a captura do microfone é encerrada, inclusive se a autorização ainda estiver pendente; ao retornar, é necessário ativá-la manualmente. A entrega de eventos de visibilidade depende do navegador e do sistema operacional.
 
-O projeto possui monitor de diagnóstico com sessões limitadas a 20 segundos e exportação local de ZIP, incluindo dados técnicos e WAV opcional. Arquivos de diagnóstico podem conter áudio ambiente ou informações privadas. Os backups JSON permitem conservar independentemente receitas musicais, sessões, perfis e históricos.
+O projeto possui monitor de diagnóstico com sessões limitadas a 20 segundos e exportação local de ZIP, incluindo dados técnicos e WAV opcional. Arquivos de diagnóstico podem conter áudio ambiente ou informações privadas. As receitas e os perfis musicais são exportados em JSON; sessões, perfis instrumentais e históricos de curvas podem ser conservados em AFS, AFP e AFC, respectivamente, ou em JSON compatível. Os formatos binários instrumentais não incluem WAV. Utilize arquivos produzidos pelo aplicativo no formato aceito; importações de esquemas incompatíveis são recusadas. Faça backups externos antes de limpar os dados do site.
 
 As importações passam por verificações de estrutura, tamanho, coerência e integridade aplicáveis. A Content Security Policy restringe scripts não autorizados, conexões externas e outros recursos. SHA-256 verifica integridade em relação ao conteúdo esperado, não autoria, autenticidade da captação ou validade científica. Essas medidas não representam uma certificação de segurança.
 
@@ -125,7 +130,7 @@ As importações passam por verificações de estrutura, tamanho, coerência e i
 
 O projeto permanece experimental. A qualidade das estimativas depende do instrumento, do microfone, da taxa de amostragem, do ruído, da estabilidade do sinal e das hipóteses acústicas. Não há garantia de erro universal em cents, de incerteza física calibrada de B ou de adequação de uma curva a qualquer instrumento.
 
-Os testes computacionais realizados ao longo do desenvolvimento incluem regressões de detecção, catálogo musical, análise acústica, configurações, síntese, validadores de importação e CSP. O trabalho mais recente contempla a separação de famílias e modelos acústicos, sem substituir a necessidade de ensaios com instrumentos físicos. A validação metrológica, a cobertura integral de aparelhos móveis e a auditoria independente de segurança permanecem pendentes.
+Os testes computacionais realizados ao longo do desenvolvimento incluem regressões de detecção, catálogo musical, análise acústica, configurações, síntese, validadores de importação e CSP. As verificações incluem comparação de resultados DSP com sinais sintéticos, execução de Workers e WASM no Chromium, controles de áudio simulados, integridade científica, disposição física, validação binária, navegação e contraste. Esses testes não substituem ensaios com instrumentos físicos. A homologação em Android físico, IndexedDB nativo e transferências completas AFP/AFS/AFC, bem como a validação metrológica e a auditoria independente de segurança, não é integralmente comprovada.
 
 A aplicação de curvas não representa homologação de um procedimento de afinação. A síntese aditiva de espectros medidos é uma aproximação de frequências e amplitudes, não uma reprodução da fase, do ruído, dos transientes ou da evolução temporal do som original.
 
@@ -162,6 +167,12 @@ A adaptação para o Afinador compreende compilação do núcleo para WebAssembl
 O Afinador contém um porte causal em JavaScript, adaptado para Web Worker, com FFTs calculadas por PFFFT/WASM. A adaptação preserva os princípios multijanela, a grade de candidatos, a escala ERB, os kernels com harmônicos de ordem 1 e prima e o refinamento do estimador. Substitui o processamento offline por buffers incrementais, reamostragem quando necessária e reutilização de kernels e planos. O resultado causal não é necessariamente idêntico ao programa offline original, em especial nos transientes e bordas temporais.
 
 O código adaptado está no bloco `fonteSWIPEOriginalAdaptado`, e a licença integral de Gorman em `licencaSWIPEGormanMIT`, ambos no `index.html`. FFTW e libsndfile, dependências da implementação C original, não constituem dependências de execução desse porte.
+
+### CBOR-X — codificação binária
+
+- **Componente:** CBOR-X 1.6.6, copyright © 2020 Kris Zyp.
+- **Licença:** MIT, com aviso integral incorporado ao `index.html`.
+- **Uso:** codificação e decodificação dos dados dos formatos binários instrumentais, com validação e adaptações locais para representação numérica e textual.
 
 ## Referências científicas
 
