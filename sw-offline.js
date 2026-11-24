@@ -4,14 +4,18 @@
  * uma atualização aguarda o fechamento das janelas da versão anterior.
  */
 'use strict';
-const RELEASE = "af6a330fcd8840f8cc74aba0";
+const RELEASE = "5ddaa2835ada36b34ab63dc6";
 const ASSETS = Object.freeze({
-  "index.html": "ced36a9441fe1539a8661c8fb202c91cf9b95384878c0ef9b060d79f38d603e6",
-  "manifest.webmanifest": "52cb25fe695960a82432fbd7f91efbb1ec43555013954d3a03434582295e12ab",
-  "favicon.ico": "02581884f7cb2e69ba8d47386abf0ee33fbf1073ade3d3e8e0daf0c36848b357",
-  "icons/icon-192.png": "b8c1a16d6dec1a6ee89ab960470e17d0db01db5720491eef91dec90fb4279835",
-  "icons/icon-512.png": "2b0286c777b7d28bb91ec735b71d38a10a6d9bc972ea93afd514a41bfcd648f6",
-  "icons/icon-maskable.png": "0b3f9a06929714463a6ec9cc188fd71e8bc3e1287372d15dce5142efceed2c9d"
+  "index.html": "937ba108ae75e022d61f267b4ca4ee11137ccb756632b36bbbe2041a1a2b31c5",
+  "manifest.webmanifest": "e864faf4860c52af1716d22b839cf97be51ba4c7065cbafcea68594363a777ca",
+  "favicon.ico": "f3f4a7573e819a7feff4e42d50ea5b4087a1c599484ec93f869b133869fbb75c",
+  "icons/icon-192.png": "52c7750241c69785ec8e7ea98aacfdabaf5afc7ce87433790402ef5453e1aa01",
+  "icons/icon-512.png": "3039a58999045446e80899f9c1dea98250b1776b487dd334f0f5ff117de7c52d",
+  "icons/icon-maskable.png": "662092c7a16a2ecc7e290fb2606bd750224a6e2083ec0ff0ae9815d93ba3d799",
+  "favicon.ico?v=f3f4a7573e81": "f3f4a7573e819a7feff4e42d50ea5b4087a1c599484ec93f869b133869fbb75c",
+  "icons/icon-192.png?v=52c7750241c6": "52c7750241c69785ec8e7ea98aacfdabaf5afc7ce87433790402ef5453e1aa01",
+  "icons/icon-512.png?v=3039a5899904": "3039a58999045446e80899f9c1dea98250b1776b487dd334f0f5ff117de7c52d",
+  "icons/icon-maskable.png?v=662092c7a16a": "662092c7a16a2ecc7e290fb2606bd750224a6e2083ec0ff0ae9815d93ba3d799"
 });
 
 const PREFIX = 'afinador-offline:' + self.registration.scope + ':';
