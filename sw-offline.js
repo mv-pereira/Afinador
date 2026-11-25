@@ -4,9 +4,9 @@
  * uma atualização aguarda o fechamento das janelas da versão anterior.
  */
 'use strict';
-const RELEASE = "5ddaa2835ada36b34ab63dc6";
+const RELEASE = "789d3009bfe5123139f4bb1d";
 const ASSETS = Object.freeze({
-  "index.html": "937ba108ae75e022d61f267b4ca4ee11137ccb756632b36bbbe2041a1a2b31c5",
+  "index.html": "1f54a965697a55336966345b448f13cbfc84884e309dd3a047c9214b22062e91",
   "manifest.webmanifest": "e864faf4860c52af1716d22b839cf97be51ba4c7065cbafcea68594363a777ca",
   "favicon.ico": "f3f4a7573e819a7feff4e42d50ea5b4087a1c599484ec93f869b133869fbb75c",
   "icons/icon-192.png": "52c7750241c69785ec8e7ea98aacfdabaf5afc7ce87433790402ef5453e1aa01",
