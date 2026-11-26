@@ -32,6 +32,8 @@ O gerenciador contextual **Instrumentos** permite criar, importar, organizar e e
 
 As ferramentas compartilham o contexto musical, mas possuem motores e configurações próprios. A interface adota informação progressiva: resultados essenciais permanecem acessíveis, enquanto evidências, parâmetros avançados e explicações detalhadas são apresentados sob demanda. O [guia de uso](GUIA_DE_USO.md) documenta os procedimentos, os controles, seus valores de referência e a interpretação dos resultados.
 
+Os botões **Configurações** e **Ajuda** são contextuais. Os parâmetros de reconhecimento, processamento espectral e ajuste físico pertencem à Aquisição acústica; a Análise acústica reúne apenas as preferências de apresentação da sessão, sem alterar as evidências registradas. Os gráficos instrumentais dispõem de seus próprios controles. O gerenciador Instrumentos possui preferências de listagem independentes.
+
 ## Temperamentos e representação musical
 
 O catálogo integrado contempla 18 sistemas, entre temperamentos históricos, reconstruções e divisões iguais da oitava:

@@ -44,7 +44,7 @@ Escolha a ferramenta no menu **Ferramentas**. Não é necessário criar um perfi
 <a name="escolha"></a>
 ## 0.1. O que cada ferramenta faz
 
-Abra **Ferramentas** na barra superior e selecione o ambiente de trabalho desejado. O botão **Configurações** acompanha a ferramenta ativa. O tema é um controle independente.
+Abra **Ferramentas** na barra superior e selecione o ambiente de trabalho desejado. Os botões **Configurações** e **Ajuda** acompanham a ferramenta ativa, inclusive o gerenciador Instrumentos. A Aquisição possui parâmetros de captação e processamento; a Análise possui somente preferências de apresentação da sessão. O tema é um controle independente.
 
 | Ferramenta | Pergunta que responde | Entrada | Saída |
 | --- | --- | --- | --- |
@@ -721,11 +721,11 @@ Num cravo, meça Dó2, Sol2, Dó3 e Sol3, em qualquer ordem, usando o mesmo regi
 Veja [os sete gráficos instrumentais](#analise-instrumental) para os controles e a interpretação de cada projeção.
 
 <a name="cfg-2"></a>
-## 2.5. Configurações de aquisição e análise
+## 2.5. Configurações de Aquisição acústica
 
-Os grupos avançados permitem experimentos controlados. Configurações acústicas personalizadas são registradas nas sessões, consideradas exploratórias para fins de curvas e não habilitam uma medição automaticamente como fonte de correções. A alteração durante uma sessão em curso não muda os parâmetros congelados daquela sessão; para testar novos critérios, finalize e inicie outra. A escala e o filtro de candidatos são visuais. Os limiares próprios da caracterização empírica e da fonte independente de curvas não são substituídos pelas preferências de ajuste de B; consulte [a caracterização empírica](#empirica).
+Os grupos avançados permitem experimentos controlados. Configurações acústicas personalizadas são registradas nas sessões, consideradas exploratórias para fins de curvas e não habilitam uma medição automaticamente como fonte de correções. A alteração durante uma sessão em curso não muda os parâmetros congelados daquela sessão; para testar novos critérios, finalize e inicie outra. A apresentação dos resultados pertence às configurações de Análise acústica, descritas abaixo. Os limiares próprios da caracterização empírica e da fonte independente de curvas não são substituídos pelas preferências de ajuste de B; consulte [a caracterização empírica](#empirica).
 
-### Aquisição e apresentação (aberto)
+### Aquisição (aberto)
 
 | Campo | Padrão | Opções e efeito |
 | --- | --- | --- |
@@ -733,8 +733,6 @@ Os grupos avançados permitem experimentos controlados. Configurações acústic
 | Identificação da nota | Automática | Sugestão ou escolha anterior à medição |
 | Meta de ataques utilizáveis | 10 | 1–64; não garante qualidade nem elimina exigências do modelo |
 | Encerrar ao alcançar a meta | Não | Encerra a escuta automaticamente; ainda requer revisão |
-| Escala espectral | Logarítmica | Linear ou logarítmica; também alternável ao tocar no gráfico |
-| Mostrar parciais candidatos | Sim | Filtro visual; não apaga evidências |
 
 ### Análise espectral (recolhido)
 
@@ -793,6 +791,19 @@ Todos esses campos variam em passos de 20 ms. O buffer de aquisição é de 1.80
 ### Restrições de compatibilidade entre parâmetros
 
 Além dos limites individuais, janela mínima ≤ máxima; duração útil mínima ≤ máxima; descarte + duração útil máxima ≤ 1.800 ms; SNR mínimo do pico ≤ SNR mínimo do parcial; mínimos de ordens e de parciais não podem superar as ordens máximas; mediana máxima de resíduos ≤ resíduo máximo; mínimo para consolidação ≤ mínimo para bootstrap. A janela conserva os últimos valores válidos quando alguma dessas relações não é satisfeita. Ajuste primeiro o parâmetro que permite a transição ou use **Restaurar padrões**.
+
+<a name="cfg-analise"></a>
+### Configurações de Análise acústica
+
+Abra **Configurações** estando na Análise acústica. O grupo **Apresentação da sessão** contém somente preferências visuais:
+
+| Campo | Padrão | Opções e efeito |
+| --- | --- | --- |
+| Escala espectral | Logarítmica | Linear ou logarítmica; não altera a resolução |
+| Notação dos parciais | Numérica | Numérica (P1, P2, P3), intervalos decompostos (f, 8ª, 8ª + 5ª) ou compostos (f, 8ª, 12ª); muda rótulos, não ordens |
+| Mostrar parciais candidatos | Sim | Filtro da tabela; não exclui evidências |
+
+Os sete gráficos instrumentais têm controles próprios de seleção, escala, referências e visualização. A janela de Configurações da Análise não contém reconhecimento de ataques, identificação de nota, janelas de aquisição, limiares de aceitação ou parâmetros de ajuste de B: esses parâmetros pertencem à Aquisição e são preservados nas evidências originais. Salvar alterações ou Restaurar padrões na Análise afeta somente as suas três preferências de apresentação; a ação correspondente na Aquisição preserva as preferências visuais da Análise. Fechar mantém os valores válidos nesta visita sem persistir alterações ainda não salvas.
 
 <a name="interpretar-parciais"></a>
 ## 2.6. Interpretar o resultado acústico
@@ -1004,7 +1015,7 @@ Ao corrigir a disposição de 12/13/14 teclas ou reduzir uma extensão declarada
 <a name="cfg-3"></a>
 ## 3.4. Preferências do gerenciador
 
-As preferências de apresentação afetam a listagem, não os cálculos. No histórico, **Ordenar** permite escolher Mais recentes (padrão), Mais antigas ou Qualidade provisória. Esta última é uma triagem, não uma classificação metrológica. Use os controles locais de Avançado e as preferências disponibilizadas pela ferramenta ativa. Restaurar padrões não apaga evidências.
+Abra **Configurações** enquanto o gerenciador Instrumentos estiver aberto, seja pela Aquisição ou pela Análise. O grupo **Apresentação** oferece **Ordenação das sessões** (Mais recentes, Mais antigas ou Qualidade provisória; padrão Mais recentes) e **Mostrar sessões inconclusivas** (padrão Sim). A ordenação por qualidade é triagem, não classificação metrológica. O filtro não apaga registros. O histórico também dispõe de Ordenar em Avançado. Restaurar padrões atua somente nas preferências do gerenciador. Ao usar Voltar à ferramenta, Configurações e Ajuda voltam a corresponder à ferramenta de origem.
 
 <a name="comparar-sessoes"></a>
 ## 3.5. Mapa e histórico
