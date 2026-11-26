@@ -23,10 +23,12 @@ Desenvolvido para computadores e dispositivos móveis, com interface em portugu�
 | Ferramenta | Finalidade e recursos |
 | --- | --- |
 | **Afinador** | Detecção de altura, afinação automática e por nota fixa, frequência em Hz, desvio em cents, espectro FFT com alternância entre escala logarítmica (padrão) e linear por toque ou clique no gráfico, zoom espectral e representação dos temperamentos. |
-| **Parciais e inarmonicidade** | Capturas individuais e multiataque, inspeção de picos e parciais, comparação de execuções, ajuste experimental de inarmonicidade, gráficos de desvios e painel navegável de estabilidade. |
-| **Perfis instrumentais** | Organização das medições por instrumento, tecla e corda; mapa físico, histórico, comparação de sessões, armazenamento local e backups AFP/AFS ou JSON. |
+| **Aquisição acústica** | Capturas individuais e multiataque, identificação automática ou fixa, revisão do resumo e salvamento assistido com início da próxima medição. |
+| **Análise acústica** | Inspeção de sessões, comparação histórica, estatísticas por nota e caracterização instrumental por sete gráficos espectrais, tímbricos, físicos e intervalares. |
 | **Curvas de afinação** | Otimização experimental para piano, fortepiano e cravo, além da fonte empírica independente de B para instrumentos elegíveis da família Outro; análise de relações intervalares, edição de restrições, auditoria, histórico de versões e aplicação reversível de correções instrumentais. |
 | **Emissor de notas** | Geração de referências sonoras, formas de onda periódicas, séries inarmônicas, reconstrução aditiva de espectros medidos e síntese de componentes personalizados. |
+
+O gerenciador contextual **Instrumentos** permite criar, importar, organizar e exportar perfis sem constituir uma ferramenta de análise separada.
 
 As ferramentas compartilham o contexto musical, mas possuem motores e configurações próprios. A interface adota informação progressiva: resultados essenciais permanecem acessíveis, enquanto evidências, parâmetros avançados e explicações detalhadas são apresentados sob demanda. O [guia de uso](GUIA_DE_USO.md) documenta os procedimentos, os controles, seus valores de referência e a interpretação dos resultados.
 
@@ -63,7 +65,7 @@ O detector opera principalmente sobre sons monofônicos. Se o Worker DSP deixa d
 
 ## Análise acústica e inarmonicidade
 
-A ferramenta de Parciais e inarmonicidade separa a família do instrumento da hipótese acústica empregada para interpretar as observações. Piano, Fortepiano e Cravo possuem políticas próprias; a categoria Outro permite investigar fontes distintas sem pressupor automaticamente seu modelo físico.
+A Aquisição acústica separa a família do instrumento da hipótese acústica empregada para interpretar as observações. Piano, Fortepiano e Cravo possuem políticas próprias; a categoria Outro permite investigar fontes distintas sem pressupor automaticamente seu modelo físico.
 
 | Modelo acústico | Representação |
 | --- | --- |
@@ -81,7 +83,29 @@ Os perfis mantêm o contexto acústico, a identificação física, os parâmetro
 
 Mudanças da disposição física preservam o histórico das teclas e das sessões arquivadas; a decisão manual de descarte é mantida separadamente da inelegibilidade técnica. O descarte de uma sessão em trabalho fica bloqueado enquanto seu salvamento está em curso.
 
-A revisão oferece os gráficos **Desvios da série harmônica ideal**, **Desvios em relação ao n-ésimo parcial** (referência dinâmica) e **Desvios em relação ao modelo físico**, quando há dados pertinentes. O painel **Estabilidade das medições** permite alternar entre o consolidado e cada análise, em quatro métricas temporais. Informações técnicas ficam acessíveis sob demanda; valores ausentes não são tratados como zero ou como instabilidade.
+A Análise acústica, na vista Sessão, oferece os gráficos **Desvios da série harmônica ideal**, **Desvios em relação ao n-ésimo parcial** (referência dinâmica) e **Desvios em relação ao modelo físico**, quando há dados pertinentes. O painel **Estabilidade das medições** permite alternar entre o consolidado e cada análise, em quatro métricas temporais. Informações técnicas ficam acessíveis sob demanda; valores ausentes não são tratados como zero ou como instabilidade.
+
+### Aquisição sequencial e extensão observada
+
+Crie um instrumento em **Aquisição acústica → Instrumentos** e comece a medir sem informar a extensão. O perfil automático cadastra somente as identidades físicas das notas confirmadas e salvas. É possível medir fora de ordem, saltar notas e oitavas, ou estudar apenas uma região do instrumento — inclusive cravos de oitava curta ou quebrada. O teclado compacto mostra uma oitava por vez; pontos verdes identificam medições. Uma tecla sem ponto não comprova existência nem inexistência física. Mapas declarados são preservados; a extensão pode ser editada deliberadamente no gerenciador avançado.
+
+A identificação textual de corda ou registro é opcional e permanece nas medições seguintes do mesmo instrumento durante o fluxo de aquisição. **Salvar e medir próxima nota** apresenta progresso no próprio botão, verifica a gravação, retorna à região de medição e inicia a próxima captura, sem confirmação adicional. Em identificação automática, toque a próxima nota desejada; em identificação fixa, o programa prepara o próximo alvo, que pode ser alterado. Em caso de erro, a sessão permanece disponível.
+
+### Caracterização acústica instrumental
+
+A Análise acústica oferece três níveis: **Sessão** (execuções, espectros e ajustes), **Nota** (estatísticas e repetibilidade) e **Instrumento** (comparação entre identidades físicas). As projeções são calculadas sob demanda, com seleção de fontes e coortes de contexto compatível. O registro comum permite agrupar notas diferentes; metadados desconhecidos não demonstram equivalência e podem limitar a interpretação a uma exploração.
+
+| Gráfico | O que investiga |
+| --- | --- |
+| G02 — Mapa espectral por parciais | Amplitudes relativas e proporção de ataques com componentes observados, por ordem e tecla. |
+| G03 — Perfil de inarmonicidade | B consolidado provisoriamente consistente, dispersão entre sessões e bootstrap quando disponível. |
+| G04 — Perfil tímbrico | Centroides, dispersão por ordem, frações de potência relativa e razão pares/ímpares. |
+| G05 — Desvios harmônicos | Desvios em cents com referência empírica ou alternativa explícita; referências distintas não são misturadas. |
+| G06 — Repetibilidade | Dispersão dentro de uma sessão e entre sessões, taxa de aceitação e inspeção de ataques. |
+| G07 — Proximidade intervalar espectral | Comparação de pares de parciais de duas teclas e previsão de batimentos, sem atribuir índice de consonância. |
+| G08 — Mapa espectral de frequência contínua | Distribuição de amplitude por bandas logarítmicas, incluindo evidência não harmônica, sem exigir ordens. |
+
+Os gráficos respeitam exclusões, limites de banda, referências e evidências ausentes. Descritores são calculados por ataque e agregados por medianas de sessão e tecla, com peso igual por sessão quando aplicável; o eixo de teclas é categórico, não distância cromática. Os níveis em dB são relativos, não SPL calibrado. G08 não é um espectrograma temporal. O G07 não mede batimentos de notas simultâneas nem gera curvas automaticamente. Consulte o [guia de análise](GUIA_DE_USO.md#analise-instrumental).
 
 ## Curvas de afinação
 
@@ -110,13 +134,13 @@ O aplicativo é distribuído como um único arquivo HTML autocontido, com CSS, J
 | Persistência | `localStorage` para preferências e biblioteca; IndexedDB para perfis instrumentais e históricos de curvas; formatos binários AFP, AFS e AFC, com CBOR-X incorporado, e intercâmbio JSON compatível. |
 | Segurança | CSP, validação de importações e WebCrypto/SHA-256 para verificações de integridade. |
 
-O porte de SWIPE′ realiza análise causal de buffers incrementais, em vez de processamento de arquivos de áudio completos. O caminho acústico de Parciais é independente do detector de altura e não passa a executar continuamente durante a afinação convencional.
+O porte de SWIPE′ realiza análise causal de buffers incrementais, em vez de processamento de arquivos de áudio completos. O caminho acústico de aquisição e análise é independente do detector de altura e não passa a executar continuamente durante a afinação convencional.
 
 ## Compatibilidade
 
 O projeto requer navegador moderno com JavaScript habilitado. A aquisição depende de permissão de microfone e contexto seguro (HTTPS ou `localhost`). Web Workers, AudioWorklet, WebAssembly, WebCrypto e armazenamento local são necessários conforme os recursos utilizados. SIMD128 não é indispensável quando a variante escalar é suportada.
 
-A distribuição web é hospedada no GitHub Pages. Não é necessário instalar uma PWA para utilizá-la. O HTML não exige etapa de compilação para ser servido; a abertura direta por `file://` pode restringir APIs e não garante funcionamento integral. A compatibilidade varia entre navegadores e dispositivos; o funcionamento offline depende de uma cópia local acessível.
+A distribuição web é hospedada no GitHub Pages. Não é necessário instalar a PWA para utilizá-la. Para execução local, sirva a pasta de publicação por HTTP em `localhost` (por exemplo, com `python -m http.server 8000` executado nessa pasta) e abra `http://localhost:8000/`. O HTML não exige etapa de compilação para ser servido; a abertura direta por `file://` pode restringir APIs e não garante funcionamento integral. A compatibilidade varia entre navegadores e dispositivos; a publicação inclui manifesto e Service Worker para uso como PWA e cache offline dos recursos verificados, quando o navegador permite. A abertura direta do HTML não equivale à instalação da PWA; a disponibilidade offline depende da instalação/cache concluídos.
 
 ## Privacidade, dados e segurança
 
@@ -130,7 +154,7 @@ As importações passam por verificações de estrutura, tamanho, coerência e i
 
 O projeto permanece experimental. A qualidade das estimativas depende do instrumento, do microfone, da taxa de amostragem, do ruído, da estabilidade do sinal e das hipóteses acústicas. Não há garantia de erro universal em cents, de incerteza física calibrada de B ou de adequação de uma curva a qualquer instrumento.
 
-Os testes computacionais realizados ao longo do desenvolvimento incluem regressões de detecção, catálogo musical, análise acústica, configurações, síntese, validadores de importação e CSP. As verificações incluem comparação de resultados DSP com sinais sintéticos, execução de Workers e WASM no Chromium, controles de áudio simulados, integridade científica, disposição física, validação binária, navegação e contraste. Esses testes não substituem ensaios com instrumentos físicos. A homologação em Android físico, IndexedDB nativo e transferências completas AFP/AFS/AFC, bem como a validação metrológica e a auditoria independente de segurança, não é integralmente comprovada.
+Os testes computacionais realizados ao longo do desenvolvimento incluem regressões de detecção, catálogo musical, análise acústica, configurações, síntese, validadores de importação e CSP. As verificações incluem comparação de resultados DSP com sinais sintéticos, execução de Workers e WASM no Chromium, controles de áudio simulados, integridade científica, disposição física, validação binária, navegação e contraste. Esses testes não substituem ensaios com instrumentos físicos. A homologação em Android físico, IndexedDB nativo e transferências completas AFP/AFS/AFC e instalação/atualização offline da PWA, bem como a validação metrológica e a auditoria independente de segurança, não é integralmente comprovada.
 
 A aplicação de curvas não representa homologação de um procedimento de afinação. A síntese aditiva de espectros medidos é uma aproximação de frequências e amplitudes, não uma reprodução da fase, do ruído, dos transientes ou da evolução temporal do som original.
 
@@ -141,6 +165,7 @@ A aplicação de curvas não representa homologação de um procedimento de afin
 | [`index.html`](index.html) | Aplicativo autocontido e ponto de entrada da publicação. |
 | [`GUIA_DE_USO.md`](GUIA_DE_USO.md) | Manual completo, procedimentos, configurações, interpretação e troubleshooting. |
 | [`README.md`](README.md) | Apresentação do projeto e documentação técnica geral. |
+| [`manifest.webmanifest`](manifest.webmanifest), [`sw-offline.js`](sw-offline.js), `icons/`, `favicon.ico` | Recursos de instalação, cache offline e identidade visual. |
 | [`Aulas/`](Aulas/) | Diretório de materiais do repositório. |
 | [`LICENSE`](LICENSE) | Licença do código próprio do projeto. |
 
