@@ -27,14 +27,14 @@ Escolha a ferramenta no menu **Ferramentas**. Não é necessário criar um perfi
 | --- | --- |
 | Afinar | Afinador → escolha temperamento e referência → ative microfone → toque uma nota → ajuste até aproximar o desvio de zero. [Detalhes](#afinar) |
 | Medir uma nota | Aquisição acústica → escolha família, condição e identificação → Iniciar medição → repita a mesma nota → Finalizar medição. [Detalhes](#multiataque) |
-| Medir várias notas | Aquisição acústica → Instrumentos → Novo perfil → criar → Voltar à ferramenta → medir e finalizar → **Salvar e medir próxima nota**. Repita com as notas desejadas, sem preencher a extensão. [Detalhes](#salvar-sessoes) |
+| Medir várias notas | Aquisição acústica → Instrumentos → Novo instrumento → criar → Voltar à aquisição → medir e finalizar → **Salvar e medir próxima nota**. Repita com as notas desejadas, sem preencher a extensão. [Detalhes](#salvar-sessoes) |
 | Estudar as medições | Análise acústica → escolha Rascunho atual, Medições armazenadas ou Abrir sessão… → Sessão, Nota ou Instrumento. [Detalhes](#revisao-historica) |
-| Ver o timbre e a inarmonicidade de um instrumento | Análise acústica → Instrumento → Calcular / atualizar → escolha a fonte e abra o gráfico desejado. [Detalhes](#analise-instrumental) |
-| Transferir um instrumento | Aquisição acústica → Instrumentos → Exportar perfil (.afp) ou Importar instrumento. [Detalhes](#backup-perfil) |
+| Ver o timbre e a inarmonicidade de um instrumento | Análise acústica → Instrumento → abra o gráfico desejado; cálculo automático com indicador de progresso. [Detalhes](#analise-instrumental) |
+| Transferir um instrumento | Aquisição acústica → Instrumentos → Exportar instrumento (.afp) ou Importar instrumento. [Detalhes](#backup-perfil) |
 | Estudar correções | Curvas de afinação → perfil e objetivo → Gerar curva → revisar → Aplicar ao Afinador, se elegível e desejado. |
 | Ouvir uma nota | Emissor de notas → escolha nota, tipo de som e volume → Emitir nota → Parar som. |
 
-**Avançado** reúne controles complementares; **Configurações** define preferências persistentes; **Ajuda** explica controles e limitações. O gerenciador **Instrumentos** é contextual: use **Voltar à ferramenta** para continuar o trabalho. Selecionar um instrumento não altera automaticamente o temperamento ou a curva aplicada.
+**Avançado** reúne controles complementares; **Configurações** define preferências persistentes; **Ajuda** explica controles e limitações. O gerenciador **Instrumentos** é contextual: use **Voltar à aquisição / Voltar à análise** para continuar o trabalho. Selecionar um instrumento não altera automaticamente o temperamento ou a curva aplicada.
 
 [Voltar ao sumário](#sumario)
 
@@ -613,23 +613,23 @@ O consolidado contabiliza somente parciais aceitos, únicos e não excluídos de
 ### Como abrir os gráficos
 
 1. Em **Análise acústica**, selecione **Medições armazenadas** e o instrumento desejado.
-2. Escolha **Instrumento** e pressione **Calcular / atualizar**. Para examinar uma única tecla, use **Nota**; para um conjunto de ataques, **Sessão**.
-3. Abra **Restringir fontes ou escolher sessões** se quiser limitar o escopo. Em **Fonte / coorte**, selecione o conjunto pertinente e leia **Protocolo e limitações**. Os grupos consideram família, modelo, condição, registro comum, configuração e contexto da captura; não pressupõem que cordas de notas diferentes sejam a mesma corda física. Rótulos distintos, como `8` e `8'`, não são automaticamente equivalentes.
-4. Abra um gráfico e acione seu cálculo específico quando houver botão. Toque em células ou pontos e use os seletores e tabelas para examinar valores. Use **Abrir Nota** onde disponível para detalhar a tecla. Os mapas maiores têm navegação por blocos.
+2. Escolha **Instrumento** e expanda o gráfico desejado; o cálculo começa automaticamente. Para examinar uma única tecla, use **Nota**; para um conjunto de ataques, **Sessão**.
+3. Em **Configurações → Seleção de evidências (temporária)**, restrinja o escopo quando necessário. Se houver múltiplas coortes, escolha **Fonte / coorte**. Consulte **Protocolo e diagnóstico** para rastreabilidade. Os grupos consideram família, modelo, condição, registro comum, configuração e contexto da captura; não pressupõem que cordas de notas diferentes sejam a mesma corda física. Rótulos distintos, como `8` e `8'`, não são automaticamente equivalentes.
+4. Ao expandir um gráfico, acompanhe a barra durante a verificação e o cálculo. Se a seção for recolhida, a operação pendente é cancelada quando possível. O último gráfico válido pode ser reaproveitado sem reler as evidências, se nenhuma outra análise ou mudança o invalidar. Toque em células ou pontos para ler o valor selecionado; abra ⓘ para metodologia, estados e detalhe científico ou ⛶ para ampliar. Para consultar as evidências de uma nota, selecione o nível Nota separadamente. Os mapas maiores têm navegação por blocos.
 
 Uma coorte com metadados incompletos é exploratória: não confirma igualdade de condições. A inclusão de registros excluídos é somente visualização. Ataques elegíveis e incluídos sustentam os agregados usuais; a mediana por sessão antecede a mediana por tecla, evitando que uma sessão longa domine as outras. Em geral, MAD requer três observações e quartis quatro. O número de sessões e ataques importa para avaliar evidência. Lacunas, ordens não detectadas, fora de banda, fontes incompatíveis e valores excluídos são situações distintas. O mapa observado não preenche posições cromáticas intermediárias; em perfis declarados podem existir posições sem medição. O eixo horizontal é categórico.
 
-### G02 — Mapa espectral instrumental em cores
+### G02 — Mapa de parciais
 
-Selecione **Amplitude relativa (dB)** ou **Cobertura dos parciais (%)**, P1–P12 ou P1–P24 e faixa −60 a 0 ou −80 a 0 dB. Use **Ampliar células** e a tabela da tecla. Cada linha representa uma ordem, não uma frequência absoluta. A taxa de cobertura descreve a presença do parcial nos ataques incluídos; não é um índice de completude do instrumento. Hachuras e símbolos distinguem dados ausentes, excluídos, incompatíveis ou fora de banda. Um ponto branco sobre a cor identifica evidência limitada. Níveis são relativos ao pico de cada ataque, não dB SPL; saturação de cor não altera o número armazenado.
+Selecione **Amplitude relativa (dB)** ou **Cobertura dos parciais (%)**, em sua vista. Em Configurações, escolha P1–P12/P1–P24, faixa −60 a 0 ou −80 a 0 dB e **Ampliar células**. Toque em uma célula para examinar seus valores. Cada linha representa uma ordem, não uma frequência absoluta. A taxa de cobertura descreve a presença do parcial nos ataques incluídos; não é um índice de completude do instrumento. Hachuras e símbolos distinguem dados ausentes, excluídos, incompatíveis ou fora de banda. Um ponto branco sobre a cor identifica evidência limitada. Níveis são relativos ao pico de cada ataque, não dB SPL; saturação de cor não altera o número armazenado.
 
-### G03 — Perfil instrumental de inarmonicidade
+### G03 — Perfil de inarmonicidade
 
-Pressione **Calcular perfil de B**. São exibidos apenas coeficientes B consolidados provisoriamente consistentes do modelo de corda rígida isolada. O eixo de B é logarítmico e adimensional; círculos representam sessões, losango a mediana por tecla, barra mínimo–máximo e caixa Q1–Q3 quando estimável. Habilite bootstrap para ver intervalos nominais da própria sessão. A faixa de estados distingue inconclusivo, zero, inválido, não aplicável, sem B consolidado, incompatível/excluído e sem medição. Nenhum desses estados é lançado como zero no eixo log. Não há ajuste de curva ou interpolação. B individual e candidato inconclusivo não são promovidos a valor consolidado.
+Expanda **Perfil de inarmonicidade**. São exibidos apenas coeficientes B consolidados provisoriamente consistentes do modelo de corda rígida isolada. O eixo de B é logarítmico e adimensional; círculos representam sessões, losango a mediana por tecla, barra mínimo–máximo e caixa Q1–Q3 quando estimável. Habilite bootstrap em Configurações para ver intervalos nominais da própria sessão. A faixa de estados distingue inconclusivo, zero, inválido, não aplicável, sem B consolidado, incompatível/excluído e sem medição. Nenhum desses estados é lançado como zero no eixo log. Não há ajuste de curva ou interpolação. B individual e candidato inconclusivo não são promovidos a valor consolidado.
 
-### G04 — Perfil tímbrico instrumental
+### G04 — Perfil tímbrico
 
-Escolha a janela P1–P12/P1–P24, limite comum de 4, 8, 12, 16 ou 24 kHz e um descritor; pressione **Calcular perfil**. Os pesos são potências relativas `w = 10^(dB/10)`, calculadas sobre componentes detectados. Cada descritor usa seu próprio eixo.
+Em Configurações, escolha a janela P1–P12/P1–P24 e limite comum de 4, 8, 12, 16 ou 24 kHz; no gráfico, escolha um descritor. Os pesos são potências relativas `w = 10^(dB/10)`, calculadas sobre componentes detectados. Cada descritor usa seu próprio eixo.
 
 | Descritor | Interpretação |
 | --- | --- |
@@ -642,27 +642,31 @@ Escolha a janela P1–P12/P1–P24, limite comum de 4, 8, 12, 16 ou 24 kHz e um 
 
 É necessário suporte de ao menos dois componentes distintos. Ausência de P1 ou de uma faixa não implica potência zero. Para picos não harmônicos, apenas centroide por frequência é pertinente. O gráfico mostra medianas por sessão e por tecla e dispersão min–máx, não intervalos de confiança. Em perfis observados, os pontos não são ligados por linhas que sugiram continuidade física. Brilho, amplitude e distribuição espectral dependem também da captação; não são uma nota de qualidade sonora.
 
-### G05 — Mapa instrumental de desvios harmônicos
+### G05 — Desvios harmônicos
 
-Escolha **Adaptativa (P1 empírica ou parcial alternativo)** ou **Modelo físico extrapolado (quando aceito)**, o grupo de referência, ordens e escala simétrica ±10, ±20, ±50 ou ±100 cents. Pressione **Calcular desvios**. Para uma âncora de ordem `r`, o desvio da ordem `n` é `1200 log₂[(fₙ/n)/(fᵣ/r)]`. P1 é usada quando admissível; P2, P3 ou outra ordem medida pode servir de âncora quando necessário. O zero da âncora é definido pela fórmula. Não se misturam grupos de referência e não se usa o temperamento como âncora. O modo físico é separado e não representa P1 medida. Cores divergentes distinguem desvios negativos e positivos; valores fora da faixa mantêm o número original. Não depende necessariamente de B e não alimenta curvas diretamente.
+Em Configurações, escolha **Adaptativa (P1 empírica ou parcial alternativo)** ou **Modelo físico extrapolado (quando aceito)**, ordens e escala simétrica ±10, ±20, ±50 ou ±100 cents. No gráfico, selecione o grupo de referência. Para uma âncora de ordem `r`, o desvio da ordem `n` é `1200 log₂[(fₙ/n)/(fᵣ/r)]`. P1 é usada quando admissível; P2, P3 ou outra ordem medida pode servir de âncora quando necessário. O zero da âncora é definido pela fórmula. Não se misturam grupos de referência e não se usa o temperamento como âncora. O modo físico é separado e não representa P1 medida. Cores divergentes distinguem desvios negativos e positivos; valores fora da faixa mantêm o número original. Não depende necessariamente de B e não alimenta curvas diretamente.
 
 ### G06 — Repetibilidade acústica
 
-Selecione **MAD intrassessão (mediana)**, **MAD entre sessões** ou **Taxa de aceitação (%)**, janela de ordens e escala MAD (0–5, 0–10, 0–20 ou 0–50 cents). Pressione **Calcular repetibilidade**. A frequência de referência descritiva é a mediana das medianas das frequências observadas na coorte, por tecla e ordem. MAD é a mediana dos afastamentos absolutos em relação à mediana dos desvios em cents. Dentro de uma sessão, descreve a variação dos ataques; entre sessões, a variação de suas medianas. Uma única sessão não estima dispersão entre sessões. Uma única observação não significa estabilidade perfeita. Nenhum extremo é excluído automaticamente.
+Selecione **MAD intrassessão (mediana)**, **MAD entre sessões** ou **Taxa de aceitação (%)**, no gráfico; ajuste a janela de ordens e escala MAD (0–5, 0–10, 0–20 ou 0–50 cents) em Configurações. A frequência de referência descritiva é a mediana das medianas das frequências observadas na coorte, por tecla e ordem. MAD é a mediana dos afastamentos absolutos em relação à mediana dos desvios em cents. Dentro de uma sessão, descreve a variação dos ataques; entre sessões, a variação de suas medianas. Uma única sessão não estima dispersão entre sessões. Uma única observação não significa estabilidade perfeita. Nenhum extremo é excluído automaticamente.
 
-Selecione a tecla, o componente e a sessão; use **Inspecionar ataques da sessão** para ver as observações. Consulte **Dispersão da fundamental por tecla** e, separadamente, **desvio do alvo histórico da fundamental**. Fundamental inferida não é P1 medida; o alvo histórico não é a afinação corrente. A taxa de aceitação não é sinônimo de estabilidade nem qualidade acústica.
+Toque em uma célula do mapa (ou selecione pelas setas e pressione Enter) para mostrar os pontos das sessões. Toque em um ponto de sessão para ver os ataques; também é possível acioná-lo com Enter ou Espaço. Consulte **Dispersão da fundamental por tecla** e, separadamente, **desvio do alvo histórico da fundamental**. Fundamental inferida não é P1 medida; o alvo histórico não é a afinação corrente. A taxa de aceitação não é sinônimo de estabilidade nem qualidade acústica.
 
-### G07 — Proximidade intervalar espectral (experimental)
+### G07 — Proximidade intervalar (experimental)
 
-Selecione explicitamente **Nota A** e **Nota B** na mesma coorte, escolha o padrão de pares (oitava 2:1, quinta 3:2, terça maior 5:4, terça menor 6:5, duodécima 3:1 ou par avançado P1–P24) e pressione **Calcular proximidade**. A tabela compara frequências medianas de parciais observados e informa amplitudes, desvios e batimento previsto. A posição das teclas não determina automaticamente a família do intervalo.
+Selecione explicitamente **Nota A** e **Nota B** na mesma coorte, escolha o padrão de pares (oitava 2:1, quinta 3:2, terça maior 5:4, terça menor 6:5, duodécima 3:1 ou par avançado P1–P24); o cálculo ocorre automaticamente assim que as duas notas e a autorização de exploração, quando exigida, estiverem definidas. O gráfico de pares permite alternar entre desvio assinado em cents e diferença absoluta em Hz. Toque nas barras para inspecionar as frequências observadas e os valores. A posição das teclas não determina automaticamente a família do intervalo.
 
-`Δ = 1200 log₂(fA/fB)`; `batimento previsto = |fA − fB|` Hz. Por exemplo, 300 e 301 Hz dão aproximadamente −5,76 cents e 1 Hz. Inverter A/B e ordens troca o sinal, não o batimento. O mapa usa uma nota fixa e candidatas, com mínimo ou mediana de `|Δ|` e escala 0–10, 0–20, 0–50 ou 0–100 cents. Confira quantos pares sustentam cada comparação. Se a comparabilidade não estiver comprovada, a exploração exige a opção explícita correspondente. As notas foram gravadas separadamente: o cálculo não mede batimentos simultâneos, não prediz sua audibilidade e não constitui métrica validada de consonância, recomendação de temperamento ou curva de afinação.
+`Δ = 1200 log₂(fA/fB)`; `batimento previsto = |fA − fB|` Hz. Por exemplo, 300 e 301 Hz dão aproximadamente −5,76 cents e 1 Hz. Inverter A/B troca os papéis e ordens, portanto troca o sinal, não o batimento. O mapa usa uma nota fixa e candidatas, com mínimo ou mediana de `|Δ|` e escala 0–10, 0–20, 0–50 ou 0–100 cents. Confira quantos pares sustentam cada comparação. Se a comparabilidade não estiver comprovada, a exploração exige a opção explícita correspondente. As notas foram gravadas separadamente: o cálculo não mede batimentos simultâneos, não prediz sua audibilidade e não constitui métrica validada de consonância, recomendação de temperamento ou curva de afinação.
 
-### G08 — Mapa espectral de frequência contínua
+### G08 — Mapa espectral
 
-Escolha a fonte **Grade 20.2** ou **Pontos legados (aproximação)**, eixo de frequência absoluta (16 Hz–24 kHz) ou relativo `f/f₀` (0,25–128, apenas para fontes harmônicas com referência válida), 128/256/512 bandas e escala −60 ou −80 a 0 dB. Pressione **Calcular mapa de frequência**. Para cada ataque, utiliza-se o máximo das amostras armazenadas em cada banda; depois as medianas por sessão e por tecla. As bandas logarítmicas preservam picos sem extrapolar além de Nyquist, da configuração ou do suporte armazenado. Fontes legadas e grade não têm necessariamente resolução equivalente.
+Em Configurações, escolha a fonte **Grade 20.2** ou **Pontos legados (aproximação)**, 128/256/512 bandas e escala −60 ou −80 a 0 dB. No gráfico, escolha o eixo de frequência absoluta (16 Hz–24 kHz) ou relativo `f/f₀` (0,25–128, apenas para fontes harmônicas com referência válida). Para cada ataque, utiliza-se o máximo das amostras armazenadas em cada banda; depois as medianas por sessão e por tecla. As bandas logarítmicas preservam picos sem extrapolar além de Nyquist, da configuração ou do suporte armazenado. Fontes legadas e grade não têm necessariamente resolução equivalente.
 
-Use **Detalhe 4.096 bandas** para inspecionar uma tecla e **Voltar ao bloco** para o mapa geral. O detalhe não aumenta a resolução física. Uma banda sem amostra não é amplitude zero. Esta vista pode mostrar componentes não harmônicos, diferentemente do mapa por ordens. Não é espectrograma temporal, PSD ou nível SPL calibrado.
+Toque duas vezes na coluna desejada ou pressione Enter após selecioná-la para inspecionar 4.096 bandas de uma tecla; use **Mapa geral** ou Esc para retornar. O detalhe não aumenta a resolução física. Uma banda sem amostra não é amplitude zero. Esta vista pode mostrar componentes não harmônicos, diferentemente do mapa por ordens. Não é espectrograma temporal, PSD ou nível SPL calibrado.
+
+### Configurações dos gráficos instrumentais
+
+Em **Configurações** da Análise acústica, os grupos recolhíveis incluem Mapa de parciais (escala, ordens e ampliação), Mapa espectral (fonte, bandas, escala e ampliação), Inarmonicidade (bootstrap), Desvios harmônicos (método de referência, escala e ordens), Perfil tímbrico (ordens e limite), Repetibilidade (escala e ordens) e Proximidade intervalar (métrica e escala). Salvar alterações conserva essas preferências localmente; restaurar padrões afeta a apresentação e exploração, não os parâmetros da aquisição. A seleção temporária de evidências, a coorte e a autorização de exploração de comparabilidade desconhecida não são preferências persistentes. Nenhum controle de apresentação altera as observações gravadas ou torna um registro elegível para curvas.
 
 ### Quando um gráfico não apresenta dados
 
@@ -712,10 +716,10 @@ Num cravo, meça Dó2, Sol2, Dó3 e Sol3, em qualquer ordem, usando o mesmo regi
 | Excluir do conjunto / Restaurar ao conjunto; Revisar parciais | Rever o rascunho quando permitido; não apaga a evidência original. |
 | Recalcular resultado | Atualizar a consolidação do rascunho após revisão. |
 | Espectro e gráficos de desvios / estabilidade / B | Consultar evidências, critérios e ajuste físico; veja as seções seguintes. |
-| Calcular / atualizar / Cancelar | Construir ou interromper uma projeção de nota ou instrumento. |
-| Restringir fontes ou escolher sessões / Fonte / coorte | Selecionar o escopo e a fonte de comparação; consultar limitações do protocolo. |
+| Expandir/recolher gráfico | Calcular sob demanda ou cancelar a leitura pendente; reaproveitar o último resultado válido quando possível. |
+| Configurações → Seleção de evidências / Fonte / coorte | Selecionar o escopo e a fonte de comparação; consultar limitações do protocolo. |
 | Incluir registros excluídos da modelagem (somente visualização) | Explorar dados excluídos sem readmiti-los como fonte de curva. |
-| Abrir Nota / seletores / tabelas dos gráficos | Inspecionar valores e aprofundar uma identidade física. |
+| Toque, clique ou setas do teclado / ⓘ / ⛶ | Inspecionar valores e aprofundar uma identidade física. |
 | Exportar sessão (.afs) / Salvar sessão importada… | Exportar a sessão consultada ou associar uma importação a um perfil. |
 
 Veja [os sete gráficos instrumentais](#analise-instrumental) para os controles e a interpretação de cada projeção.
@@ -803,7 +807,7 @@ Abra **Configurações** estando na Análise acústica. O grupo **Apresentação
 | Notação dos parciais | Numérica | Numérica (P1, P2, P3), intervalos decompostos (f, 8ª, 8ª + 5ª) ou compostos (f, 8ª, 12ª); muda rótulos, não ordens |
 | Mostrar parciais candidatos | Sim | Filtro da tabela; não exclui evidências |
 
-Os sete gráficos instrumentais têm controles próprios de seleção, escala, referências e visualização. A janela de Configurações da Análise não contém reconhecimento de ataques, identificação de nota, janelas de aquisição, limiares de aceitação ou parâmetros de ajuste de B: esses parâmetros pertencem à Aquisição e são preservados nas evidências originais. Salvar alterações ou Restaurar padrões na Análise afeta somente as suas três preferências de apresentação; a ação correspondente na Aquisição preserva as preferências visuais da Análise. Fechar mantém os valores válidos nesta visita sem persistir alterações ainda não salvas.
+Os sete gráficos instrumentais têm controles de exploração locais e grupos de preferências técnicas em Configurações. A janela de Configurações da Análise não contém reconhecimento de ataques, identificação de nota, janelas de aquisição, limiares de aceitação ou parâmetros de ajuste de B: esses parâmetros pertencem à Aquisição e são preservados nas evidências originais. Salvar alterações ou Restaurar padrões na Análise afeta somente as preferências de apresentação e dos gráficos instrumentais; a ação correspondente na Aquisição preserva as preferências visuais da Análise. Fechar mantém os valores válidos nesta visita sem persistir alterações ainda não salvas.
 
 <a name="interpretar-parciais"></a>
 ## 2.6. Interpretar o resultado acústico
@@ -961,10 +965,10 @@ Um perfil instrumental é um prontuário acústico do instrumento: identificaç�
 ## 3.1. Criar um perfil instrumental
 
 1. Confira o temperamento, referência e disposição musical do Afinador, especialmente quando houver teclas divididas ou EDO.
-2. Abra **Aquisição acústica → Instrumentos → Novo perfil**.
+2. Abra **Aquisição acústica → Instrumentos → Novo instrumento**.
 3. Informe **Nome** e **Família**. Em **Avançado**, acrescente fabricante/subtipo e observações se desejar; para Outro, escolha o modelo acústico correspondente.
-4. Pressione **Criar e salvar perfil**. Não é necessário escolher primeira ou última tecla.
-5. Use **Voltar à ferramenta**. Meça as notas desejadas e salve as sessões.
+4. Pressione **Criar e salvar instrumento**. Não é necessário escolher primeira ou última tecla.
+5. Use **Voltar à aquisição**. Meça as notas desejadas e salve as sessões.
 
 O perfil começa com mapa observado vazio. Ao salvar uma sessão com identidade física confirmada e compatível, somente essa identidade é acrescentada. Medir Sol2, Dó2 e Mi2 nessa ordem cadastra Dó2, Mi2 e Sol2, não as demais notas. A extensão observada Dó2–Sol2 não prova a existência de todas as teclas intermediárias. Isso permite estudar oitavas curtas, oitavas quebradas e instrumentos parcialmente medidos. Perfis com mapa explicitamente declarado preservam sua disposição.
 
@@ -987,22 +991,22 @@ Se não houver identidade física confirmada, preserve a sessão sem inventar um
 
 | Controle | Uso |
 | --- | --- |
-| Instrumento / Novo perfil / Criar e salvar perfil | Selecionar ou criar uma coleção acústica. |
+| Instrumento / Novo instrumento / Criar e salvar instrumento | Selecionar ou criar uma coleção acústica. |
 | Importar instrumento / Abrir sessão | Trazer um perfil AFP/JSON ou uma sessão compatível. |
 | Renomear / Editar metadados | Corrigir identificação documental. |
-| Excluir perfil | Remover perfil e registros locais; faça backup primeiro. |
-| Exportar perfil (.afp) / Exportar perfil (JSON) | Criar backup binário ou intercâmbio estruturado. |
+| Excluir instrumento | Remover perfil e registros locais; faça backup primeiro. |
+| Exportar instrumento (.afp) / Exportar instrumento (JSON) | Criar backup binário diretamente no painel Gerenciar instrumentos, ou intercâmbio estruturado em Avançado. |
 | Mapa de teclas / setas de oitava | Consultar medições por identidade física. |
 | Medições sem tecla / fora do mapa | Consultar sessões não vinculadas ou arquivadas. |
 | Histórico / Avançado do registro | Consultar e gerenciar sessões, incluindo exportação individual. |
 | Salvar sessão neste perfil / Baixar sessão sem salvar / Cancelar salvamento | Concluir, preservar externamente ou abandonar uma associação pendente. |
-| Voltar à ferramenta | Fechar o gerenciador sem iniciar áudio. |
+| Voltar à aquisição / Voltar à análise | Fechar o gerenciador sem iniciar áudio, pelo botão destacado no cabeçalho que acompanha a rolagem. O fundo diferenciado identifica o ambiente de gerenciamento. |
 
 ### Avançado
 
 | Controle | Uso e cuidados |
 | --- | --- |
-| Duplicar perfil | Criar cópia independente; não mescla perfis. |
+| Duplicar instrumento | Criar cópia independente; não mescla perfis. |
 | Informações do instrumento e disposição física | Inspecionar metadados e ordem de identidades. |
 | Editar extensão física | Declarar deliberadamente primeira e última tecla; leia as consequências. Essa edição deixa de ser apenas mapa observado. |
 | Mover antes / Mover depois | Corrigir a ordem física quando conhecida. |
@@ -1015,7 +1019,7 @@ Ao corrigir a disposição de 12/13/14 teclas ou reduzir uma extensão declarada
 <a name="cfg-3"></a>
 ## 3.4. Preferências do gerenciador
 
-Abra **Configurações** enquanto o gerenciador Instrumentos estiver aberto, seja pela Aquisição ou pela Análise. O grupo **Apresentação** oferece **Ordenação das sessões** (Mais recentes, Mais antigas ou Qualidade provisória; padrão Mais recentes) e **Mostrar sessões inconclusivas** (padrão Sim). A ordenação por qualidade é triagem, não classificação metrológica. O filtro não apaga registros. O histórico também dispõe de Ordenar em Avançado. Restaurar padrões atua somente nas preferências do gerenciador. Ao usar Voltar à ferramenta, Configurações e Ajuda voltam a corresponder à ferramenta de origem.
+Abra **Configurações** enquanto o gerenciador Instrumentos estiver aberto, seja pela Aquisição ou pela Análise. O grupo **Apresentação** oferece **Ordenação das sessões** (Mais recentes, Mais antigas ou Qualidade provisória; padrão Mais recentes) e **Mostrar sessões inconclusivas** (padrão Sim). A ordenação por qualidade é triagem, não classificação metrológica. O filtro não apaga registros. O histórico também dispõe de Ordenar em Avançado. Restaurar padrões atua somente nas preferências do gerenciador. Ao usar Voltar à aquisição / Voltar à análise, Configurações e Ajuda voltam a corresponder à ferramenta de origem.
 
 <a name="comparar-sessoes"></a>
 ## 3.5. Mapa e histórico
@@ -1029,7 +1033,7 @@ No gerenciador, selecione a tecla para consultar seu histórico; em **Análise a
 
 ### Backup e restauração
 
-1. Selecione o perfil e pressione **Exportar perfil (.afp)**. Esse é o formato preferencial para transportar o instrumento e suas sessões. Confira o arquivo no destino selecionado pelo navegador. Em Avançado, **Exportar perfil (JSON)** oferece a alternativa estruturada; no Avançado de um registro do histórico, **Exportar sessão (.afs)** guarda somente aquela sessão.
+1. Selecione o perfil e pressione **Exportar instrumento (.afp)**. Esse é o formato preferencial para transportar o instrumento e suas sessões. Confira o arquivo no destino selecionado pelo navegador. Em Avançado, **Exportar instrumento (JSON)** oferece a alternativa estruturada; no Avançado de um registro do histórico, **Exportar sessão (.afs)** guarda somente aquela sessão.
 2. Para restaurar ou transferir um instrumento, use **Importar instrumento** e escolha AFP ou JSON de perfil compatível. A importação valida e cria um perfil diretamente, sem confirmação redundante. Em colisão de ID, cria uma cópia independente; não sobrescreve nem mescla perfis existentes.
 3. Para importar uma sessão multiataque (.afs ou JSON), use **Abrir sessão** no gerenciador ou **Abrir sessão…** na Análise acústica. A sessão validada fica pendente: escolha perfil compatível e confirme **Salvar sessão neste perfil**. Substituir uma sessão ainda pendente exige confirmação. Uma análise individual genérica não é uma sessão multiataque importável como registro.
 4. Acompanhe a janela de progresso nas transferências binárias. A porcentagem refere-se à fase atual, não ao tempo restante. É possível cancelar antes da finalização; não considere o arquivo salvo ou o perfil publicado até a confirmação de conclusão. Se a operação for interrompida, confira o destino e não descarte a cópia original.

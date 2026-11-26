@@ -109,6 +109,8 @@ A Análise acústica oferece três níveis: **Sessão** (execuções, espectros 
 
 Os gráficos respeitam exclusões, limites de banda, referências e evidências ausentes. Descritores são calculados por ataque e agregados por medianas de sessão e tecla, com peso igual por sessão quando aplicável; o eixo de teclas é categórico, não distância cromática. Os níveis em dB são relativos, não SPL calibrado. G08 não é um espectrograma temporal. O G07 não mede batimentos de notas simultâneas nem gera curvas automaticamente. Consulte o [guia de análise](GUIA_DE_USO.md#analise-instrumental).
 
+Os gráficos instrumentais são calculados sob demanda ao abrir sua seção, com indicador de progresso. A inspeção ocorre nos próprios pontos ou células, e os botões ⓘ e ⛶ oferecem metodologia e ampliação. As preferências técnicas ficam em Configurações da Análise acústica; a seleção de evidências é temporária. Não há tabelas numéricas extensas na apresentação instrumental.
+
 ## Curvas de afinação
 
 O otimizador experimental contempla **piano, fortepiano e cravo**, com políticas de ponderação intervalar próprias. **Outro** pode participar exclusivamente pela fonte **Parciais empíricos — independente de B (experimental)**, quando o modelo é Automático com ordens identificadas, Série harmônica ou Corda rígida e os demais critérios são satisfeitos. Exploratório e Componentes não harmônicos não fornecem evidência elegível para curvas. A análise considera relações entre parciais de teclas diferentes, a base musical, a disponibilidade e qualidade das fontes, e restrições de preservação intervalar.
